@@ -18,6 +18,7 @@ import DashboardAdmin from '../views/admin/DashboardAdmin.vue'
 import ListaBarberos from '../views/admin/ListaBarberos.vue'
 import PerfilBarberoAdmin from '../views/admin/PerfilBarberoAdmin.vue'
 import EditarBarbero from '../views/admin/EditarBarbero.vue'
+import RegistrarBarbero from '../views/admin/RegistrarBarbero.vue'
 
 const routes = [
   // ==========================================
@@ -98,6 +99,12 @@ const routes = [
         meta: { title: 'Perfil del Barbero' },
         props: true,
       },
+      {
+  path: 'barberos/nuevo',
+  name: 'RegistrarBarbero',
+  component: RegistrarBarbero,
+  meta: { title: 'Registrar Barbero' },
+},
       {
         path: 'barberos/:id/editar',
         name: 'EditarBarbero',

@@ -1,183 +1,210 @@
 <template>
-  <div class="max-w-2xl mx-auto p-6">
+  <div class="registrar animate-fade-in">
 
-    <div class="mb-6">
-      <h1 class="text-2xl font-semibold text-gray-800">Registrar nuevo barbero</h1>
-      <p class="text-sm text-gray-500 mt-1">Todos los campos marcados con * son obligatorios</p>
+    <!-- Encabezado -->
+    <div class="registrar__header">
+      <div>
+        <h1 class="registrar__title">Registrar <span class="gold-text">nuevo barbero</span></h1>
+        <p class="registrar__subtitle">Complete los datos y asigne el horario inicial obligatorio</p>
+      </div>
+      <button @click="$router.push('/admin/barberos')" class="btn-secondary">
+        ← Volver
+      </button>
     </div>
 
-    <!-- Alerta de error general -->
-    <div v-if="errorGeneral" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-      {{ errorGeneral }}
+    <!-- Alerta error -->
+    <div v-if="errorGeneral" class="registrar__alerta registrar__alerta--error">
+      ⚠️ {{ errorGeneral }}
     </div>
 
-    <!-- Alerta de éxito -->
-    <div v-if="exitoso" class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-      Barbero registrado correctamente. Redirigiendo...
+    <!-- Alerta éxito -->
+    <div v-if="exitoso" class="registrar__alerta registrar__alerta--exito">
+      ✅ Barbero registrado correctamente. Redirigiendo...
     </div>
 
-    <form @submit.prevent="registrar" class="space-y-6">
+    <form @submit.prevent="registrar" class="registrar__form">
 
-      <!-- DATOS PERSONALES -->
-      <div class="bg-white border border-gray-200 rounded-lg p-5">
-        <h2 class="text-base font-medium text-gray-700 mb-4">Datos personales</h2>
+      <!-- SECCIÓN: Datos personales -->
+      <div class="glass-card registrar__seccion">
+        <h2 class="registrar__seccion-titulo">👤 Datos personales</h2>
 
-        <div class="grid grid-cols-2 gap-4">
-
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Primer nombre *</label>
+        <div class="registrar__grid">
+          <div class="registrar__campo">
+            <label class="label">Primer nombre *</label>
             <input
               v-model="form.nombre1"
               type="text"
               placeholder="Ej: Carlos"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
-              :class="{ 'border-red-400': errores.nombre1 }"
+              class="input-field"
+              :class="{ 'input-field--error': errores.nombre1 }"
             />
-            <p v-if="errores.nombre1" class="text-red-500 text-xs mt-1">{{ errores.nombre1 }}</p>
+            <span v-if="errores.nombre1" class="registrar__error">{{ errores.nombre1 }}</span>
           </div>
 
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Segundo nombre</label>
+          <div class="registrar__campo">
+            <label class="label">Segundo nombre</label>
             <input
               v-model="form.nombre2"
               type="text"
               placeholder="Ej: Andres"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+              class="input-field"
             />
           </div>
 
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Primer apellido *</label>
+          <div class="registrar__campo">
+            <label class="label">Primer apellido *</label>
             <input
               v-model="form.apellido1"
               type="text"
               placeholder="Ej: Mamani"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
-              :class="{ 'border-red-400': errores.apellido1 }"
+              class="input-field"
+              :class="{ 'input-field--error': errores.apellido1 }"
             />
-            <p v-if="errores.apellido1" class="text-red-500 text-xs mt-1">{{ errores.apellido1 }}</p>
+            <span v-if="errores.apellido1" class="registrar__error">{{ errores.apellido1 }}</span>
           </div>
 
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Segundo apellido</label>
+          <div class="registrar__campo">
+            <label class="label">Segundo apellido</label>
             <input
               v-model="form.apellido2"
               type="text"
               placeholder="Ej: Quispe"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+              class="input-field"
             />
           </div>
 
-        </div>
-
-        <div class="mt-4 grid grid-cols-2 gap-4">
-
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Correo electrónico *</label>
+          <div class="registrar__campo">
+            <label class="label">Correo electrónico *</label>
             <input
               v-model="form.correo"
               type="email"
               placeholder="correo@ejemplo.com"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
-              :class="{ 'border-red-400': errores.correo }"
+              class="input-field"
+              :class="{ 'input-field--error': errores.correo }"
             />
-            <p v-if="errores.correo" class="text-red-500 text-xs mt-1">{{ errores.correo }}</p>
+            <span v-if="errores.correo" class="registrar__error">{{ errores.correo }}</span>
           </div>
 
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Contraseña *</label>
+          <div class="registrar__campo">
+            <label class="label">Contraseña *</label>
             <input
               v-model="form.contrasena"
               type="password"
               placeholder="Mínimo 6 caracteres"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
-              :class="{ 'border-red-400': errores.contrasena }"
+              class="input-field"
+              :class="{ 'input-field--error': errores.contrasena }"
             />
-            <p v-if="errores.contrasena" class="text-red-500 text-xs mt-1">{{ errores.contrasena }}</p>
+            <span v-if="errores.contrasena" class="registrar__error">{{ errores.contrasena }}</span>
           </div>
 
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Fecha de ingreso *</label>
+          <div class="registrar__campo">
+            <label class="label">Fecha de ingreso *</label>
             <input
               v-model="form.fecha_ingreso"
               type="date"
               :max="hoy"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
-              :class="{ 'border-red-400': errores.fecha_ingreso }"
+              class="input-field"
+              :class="{ 'input-field--error': errores.fecha_ingreso }"
             />
-            <p v-if="errores.fecha_ingreso" class="text-red-500 text-xs mt-1">{{ errores.fecha_ingreso }}</p>
+            <span v-if="errores.fecha_ingreso" class="registrar__error">{{ errores.fecha_ingreso }}</span>
           </div>
-
         </div>
       </div>
 
-      <!-- HORARIO INICIAL -->
-      <div class="bg-white border border-gray-200 rounded-lg p-5">
-        <h2 class="text-base font-medium text-gray-700 mb-1">Horario inicial *</h2>
-        <p class="text-xs text-gray-400 mb-4">Configure los días que trabajará el barbero. Cada día laboral debe tener mínimo 8 horas efectivas.</p>
+      <!-- SECCIÓN: Horario inicial -->
+      <div class="glass-card registrar__seccion">
+        <div class="registrar__seccion-header">
+          <h2 class="registrar__seccion-titulo">🗓️ Horario inicial</h2>
+          <p class="registrar__seccion-desc">
+            Cada día laboral activo debe tener mínimo <strong>8 horas efectivas</strong> (se descuenta 1h de almuerzo automáticamente).
+          </p>
+        </div>
 
-        <p v-if="errores.dias" class="text-red-500 text-xs mb-3">{{ errores.dias }}</p>
+        <span v-if="errores.dias" class="registrar__error" style="display:block; margin-bottom: 1rem;">
+          {{ errores.dias }}
+        </span>
 
-        <div class="space-y-3">
+        <div class="registrar__dias">
           <div
             v-for="dia in diasSemana"
             :key="dia.key"
-            class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg"
-            :class="{ 'bg-gray-50': !dia.activo }"
+            class="registrar__dia"
+            :class="{
+              'registrar__dia--activo': dia.activo,
+              'registrar__dia--inactivo': !dia.activo
+            }"
           >
-            <!-- Toggle del día -->
-            <input
-              type="checkbox"
-              v-model="dia.activo"
-              class="w-4 h-4 accent-blue-500"
-            />
-            <span class="text-sm font-medium w-24 text-gray-700">{{ dia.nombre }}</span>
+            <!-- Cabecera del día -->
+            <div class="registrar__dia-header">
+              <label class="registrar__dia-toggle">
+                <input type="checkbox" v-model="dia.activo" />
+                <span class="registrar__dia-nombre">{{ dia.nombre }}</span>
+              </label>
+              <span
+                v-if="dia.activo && !dia.dia_descanso"
+                class="registrar__dia-horas"
+                :class="horasValidas(dia) ? 'registrar__dia-horas--ok' : 'registrar__dia-horas--mal'"
+              >
+                {{ calcularHoras(dia) }}
+              </span>
+              <span v-if="dia.activo && dia.dia_descanso" class="registrar__dia-badge">
+                Descanso
+              </span>
+            </div>
 
-            <!-- Horarios (solo si el día está activo) -->
-            <template v-if="dia.activo">
-              <div class="flex items-center gap-2 flex-1">
-                <input
-                  v-model="dia.hora_entrada"
-                  type="time"
-                  class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-400"
-                />
-                <span class="text-gray-400 text-sm">a</span>
-                <input
-                  v-model="dia.hora_salida"
-                  type="time"
-                  class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-400"
-                />
-                <span class="text-xs ml-2" :class="horasValidas(dia) ? 'text-green-600' : 'text-red-500'">
-                  {{ calcularHoras(dia) }}
-                </span>
+            <!-- Horarios (solo si está activo) -->
+            <div v-if="dia.activo" class="registrar__dia-body">
+              <div class="registrar__dia-horas-inputs">
+                <div class="registrar__campo-pequeño">
+                  <label class="label">Entrada</label>
+                  <input
+                    v-model="dia.hora_entrada"
+                    type="time"
+                    class="input-field"
+                    :disabled="dia.dia_descanso"
+                  />
+                </div>
+                <span class="registrar__dia-separador">→</span>
+                <div class="registrar__campo-pequeño">
+                  <label class="label">Salida</label>
+                  <input
+                    v-model="dia.hora_salida"
+                    type="time"
+                    class="input-field"
+                    :disabled="dia.dia_descanso"
+                  />
+                </div>
               </div>
 
-              <label class="flex items-center gap-1 text-xs text-gray-500">
-                <input type="checkbox" v-model="dia.dia_descanso" class="accent-orange-400" />
-                Día de descanso
+              <label class="registrar__descanso-toggle">
+                <input type="checkbox" v-model="dia.dia_descanso" />
+                <span>Marcar como día de descanso</span>
               </label>
-            </template>
+            </div>
 
-            <span v-else class="text-xs text-gray-400">No trabaja este día</span>
+            <!-- Mensaje si está inactivo -->
+            <div v-else class="registrar__dia-inactivo-msg">
+              No trabaja este día
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- BOTONES -->
-      <div class="flex gap-3 justify-end">
+      <!-- Botones finales -->
+      <div class="registrar__footer">
         <button
           type="button"
           @click="$router.push('/admin/barberos')"
-          class="px-5 py-2 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
+          class="btn-secondary"
         >
           Cancelar
         </button>
         <button
           type="submit"
           :disabled="cargando"
-          class="px-5 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          class="btn-primary"
         >
-          {{ cargando ? 'Registrando...' : 'Registrar barbero' }}
+          {{ cargando ? 'Registrando...' : '✅ Registrar barbero' }}
         </button>
       </div>
 
@@ -186,17 +213,16 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import barberoService from '../../services/barberoService.js'
 
-const router  = useRouter()
+const router       = useRouter()
 const cargando     = ref(false)
 const errorGeneral = ref('')
 const exitoso      = ref(false)
 const errores      = ref({})
-
-const hoy = new Date().toISOString().split('T')[0]
+const hoy          = new Date().toISOString().split('T')[0]
 
 const form = ref({
   nombre1:       '',
@@ -212,78 +238,4 @@ const diasSemana = ref([
   { key: 'Lunes',     nombre: 'Lunes',     activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
   { key: 'Martes',    nombre: 'Martes',    activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
   { key: 'Miércoles', nombre: 'Miércoles', activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
-  { key: 'Jueves',    nombre: 'Jueves',    activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
-  { key: 'Viernes',   nombre: 'Viernes',   activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
-  { key: 'Sábado',    nombre: 'Sábado',    activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
-  { key: 'Domingo',   nombre: 'Domingo',   activo: false, hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: true  },
-])
-
-function calcularHoras(dia) {
-  if (!dia.hora_entrada || !dia.hora_salida) return ''
-  if (dia.dia_descanso) return 'Descanso'
-  const [h1, m1] = dia.hora_entrada.split(':').map(Number)
-  const [h2, m2] = dia.hora_salida.split(':').map(Number)
-  const total = ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60 - 1
-  if (total <= 0) return '0h efectivas'
-  return `${total.toFixed(1)}h efectivas`
-}
-
-function horasValidas(dia) {
-  if (dia.dia_descanso) return true
-  const [h1, m1] = dia.hora_entrada.split(':').map(Number)
-  const [h2, m2] = dia.hora_salida.split(':').map(Number)
-  const total = ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60 - 1
-  return total >= 8
-}
-
-function validar() {
-  const e = {}
-  if (!form.value.nombre1.trim())       e.nombre1       = 'El primer nombre es obligatorio'
-  if (!form.value.apellido1.trim())     e.apellido1     = 'El primer apellido es obligatorio'
-  if (!form.value.correo.trim())        e.correo        = 'El correo es obligatorio'
-  if (!form.value.contrasena.trim())    e.contrasena    = 'La contraseña es obligatoria'
-  if (form.value.contrasena.length < 6) e.contrasena    = 'Mínimo 6 caracteres'
-  if (!form.value.fecha_ingreso)        e.fecha_ingreso = 'La fecha de ingreso es obligatoria'
-
-  const diasActivos = diasSemana.value.filter(d => d.activo)
-  if (diasActivos.length === 0) e.dias = 'Debe activar al menos un día de trabajo'
-
-  const diaInvalido = diasActivos.find(d => !d.dia_descanso && !horasValidas(d))
-  if (diaInvalido) e.dias = `El día ${diaInvalido.nombre} no cumple las 8 horas mínimas`
-
-  errores.value = e
-  return Object.keys(e).length === 0
-}
-
-async function registrar() {
-  errorGeneral.value = ''
-  if (!validar()) return
-
-  cargando.value = true
-
-  const diasActivos = diasSemana.value
-    .filter(d => d.activo)
-    .map(d => ({
-      dia:          d.key,
-      hora_entrada: d.hora_entrada,
-      hora_salida:  d.hora_salida,
-      dia_descanso: d.dia_descanso,
-    }))
-
-  try {
-    await barberoService.registrar({
-      ...form.value,
-      dias: diasActivos,
-    })
-
-    exitoso.value = true
-    setTimeout(() => router.push('/admin/barberos'), 1500)
-
-  } catch (err) {
-    const mensaje = err.response?.data?.mensaje || 'Error al registrar el barbero'
-    errorGeneral.value = mensaje
-  } finally {
-    cargando.value = false
-  }
-}
-</script>
+  { key: 'Jueves',    nombre: 'Jueves',    activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso:

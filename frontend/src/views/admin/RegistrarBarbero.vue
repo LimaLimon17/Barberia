@@ -238,4 +238,310 @@ const diasSemana = ref([
   { key: 'Lunes',     nombre: 'Lunes',     activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
   { key: 'Martes',    nombre: 'Martes',    activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
   { key: 'Miércoles', nombre: 'Miércoles', activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
-  { key: 'Jueves',    nombre: 'Jueves',    activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso:
+  { key: 'Jueves',    nombre: 'Jueves',    activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
+  { key: 'Viernes',   nombre: 'Viernes',   activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
+  { key: 'Sábado',    nombre: 'Sábado',    activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
+  { key: 'Domingo',   nombre: 'Domingo',   activo: false, hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: true  },
+])
+
+function calcularHoras(dia) {
+  if (!dia.hora_entrada || !dia.hora_salida) return ''
+  const [h1, m1] = dia.hora_entrada.split(':').map(Number)
+  const [h2, m2] = dia.hora_salida.split(':').map(Number)
+  const total = ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60 - 1
+  if (total <= 0) return '0h efectivas'
+  return `${total.toFixed(1)}h efectivas`
+}
+
+function horasValidas(dia) {
+  if (dia.dia_descanso) return true
+  const [h1, m1] = dia.hora_entrada.split(':').map(Number)
+  const [h2, m2] = dia.hora_salida.split(':').map(Number)
+  const total = ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60 - 1
+  return total >= 8
+}
+
+function validar() {
+  const e = {}
+  if (!form.value.nombre1.trim())        e.nombre1       = 'El primer nombre es obligatorio'
+  if (!form.value.apellido1.trim())      e.apellido1     = 'El primer apellido es obligatorio'
+  if (!form.value.correo.trim())         e.correo        = 'El correo es obligatorio'
+  if (!form.value.contrasena.trim())     e.contrasena    = 'La contraseña es obligatoria'
+  if (form.value.contrasena.length < 6) e.contrasena    = 'Mínimo 6 caracteres'
+  if (!form.value.fecha_ingreso)         e.fecha_ingreso = 'La fecha de ingreso es obligatoria'
+
+  const diasActivos = diasSemana.value.filter(d => d.activo)
+  if (diasActivos.length === 0)
+    e.dias = 'Debe activar al menos un día de trabajo'
+
+  const diaInvalido = diasActivos.find(d => !d.dia_descanso && !horasValidas(d))
+  if (diaInvalido)
+    e.dias = `El día ${diaInvalido.nombre} no cumple las 8 horas mínimas`
+
+  errores.value = e
+  return Object.keys(e).length === 0
+}
+
+async function registrar() {
+  errorGeneral.value = ''
+  if (!validar()) return
+  cargando.value = true
+
+  const diasActivos = diasSemana.value
+    .filter(d => d.activo)
+    .map(d => ({
+      dia:          d.key,
+      hora_entrada: d.hora_entrada,
+      hora_salida:  d.hora_salida,
+      dia_descanso: d.dia_descanso,
+    }))
+
+  try {
+    await barberoService.registrar({ ...form.value, dias: diasActivos })
+    exitoso.value = true
+    setTimeout(() => router.push('/admin/barberos'), 1500)
+  } catch (err) {
+    errorGeneral.value = err.response?.data?.mensaje || 'Error al registrar el barbero'
+  } finally {
+    cargando.value = false
+  }
+}
+</script>
+
+<style scoped>
+.registrar {
+  max-width: 900px;
+}
+
+.registrar__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.registrar__title {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.registrar__subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.registrar__alerta {
+  padding: 0.875rem 1.25rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.registrar__alerta--error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--color-rojo-vintage);
+}
+
+.registrar__alerta--exito {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+
+.registrar__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.registrar__seccion {
+  padding: 1.75rem;
+}
+
+.registrar__seccion-header {
+  margin-bottom: 1.5rem;
+}
+
+.registrar__seccion-titulo {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 0.375rem;
+}
+
+.registrar__seccion-desc {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.registrar__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.registrar__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.registrar__error {
+  font-size: 0.75rem;
+  color: var(--color-rojo-vintage);
+  margin-top: 0.25rem;
+}
+
+.input-field--error {
+  border-color: var(--color-rojo-vintage) !important;
+  box-shadow: 0 0 0 3px rgba(166, 43, 43, 0.1);
+}
+
+/* Días de la semana */
+.registrar__dias {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.registrar__dia {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.registrar__dia--activo {
+  border-color: var(--color-azul-real);
+  box-shadow: 0 2px 8px rgba(22, 62, 113, 0.08);
+}
+
+.registrar__dia--inactivo {
+  opacity: 0.6;
+}
+
+.registrar__dia-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.registrar__dia-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.registrar__dia-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-azul-real);
+  cursor: pointer;
+}
+
+.registrar__dia-nombre {
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.registrar__dia-horas {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+}
+
+.registrar__dia-horas--ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.registrar__dia-horas--mal {
+  background: #fee2e2;
+  color: var(--color-rojo-vintage);
+}
+
+.registrar__dia-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  background: var(--color-oro-suave);
+  color: var(--color-bronce);
+}
+
+.registrar__dia-body {
+  padding: 1rem;
+  background: var(--color-bg-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.registrar__dia-horas-inputs {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.registrar__campo-pequeño {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.registrar__dia-separador {
+  font-size: 1rem;
+  color: var(--color-bronce);
+  padding-bottom: 0.625rem;
+}
+
+.registrar__descanso-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.registrar__descanso-toggle input[type="checkbox"] {
+  accent-color: var(--color-azul-real);
+  cursor: pointer;
+}
+
+.registrar__dia-inactivo-msg {
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  background: var(--color-bg-primary);
+  font-style: italic;
+}
+
+.registrar__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .registrar__grid,
+  .registrar__dias {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

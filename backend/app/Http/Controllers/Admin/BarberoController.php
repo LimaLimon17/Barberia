@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EditarBarberoRequest;
+use App\Http\Requests\RegistrarBarberoRequest;
 use App\Models\Barbero;
 use App\Models\HorarioSemanal;
 use Illuminate\Http\Request;
@@ -174,6 +175,112 @@ class BarberoController extends Controller
                 'antiguedad_dias' => $barbero->antiguedad_dias,
                 'estado' => $barbero->estado_texto,
             ],
+        ], 200);
+    }
+    /**
+     * HU-02: Registrar nuevo barbero con horario inicial obligatorio.
+     */
+    public function store(RegistrarBarberoRequest $request)
+    {
+        $admin = $request->user();
+        $ip    = $request->ip();
+
+        $idBarberoNuevo = null;
+
+        try {
+            DB::statement('CALL sp_RegistrarBarbero(?, ?, ?, ?, ?, ?, ?, ?, ?, @id_barbero)', [
+                $request->input('nombre1'),
+                $request->input('nombre2', ''),
+                $request->input('apellido1'),
+                $request->input('apellido2', ''),
+                $request->input('correo'),
+                $request->input('contrasena'),
+                $request->input('fecha_ingreso'),
+                $admin->IdUsuario,
+                $ip,
+            ]);
+
+            $resultado      = DB::select('SELECT @id_barbero AS id')[0];
+            $idBarberoNuevo = $resultado->id;
+
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+
+            if (str_contains($message, 'El correo ya está registrado')) {
+                return response()->json([
+                    'mensaje' => 'El correo electrónico ya está registrado en el sistema',
+                ], 422);
+            }
+
+            if (str_contains($message, 'La fecha de ingreso no puede ser posterior')) {
+                return response()->json([
+                    'mensaje' => 'La fecha de ingreso no puede ser posterior a hoy',
+                ], 422);
+            }
+
+            return response()->json([
+                'mensaje' => 'Error al registrar el barbero',
+                'error'   => $message,
+            ], 500);
+        }
+
+        // Asignar horario inicial obligatorio
+        $dias     = json_encode($request->input('dias'));
+        $semana   = now()->weekOfYear;
+        $ano      = now()->year;
+
+        try {
+            DB::statement('CALL sp_AsignarHorarioSemanal(?, ?, ?, ?, ?, ?, @id_horario)', [
+                $idBarberoNuevo,
+                $semana,
+                $ano,
+                $dias,
+                $admin->IdUsuario,
+                $ip,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'mensaje' => 'Barbero registrado pero hubo un error al asignar el horario: ' . $e->getMessage(),
+            ], 422);
+        }
+
+        return response()->json([
+            'mensaje'      => 'Barbero registrado correctamente',
+            'id_barbero'   => $idBarberoNuevo,
+        ], 201);
+    }
+
+    /**
+     * HU-02 Escenario 4: Desactivar barbero.
+     */
+    public function destroy(Request $request, $id)
+    {
+        $admin = $request->user();
+        $ip    = $request->ip();
+
+        $barbero = Barbero::find($id);
+
+        if (!$barbero) {
+            return response()->json([
+                'mensaje' => 'Barbero no encontrado',
+            ], 404);
+        }
+
+        try {
+            DB::statement('CALL sp_DesactivarBarbero(?, ?, ?)', [
+                $barbero->IdBarbero,
+                $admin->IdUsuario,
+                $ip,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'mensaje' => 'Error al desactivar el barbero',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+
+        return response()->json([
+            'mensaje' => 'Barbero desactivado correctamente',
         ], 200);
     }
 }

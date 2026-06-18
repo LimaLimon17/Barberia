@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Barbero\PerfilController;
 use App\Http\Controllers\Admin\BarberoController;
+use App\Http\Controllers\Admin\HorarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,8 +40,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // RUTAS DEL ADMINISTRADOR (rol = 1)
     // ------------------------------------------
     Route::middleware('role:admin')->prefix('admin')->group(function () {
-        Route::get('/barberos', [BarberoController::class, 'index']);
-        Route::get('/barberos/{id}', [BarberoController::class, 'show']);
-        Route::put('/barberos/{id}', [BarberoController::class, 'update']);
-    });
+    // Barberos
+    Route::get('/barberos',           [BarberoController::class, 'index']);
+    Route::post('/barberos',          [BarberoController::class, 'store']);
+    Route::get('/barberos/{id}',      [BarberoController::class, 'show']);
+    Route::put('/barberos/{id}',      [BarberoController::class, 'update']);
+    Route::delete('/barberos/{id}',   [BarberoController::class, 'destroy']);
+
+    // Horarios
+    Route::get('/barberos/{id}/horarios',  [HorarioController::class, 'index']);
+    Route::post('/horarios',               [HorarioController::class, 'store']);
+});
 });

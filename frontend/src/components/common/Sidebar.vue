@@ -2,7 +2,10 @@
   <aside class="sidebar">
     <div class="sidebar__header">
       <div class="sidebar__logo">
-        <span class="sidebar__logo-icon">✂️</span>
+        <!-- Reemplazado el emoji por una imagen del logo. El usuario pondrá su logo en public/logo.png -->
+        <img src="/logo.png" alt="Logo Barbería" class="sidebar__logo-img" @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='inline'" />
+        <!-- Fallback si la imagen no existe -->
+        <span class="sidebar__logo-icon" style="display: none;">✂️</span>
         <div>
           <h1 class="sidebar__brand">Barbería</h1>
           <span class="sidebar__role-badge">{{ titulo }}</span>
@@ -78,6 +81,13 @@ function isActive(ruta) {
 
 .sidebar__logo-icon {
   font-size: 2rem;
+}
+
+.sidebar__logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 50%; /* Opcional, dependiendo de la forma de su logo */
 }
 
 .sidebar__brand {

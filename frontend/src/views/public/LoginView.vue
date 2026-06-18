@@ -3,7 +3,8 @@
     <div class="login-card glass-card">
       <!-- Logo y título -->
       <div class="login-card__header">
-        <div class="login-card__logo">✂️</div>
+        <img src="/logo.png" alt="Logo Barbería" class="login-card__logo-img" @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='inline-block'" />
+        <div class="login-card__logo" style="display: none;">✂️</div>
         <h1 class="login-card__title">Barbería</h1>
         <p class="login-card__subtitle">Sistema de Gestión</p>
       </div>
@@ -167,6 +168,15 @@ async function handleLogin() {
   margin-bottom: 0.75rem;
   animation: pulse-gold 2s ease infinite;
   display: inline-block;
+}
+
+.login-card__logo-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 0.75rem;
+  animation: pulse-gold 2s ease infinite;
+  border-radius: 50%;
 }
 
 .login-card__title {

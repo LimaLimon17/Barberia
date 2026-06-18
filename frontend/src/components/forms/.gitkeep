@@ -1,0 +1,7 @@
+<!-- 
+  Directorio: components/forms/
+  Aquí se colocarán formularios específicos reutilizables:
+  - FormularioReserva.vue
+  - FormularioRegistro.vue
+  - FormularioServicio.vue
+-->

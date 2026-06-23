@@ -271,12 +271,29 @@ function validar() {
   if (!form.value.fecha_ingreso)         e.fecha_ingreso = 'La fecha de ingreso es obligatoria'
 
   const diasActivos = diasSemana.value.filter(d => d.activo)
-  if (diasActivos.length === 0)
+  if (diasActivos.length === 0) {
     e.dias = 'Debe activar al menos un día de trabajo'
+  } else {
+    for (const d of diasActivos) {
+      if (d.dia_descanso) continue
 
-  const diaInvalido = diasActivos.find(d => !d.dia_descanso && !horasValidas(d))
-  if (diaInvalido)
-    e.dias = `El día ${diaInvalido.nombre} no cumple las 8 horas mínimas`
+      // Validar rango operativo 10:00 – 22:00
+      if (d.hora_entrada < '10:00') {
+        e.dias = `El día ${d.nombre}: la entrada no puede ser antes de las 10:00`
+        break
+      }
+      if (d.hora_salida > '22:00') {
+        e.dias = `El día ${d.nombre}: la salida no puede ser después de las 22:00`
+        break
+      }
+
+      // Validar mínimo 8h efectivas
+      if (!horasValidas(d)) {
+        e.dias = `El día ${d.nombre} no cumple las 8 horas mínimas efectivas (se descuenta 1h de almuerzo)`
+        break
+      }
+    }
+  }
 
   errores.value = e
   return Object.keys(e).length === 0

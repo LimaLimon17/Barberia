@@ -20,6 +20,7 @@ import ListaBarberos from '../views/admin/ListaBarberos.vue'
 import PerfilBarberoAdmin from '../views/admin/PerfilBarberoAdmin.vue'
 import EditarBarbero from '../views/admin/EditarBarbero.vue'
 import RegistrarBarbero from '../views/admin/RegistrarBarbero.vue'
+import GestionHorarios from '../views/admin/GestionHorarios.vue'
 
 const routes = [
   // ==========================================
@@ -116,17 +117,23 @@ const routes = [
         props: true,
       },
       {
-  path: 'barberos/nuevo',
-  name: 'RegistrarBarbero',
-  component: RegistrarBarbero,
-  meta: { title: 'Registrar Barbero' },
-},
-      {
+        path: 'barberos/nuevo',
+        name: 'RegistrarBarbero',
+        component: RegistrarBarbero,
+        meta: { title: 'Registrar Barbero' },
+      },
+       {
         path: 'barberos/:id/editar',
         name: 'EditarBarbero',
         component: EditarBarbero,
         meta: { title: 'Editar Barbero' },
         props: true,
+        },
+        {
+        path: 'horarios',
+        name: 'GestionHorarios',
+        component: GestionHorarios,
+        meta: { title: 'Gestión de Horarios' },
       },
     ],
   },

@@ -8,10 +8,20 @@ const barberoService = {
     return response.data
   },
 
+  // Alias para compatibilidad con ListaBarberos existente
+  async getBarberos() {
+    return this.getAll()
+  },
+
   // Obtener un barbero por ID
   async getById(id) {
     const response = await api.get(`/admin/barberos/${id}`)
     return response.data
+  },
+
+  // Alias para compatibilidad con PerfilBarberoAdmin y EditarBarbero existentes
+  async getBarbero(id) {
+    return this.getById(id)
   },
 
   // Registrar nuevo barbero con horario inicial
@@ -24,6 +34,11 @@ const barberoService = {
   async editar(id, datos) {
     const response = await api.put(`/admin/barberos/${id}`, datos)
     return response.data
+  },
+
+  // Alias para compatibilidad con EditarBarbero existente
+  async editarBarbero(id, datos) {
+    return this.editar(id, datos)
   },
 
   // Desactivar barbero
@@ -41,6 +56,18 @@ const barberoService = {
   // Crear nuevo horario semanal
   async crearHorario(datos) {
     const response = await api.post('/admin/horarios', datos)
+    return response.data
+  },
+
+  // Obtener estado de horarios de una semana
+  async getHorarioSemana(semana, ano) {
+    const response = await api.get(`/admin/horarios-semana?semana=${semana}&ano=${ano}`)
+    return response.data
+  },
+
+  // Generar horarios de la semana (FIFO + rotación almuerzo)
+  async generarHorarioSemana(semana, ano) {
+    const response = await api.post('/admin/horarios-semana', { semana, ano })
     return response.data
   },
 

@@ -8,7 +8,8 @@ import LayoutAdmin from '../layouts/LayoutAdmin.vue'
 
 // Vistas públicas
 import LoginView from '../views/public/LoginView.vue'
-
+import HomeView from '../views/public/HomeView.vue'
+import ReservarView from '../views/public/ReservarView.vue'
 // Vistas del barbero
 import DashboardBarbero from '../views/barbero/DashboardBarbero.vue'
 import PerfilBarbero from '../views/barbero/PerfilBarbero.vue'
@@ -39,6 +40,21 @@ const routes = [
         meta: { requiresAuth: false, title: 'Iniciar Sesión' },
       },
     ],
+  },
+
+  //RUTA PAGINA PUBLICA
+  {
+    path: '/inicio',
+    name: 'Home',
+    component: HomeView,
+    meta: { title: 'The Lamplight Barber Shop' }
+  },
+ // RUTA PUBLICA - WIZARD DE RESERVA (HU-04 / HU-05)
+  {
+    path: '/reservar',
+    name: 'Reservar',
+    component: ReservarView,
+    meta: { title: 'Reservar Cita' },
   },
 
   // ==========================================

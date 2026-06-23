@@ -6,6 +6,9 @@ use App\Http\Controllers\Barbero\PerfilController;
 use App\Http\Controllers\Admin\BarberoController;
 use App\Http\Controllers\Admin\HorarioController;
 
+use App\Http\Controllers\PublicController;
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Public\ReservaController;
 /*
 |--------------------------------------------------------------------------
 | API Routes - Sistema Barbería
@@ -20,6 +23,31 @@ use App\Http\Controllers\Admin\HorarioController;
 // RUTAS PÚBLICAS (sin autenticación)
 // ==========================================
 Route::post('/login', [LoginController::class, 'login']);
+// --- RUTAS PÚBLICAS (Catálogo y Flujo de Reservas del Cliente) ---
+Route::get('/catalogo', [PublicController::class, 'obtenerCatalogoHome']);
+Route::get('/cliente/buscar/{ci}', [PublicController::class, 'buscarClientePorCI']);
+Route::post('/reservas/crear', [PublicController::class, 'crearReservaTentativa']);
+Route::post('/reservas/procesar-pago', [PublicController::class, 'procesarValidacionPago']);
+
+// Rutas públicas del flujo de reserva 
+
+Route::prefix('clientes')->group(function () {
+    Route::get('/{ci}', [ReservaController::class, 'buscarClientePorCI']);
+});
+
+Route::prefix('barberos')->group(function () {
+    Route::get('/disponibilidad', [ReservaController::class, 'disponibilidadBarberos']);
+});
+
+Route::get('/servicios', [ReservaController::class, 'serviciosPorCategoria']);
+
+Route::get('/disponibilidad/slots', [ReservaController::class, 'slotsDisponibles']);
+
+Route::prefix('reservas')->group(function () {
+    Route::post('/', [ReservaController::class, 'store']);
+    Route::get('/{idReserva}/estado', [ReservaController::class, 'estado']);
+    Route::post('/{idReserva}/confirmar-pago', [ReservaController::class, 'confirmarPago']);
+});
 
 // ==========================================
 // RUTAS PROTEGIDAS (requieren token Sanctum)

@@ -69,6 +69,11 @@
           <span v-if="authStore.cargando" class="login-form__spinner"></span>
           <span v-else>Ingresar</span>
         </button>
+        <div class="login__actions" style="text-align: center; margin-top: 1.5rem;">
+  <router-link to="/inicio" style="color: var(--color-gold-400); text-decoration: none; font-size: 0.875rem;">
+    ← Volver Sitio Público
+  </router-link>
+</div>
       </form>
 
       <p class="login-card__footer">

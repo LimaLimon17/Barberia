@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Barbero\PerfilController;
 use App\Http\Controllers\Admin\BarberoController;
 use App\Http\Controllers\Admin\HorarioController;
+use App\Http\Controllers\Admin\HorarioSemanalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,5 +51,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Horarios
     Route::get('/barberos/{id}/horarios',  [HorarioController::class, 'index']);
     Route::post('/horarios',               [HorarioController::class, 'store']);
+
+    // Horarios semanales (FIFO + rotación almuerzo)
+    Route::get('/horarios-semana',              [HorarioSemanalController::class, 'index']);
+    Route::post('/horarios-semana',             [HorarioSemanalController::class, 'store']);
+    Route::put('/horarios-semana/{id}/descanso',[HorarioSemanalController::class, 'update']);
+        
 });
 });

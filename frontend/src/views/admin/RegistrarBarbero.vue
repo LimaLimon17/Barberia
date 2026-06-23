@@ -235,13 +235,13 @@ const form = ref({
 })
 
 const diasSemana = ref([
-  { key: 'Lunes',     nombre: 'Lunes',     activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
-  { key: 'Martes',    nombre: 'Martes',    activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
-  { key: 'Miércoles', nombre: 'Miércoles', activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
-  { key: 'Jueves',    nombre: 'Jueves',    activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
-  { key: 'Viernes',   nombre: 'Viernes',   activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
-  { key: 'Sábado',    nombre: 'Sábado',    activo: true,  hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: false },
-  { key: 'Domingo',   nombre: 'Domingo',   activo: false, hora_entrada: '09:00', hora_salida: '19:00', dia_descanso: true  },
+  { key: 'Lunes',     nombre: 'Lunes',     activo: true,  hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: false },
+  { key: 'Martes',    nombre: 'Martes',    activo: true,  hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: false },
+  { key: 'Miércoles', nombre: 'Miércoles', activo: true,  hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: false },
+  { key: 'Jueves',    nombre: 'Jueves',    activo: true,  hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: false },
+  { key: 'Viernes',   nombre: 'Viernes',   activo: true,  hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: false },
+  { key: 'Sábado',    nombre: 'Sábado',    activo: true,  hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: false },
+  { key: 'Domingo',   nombre: 'Domingo',   activo: false, hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: true  },
 ])
 
 function calcularHoras(dia) {

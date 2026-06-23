@@ -59,6 +59,18 @@ const barberoService = {
     return response.data
   },
 
+  // Obtener estado de horarios de una semana
+  async getHorarioSemana(semana, ano) {
+    const response = await api.get(`/admin/horarios-semana?semana=${semana}&ano=${ano}`)
+    return response.data
+  },
+
+  // Generar horarios de la semana (FIFO + rotación almuerzo)
+  async generarHorarioSemana(semana, ano) {
+    const response = await api.post('/admin/horarios-semana', { semana, ano })
+    return response.data
+  },
+
 }
 
 export default barberoService

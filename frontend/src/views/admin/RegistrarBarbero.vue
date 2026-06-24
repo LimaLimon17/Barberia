@@ -235,6 +235,7 @@ const errorGeneral = ref('')
 const exitoso      = ref(false)
 const errores      = ref({})
 const hoy = new Date().toISOString().split('T')[0]
+const verContrasena = ref(false)
 
 const form = ref({
   nombre1:       '',
@@ -573,4 +574,28 @@ async function registrar() {
     grid-template-columns: 1fr;
   }
 }
+
+.registrar__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.registrar__input-wrapper .input-field {
+  padding-right: 2.75rem;
+}
+
+.registrar__ojo {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  line-height: 1;
+  color: var(--color-bronce);
+  user-select: none;
+}  
+  
 </style>

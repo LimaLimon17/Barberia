@@ -14,7 +14,7 @@
       <button @click="cambiarSemana(-1)" class="btn-secondary horarios__nav-btn">← Anterior</button>
       <div class="horarios__nav-info">
         <span class="horarios__semana-label">Semana {{ semana }}</span>
-        <span class="horarios__ano-label">Año {{ ano }}</span>
+        <span class="horarios__ano-label">{{ getRangoSemana(semana, ano) }} · {{ ano }}</span>
       </div>
       <button @click="cambiarSemana(1)" class="btn-secondary horarios__nav-btn">Siguiente →</button>
     </div>
@@ -185,6 +185,19 @@ function getWeekNumber(d) {
   date.setUTCDate(date.getUTCDate() + 4 - dayNum)
   const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
   return Math.ceil((((date - yearStart) / 86400000) + 1) / 7)
+}
+
+function getRangoSemana(semana, ano) {
+  // Calcular lunes de la semana ISO
+  const simple = new Date(ano, 0, 1 + (semana - 1) * 7)
+  const dow    = simple.getDay()
+  const lunes  = new Date(simple)
+  lunes.setDate(simple.getDate() - (dow <= 4 ? dow - 1 : dow - 8))
+  const domingo = new Date(lunes)
+  domingo.setDate(lunes.getDate() + 6)
+
+  const opts = { day: 'numeric', month: 'short' }
+  return `${lunes.toLocaleDateString('es-BO', opts)} – ${domingo.toLocaleDateString('es-BO', opts)}`
 }
 
 async function cargar() {

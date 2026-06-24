@@ -234,7 +234,7 @@ const cargando     = ref(false)
 const errorGeneral = ref('')
 const exitoso      = ref(false)
 const errores      = ref({})
-const hoy          = new Date().toISOString().split('T')[0]
+const hoy = new Date().toISOString().split('T')[0]
 
 const form = ref({
   nombre1:       '',
@@ -243,7 +243,7 @@ const form = ref({
   apellido2:     '',
   correo:        '',
   contrasena:    '',
-  fecha_ingreso: '',
+  fecha_ingreso: hoy,
 })
 
 const diasSemana = ref([

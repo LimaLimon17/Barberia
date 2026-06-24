@@ -87,16 +87,28 @@
 
           <div class="registrar__campo">
             <label class="label">Contraseña *</label>
-            <input
-              v-model="form.contrasena"
-              type="password"
-              placeholder="Mínimo 6 caracteres"
-              class="input-field"
-              :class="{ 'input-field--error': errores.contrasena }"
-            />
+            <div class="registrar__input-wrapper">
+              <input
+                v-model="form.contrasena"
+                :type="verContrasena ? 'text' : 'password'"
+                placeholder="Mínimo 6 caracteres"
+                class="input-field"
+                :class="{ 'input-field--error': errores.contrasena }"
+              />
+              <button
+                type="button"
+                @mousedown="verContrasena = true"
+                @mouseup="verContrasena = false"
+                @mouseleave="verContrasena = false"
+                class="registrar__ojo"
+                tabindex="-1"
+              >
+                {{ verContrasena ? '🙈' : '👁️' }}
+              </button>
+            </div>
             <span v-if="errores.contrasena" class="registrar__error">{{ errores.contrasena }}</span>
           </div>
-
+          
           <div class="registrar__campo">
             <label class="label">Fecha de ingreso *</label>
             <input

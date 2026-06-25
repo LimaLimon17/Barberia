@@ -71,6 +71,29 @@ const barberoService = {
     return response.data
   },
 
+  // Ver registros de almuerzo de un barbero
+  async getAlmuerzos(idBarbero, fechaInicio = null, fechaFin = null) {
+    let url = `/admin/barberos/${idBarbero}/almuerzos`
+    if (fechaInicio && fechaFin) url += `?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`
+    const response = await api.get(url)
+    return response.data
+  },
+
+  // Registrar salida a almuerzo
+  async registrarSalidaAlmuerzo(idBarbero, datos) {
+    const response = await api.post(`/admin/barberos/${idBarbero}/almuerzos`, datos)
+    return response.data
+  },
+
+  // Registrar retorno de almuerzo
+  async registrarRetornoAlmuerzo(idBarbero, idRegistro, horaRetorno) {
+    const response = await api.put(
+      `/admin/barberos/${idBarbero}/almuerzos/${idRegistro}`,
+      { hora_retorno: horaRetorno }
+    )
+    return response.data
+  },
+
 }
 
 export default barberoService

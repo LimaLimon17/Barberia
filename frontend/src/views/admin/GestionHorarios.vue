@@ -5,7 +5,7 @@
     <div class="horarios__header">
       <div>
         <h1 class="horarios__title">Gestión de <span class="gold-text">Horarios Semanales</span></h1>
-        <p class="horarios__subtitle">Asignación FIFO de descansos y rotación de turno de almuerzo</p>
+        <p class="horarios__subtitle">Asignación FIFO de descansos por antigüedad</p>
       </div>
     </div>
 
@@ -25,40 +25,38 @@
       <p>Cargando horarios...</p>
     </div>
 
-    <!-- Error -->
-    <div v-if="error" class="horarios__alerta horarios__alerta--error">⚠️ {{ error }}</div>
-
-    <!-- Éxito -->
+    <!-- Alertas -->
+    <div v-if="error"        class="horarios__alerta horarios__alerta--error">⚠️ {{ error }}</div>
     <div v-if="mensajeExito" class="horarios__alerta horarios__alerta--exito">✅ {{ mensajeExito }}</div>
 
     <div v-if="!cargando && datos">
 
-    <!-- Panel explicativo -->
-    <div class="glass-card horarios__info">
-      <div class="horarios__info-item">
-        <span class="horarios__info-ico">🟢</span>
-        <div>
-          <strong>Lógica FIFO</strong>
-          <p>Mayor antigüedad descansa primero — Lunes tiene prioridad</p>
+      <!-- Panel informativo -->
+      <div class="glass-card horarios__info">
+        <div class="horarios__info-item">
+          <span class="horarios__info-ico">🟢</span>
+          <div>
+            <strong>Lógica FIFO</strong>
+            <p>Mayor antigüedad descansa primero — Lunes tiene prioridad</p>
+          </div>
+        </div>
+        <div class="horarios__info-item">
+          <span class="horarios__info-ico">📋</span>
+          <div>
+            <strong>Días de descanso</strong>
+            <p>Se asignan de Lunes a Jueves según orden de antigüedad</p>
+          </div>
+        </div>
+        <div class="horarios__info-item">
+          <span class="horarios__info-ico">⏰</span>
+          <div>
+            <strong>Horario operativo</strong>
+            <p>10:00 – 22:00 · Mínimo 8 horas efectivas por día laboral</p>
+          </div>
         </div>
       </div>
-      <div class="horarios__info-item">
-        <span class="horarios__info-ico">📋</span>
-        <div>
-          <strong>Días de descanso</strong>
-          <p>Se asignan de Lunes a Jueves según orden de antigüedad</p>
-        </div>
-      </div>
-      <div class="horarios__info-item">
-        <span class="horarios__info-ico">⏰</span>
-        <div>
-          <strong>Horario operativo</strong>
-          <p>10:00 – 22:00 · Mínimo 8 horas efectivas por día laboral</p>
-        </div>
-      </div>
-    </div>
 
-      <!-- Tabla de barberos y descansos -->
+      <!-- Tabla -->
       <div class="glass-card horarios__tabla-wrap">
         <div class="horarios__tabla-header">
           <h2 class="horarios__tabla-titulo">📅 Barberos — Semana {{ semana }}</h2>
@@ -75,74 +73,71 @@
 
         <table class="horarios__tabla">
           <thead>
-          <tr>
-            <th>Orden FIFO</th>
-            <th>Barbero</th>
-            <th>Antigüedad</th>
-            <th>Día de descanso</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(barbero, index) in datos.barberos"
-            :key="barbero.id_barbero"
-            class="horarios__fila"
-          >
-            <td>
-              <span class="horarios__orden">{{ index + 1 }}</span>
-            </td>
-            <td>
-              <div class="horarios__barbero">
-                <div class="horarios__avatar">{{ barbero.nombre_completo.charAt(0) }}</div>
-                <span>{{ barbero.nombre_completo }}</span>
-              </div>
-            </td>
-            <td>
-              <span class="horarios__antiguedad">{{ barbero.antiguedad_dias }} días</span>
-            </td>
-            <td>
-              <span v-if="barbero.dia_descanso_fifo" class="horarios__descanso-badge">
-                🗓️ {{ barbero.dia_descanso_fifo }}
-              </span>
-              <span v-else class="horarios__muted">Sin descanso esta semana</span>
-            </td>
-            <td>
-              <span v-if="barbero.horario_generado" class="badge-active">● Generado</span>
-              <span v-else class="badge-inactive">● Pendiente</span>
-            </td>
-            <td>
-              <div class="horarios__acciones">
-                <router-link
-                  :to="`/admin/barberos/${barbero.id_barbero}/horario`"
-                  class="horarios__btn horarios__btn--ver"
-                  title="Ver horario"
-                >
-                  📅 Ver horario
-                </router-link>
-                <router-link
-                  :to="`/admin/barberos/${barbero.id_barbero}/horario/editar`"
-                  class="horarios__btn horarios__btn--editar"
-                  title="Editar horario"
-                >
-                  ✏️ Editar
-                </router-link>
-                <router-link
-                  :to="`/admin/barberos/${barbero.id_barbero}/almuerzos`"
-                  class="horarios__btn horarios__btn--almuerzo"
-                  title="Ver registro de almuerzos"
-                >
-                  🍽️ Almuerzos
-                </router-link>
-              </div>
-            </td>
-          </tr>
-        </tbody>
+            <tr>
+              <th>Orden FIFO</th>
+              <th>Barbero</th>
+              <th>Antigüedad</th>
+              <th>Día de descanso</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(barbero, index) in datos.barberos"
+              :key="barbero.id_barbero"
+              class="horarios__fila"
+            >
+              <td>
+                <span class="horarios__orden">{{ index + 1 }}</span>
+              </td>
+              <td>
+                <div class="horarios__barbero">
+                  <div class="horarios__avatar">{{ barbero.nombre_completo.charAt(0) }}</div>
+                  <span>{{ barbero.nombre_completo }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="horarios__antiguedad">{{ barbero.antiguedad_dias }} días</span>
+              </td>
+              <td>
+                <span v-if="barbero.dia_descanso_fifo" class="horarios__descanso-badge">
+                  🗓️ {{ barbero.dia_descanso_fifo }}
+                </span>
+                <span v-else class="horarios__muted">Sin descanso esta semana</span>
+              </td>
+              <td>
+                <span v-if="barbero.horario_generado" class="badge-active">● Generado</span>
+                <span v-else class="badge-inactive">● Pendiente</span>
+              </td>
+              <td>
+                <div class="horarios__acciones">
+                  <router-link
+                    :to="`/admin/barberos/${barbero.id_barbero}/horario`"
+                    class="horarios__btn horarios__btn--ver"
+                  >
+                    📅 Ver horario
+                  </router-link>
+                  <router-link
+                    :to="`/admin/barberos/${barbero.id_barbero}/horario/editar`"
+                    class="horarios__btn horarios__btn--editar"
+                  >
+                    ✏️ Editar
+                  </router-link>
+                  <router-link
+                    :to="`/admin/barberos/${barbero.id_barbero}/almuerzos`"
+                    class="horarios__btn horarios__btn--almuerzo"
+                  >
+                    🍽️ Almuerzos
+                  </router-link>
+                </div>
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
 
-      <!-- Leyenda de reglas -->
+      <!-- Leyenda -->
       <div class="glass-card horarios__leyenda">
         <h3 class="horarios__leyenda-titulo">📌 Reglas del sistema</h3>
         <div class="horarios__leyenda-grid">
@@ -170,10 +165,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import barberoService from '../../services/barberoService.js'
 
-// Semana actual
 const hoy    = new Date()
 const semana = ref(getWeekNumber(hoy))
 const ano    = ref(hoy.getFullYear())
@@ -192,15 +186,13 @@ function getWeekNumber(d) {
   return Math.ceil((((date - yearStart) / 86400000) + 1) / 7)
 }
 
-function getRangoSemana(semana, ano) {
-  // Calcular lunes de la semana ISO
-  const simple = new Date(ano, 0, 1 + (semana - 1) * 7)
+function getRangoSemana(sem, yr) {
+  const simple = new Date(yr, 0, 1 + (sem - 1) * 7)
   const dow    = simple.getDay()
   const lunes  = new Date(simple)
   lunes.setDate(simple.getDate() - (dow <= 4 ? dow - 1 : dow - 8))
   const domingo = new Date(lunes)
   domingo.setDate(lunes.getDate() + 6)
-
   const opts = { day: 'numeric', month: 'short' }
   return `${lunes.toLocaleDateString('es-BO', opts)} – ${domingo.toLocaleDateString('es-BO', opts)}`
 }
@@ -223,7 +215,7 @@ async function generarSemana() {
   mensajeExito.value = ''
   try {
     await barberoService.generarHorarioSemana(semana.value, ano.value)
-    mensajeExito.value = `Semana ${semana.value} generada correctamente con FIFO y rotación de almuerzo`
+    mensajeExito.value = `Semana ${semana.value} generada correctamente`
     await cargar()
     setTimeout(() => { mensajeExito.value = '' }, 5000)
   } catch (err) {
@@ -265,7 +257,6 @@ onMounted(cargar)
   color: var(--color-text-muted);
 }
 
-/* Navegación semanas */
 .horarios__nav {
   display: flex;
   align-items: center;
@@ -295,7 +286,6 @@ onMounted(cargar)
   color: var(--color-text-muted);
 }
 
-/* Loading */
 .horarios__loading {
   display: flex;
   flex-direction: column;
@@ -316,18 +306,15 @@ onMounted(cargar)
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Alertas */
 .horarios__alerta {
   padding: 0.875rem 1.25rem;
   border-radius: var(--radius-lg);
   font-size: 0.875rem;
   margin-bottom: 1.25rem;
 }
+.horarios__alerta--error { background:#fef2f2; border:1px solid #fecaca; color:var(--color-rojo-vintage); }
+.horarios__alerta--exito { background:#f0fdf4; border:1px solid #bbf7d0; color:#15803d; }
 
-.horarios__alerta--error { background: #fef2f2; border: 1px solid #fecaca; color: var(--color-rojo-vintage); }
-.horarios__alerta--exito { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
-
-/* Panel info */
 .horarios__info {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -354,7 +341,6 @@ onMounted(cargar)
 
 .horarios__info-item p { font-size: 0.8125rem; color: var(--color-text-secondary); }
 
-/* Tabla */
 .horarios__tabla-wrap { padding: 0; overflow-x: auto; margin-bottom: 1.25rem; }
 
 .horarios__tabla-header {
@@ -381,10 +367,7 @@ onMounted(cargar)
   border-radius: 9999px;
 }
 
-.horarios__tabla {
-  width: 100%;
-  border-collapse: collapse;
-}
+.horarios__tabla { width: 100%; border-collapse: collapse; }
 
 .horarios__tabla th {
   text-align: left;
@@ -407,8 +390,6 @@ onMounted(cargar)
 .horarios__fila { transition: background 0.15s; }
 .horarios__fila:hover { background: var(--color-bg-hover); }
 .horarios__fila:last-child td { border-bottom: none; }
-
-.horarios__fila--almuerzo { background: rgba(232, 220, 196, 0.2); }
 
 .horarios__orden {
   display: inline-flex;
@@ -459,22 +440,37 @@ onMounted(cargar)
   font-weight: 600;
 }
 
-.horarios__almuerzo-badge {
+.horarios__muted { font-size: 0.8125rem; color: var(--color-text-muted); font-style: italic; }
+
+.horarios__acciones {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.horarios__btn {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.75rem;
-  background: var(--color-oro-suave);
-  color: var(--color-bronce);
-  border: 1px solid var(--color-bronce);
-  border-radius: 9999px;
+  padding: 0.35rem 0.65rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
 
-.horarios__muted { font-size: 0.8125rem; color: var(--color-text-muted); font-style: italic; }
+.horarios__btn--ver    { background:#EEF2FF; color:#3730a3; border-color:#c7d2fe; }
+.horarios__btn--ver:hover { background:#e0e7ff; }
 
-/* Leyenda */
+.horarios__btn--editar { background:var(--color-oro-suave); color:var(--color-bronce); border-color:var(--color-bronce); }
+.horarios__btn--editar:hover { background:#ddd5c0; }
+
+.horarios__btn--almuerzo { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
+.horarios__btn--almuerzo:hover { background:#dcfce7; }
+
 .horarios__leyenda { padding: 1.25rem 1.5rem; }
 
 .horarios__leyenda-titulo {
@@ -498,48 +494,6 @@ onMounted(cargar)
   color: var(--color-text-secondary);
   line-height: 1.5;
 }
-
-.horarios__acciones {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.horarios__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.35rem 0.65rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  border-radius: var(--radius-md);
-  text-decoration: none;
-  border: 1px solid transparent;
-  transition: all 0.2s;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.horarios__btn--ver {
-  background: #EEF2FF;
-  color: #3730a3;
-  border-color: #c7d2fe;
-}
-.horarios__btn--ver:hover { background: #e0e7ff; }
-
-.horarios__btn--editar {
-  background: var(--color-oro-suave);
-  color: var(--color-bronce);
-  border-color: var(--color-bronce);
-}
-.horarios__btn--editar:hover { background: #ddd5c0; }
-
-.horarios__btn--almuerzo {
-  background: #f0fdf4;
-  color: #15803d;
-  border-color: #bbf7d0;
-}
-.horarios__btn--almuerzo:hover { background: #dcfce7; }
 
 .horarios__leyenda-ico { flex-shrink: 0; font-size: 1rem; margin-top: 0.1rem; }
 </style>

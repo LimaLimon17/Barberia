@@ -25,6 +25,11 @@ const menuItems = [
     ruta: '/admin/barberos',
     icono: '✂️',
   },
+  {
+    nombre: 'Horarios',
+    ruta: '/admin/horarios',
+    icono: '🗓️',
+  },
 ]
 </script>
 

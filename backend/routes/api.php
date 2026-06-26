@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Barbero\PerfilController;
 use App\Http\Controllers\Admin\BarberoController;
+use App\Http\Controllers\Admin\HorarioController;
+use App\Http\Controllers\Admin\HorarioSemanalController;
+use App\Http\Controllers\Admin\AlmuerzoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,8 +42,26 @@ Route::middleware('auth:sanctum')->group(function () {
     // RUTAS DEL ADMINISTRADOR (rol = 1)
     // ------------------------------------------
     Route::middleware('role:admin')->prefix('admin')->group(function () {
-        Route::get('/barberos', [BarberoController::class, 'index']);
-        Route::get('/barberos/{id}', [BarberoController::class, 'show']);
-        Route::put('/barberos/{id}', [BarberoController::class, 'update']);
-    });
+    // Barberos
+    Route::get('/barberos',           [BarberoController::class, 'index']);
+    Route::post('/barberos',          [BarberoController::class, 'store']);
+    Route::get('/barberos/{id}',      [BarberoController::class, 'show']);
+    Route::put('/barberos/{id}',      [BarberoController::class, 'update']);
+    Route::delete('/barberos/{id}',   [BarberoController::class, 'destroy']);
+
+    // Horarios
+    Route::get('/barberos/{id}/horarios',  [HorarioController::class, 'index']);
+    Route::post('/horarios',               [HorarioController::class, 'store']);
+
+    // Horarios semanales (FIFO + rotación almuerzo)
+    Route::get('/horarios-semana',              [HorarioSemanalController::class, 'index']);
+    Route::post('/horarios-semana',             [HorarioSemanalController::class, 'store']);
+    Route::put('/horarios-semana/{id}/descanso',[HorarioSemanalController::class, 'update']);
+
+     // Registros de almuerzo
+    Route::get('/barberos/{id}/almuerzos',           [AlmuerzoController::class, 'index']);
+    Route::post('/barberos/{id}/almuerzos',          [AlmuerzoController::class, 'store']);
+    Route::put('/barberos/{id}/almuerzos/{idReg}',   [AlmuerzoController::class, 'update']);
+        
+});
 });

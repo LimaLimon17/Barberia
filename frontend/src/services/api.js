@@ -25,6 +25,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
+      // No recargar si es la petición de login fallida
+      if (error.config && error.config.url === '/login') {
+        return Promise.reject(error)
+      }
+
       localStorage.removeItem('auth_token')
       localStorage.removeItem('usuario')
       window.location.href = '/login'

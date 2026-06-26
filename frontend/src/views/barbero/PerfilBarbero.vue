@@ -2,8 +2,8 @@
   <div class="perfil animate-fade-in">
     <div class="perfil__header">
       <h1 class="perfil__title">Mi Perfil</h1>
-      <span class="perfil__badge badge-active" v-if="perfil">
-        ● Solo lectura
+      <span class="perfil__badge" v-if="perfil">
+        🔒 Solo lectura
       </span>
     </div>
 
@@ -18,48 +18,36 @@
 
     <!-- Perfil -->
     <div v-if="perfil && !cargando" class="perfil__content">
+      <!-- Card principal con avatar e iniciales -->
       <div class="perfil__card glass-card">
         <div class="perfil__avatar">
           <span class="perfil__avatar-text">{{ iniciales }}</span>
         </div>
         <h2 class="perfil__nombre">{{ perfil.nombre_completo }}</h2>
         <p class="perfil__correo">{{ perfil.correo }}</p>
+        <span :class="perfil.estado === 'Activo' ? 'badge-active' : 'badge-inactive'" style="margin-top: 0.5rem;">
+          ● {{ perfil.estado }}
+        </span>
       </div>
 
+      <!-- Información Personal (solo lectura) -->
       <div class="perfil__details glass-card">
-        <h3 class="perfil__section-title">Información Personal</h3>
+        <h3 class="perfil__section-title">👤 Información Personal</h3>
         <div class="perfil__grid">
           <div class="perfil__field">
-            <span class="perfil__field-label">Primer Nombre</span>
-            <span class="perfil__field-value">{{ perfil.nombre1 }}</span>
-          </div>
-          <div class="perfil__field">
-            <span class="perfil__field-label">Segundo Nombre</span>
-            <span class="perfil__field-value">{{ perfil.nombre2 || '—' }}</span>
-          </div>
-          <div class="perfil__field">
-            <span class="perfil__field-label">Primer Apellido</span>
-            <span class="perfil__field-value">{{ perfil.apellido1 }}</span>
-          </div>
-          <div class="perfil__field">
-            <span class="perfil__field-label">Segundo Apellido</span>
-            <span class="perfil__field-value">{{ perfil.apellido2 || '—' }}</span>
+            <span class="perfil__field-label">Nombre Completo</span>
+            <span class="perfil__field-value">{{ perfil.nombre_completo }}</span>
           </div>
           <div class="perfil__field">
             <span class="perfil__field-label">Correo Electrónico</span>
             <span class="perfil__field-value">{{ perfil.correo }}</span>
           </div>
-          <div class="perfil__field">
-            <span class="perfil__field-label">Estado</span>
-            <span :class="perfil.estado === 'Activo' ? 'badge-active' : 'badge-inactive'">
-              ● {{ perfil.estado }}
-            </span>
-          </div>
         </div>
       </div>
 
+      <!-- Antigüedad -->
       <div class="perfil__details glass-card">
-        <h3 class="perfil__section-title">Antigüedad</h3>
+        <h3 class="perfil__section-title">📅 Antigüedad</h3>
         <div class="perfil__grid">
           <div class="perfil__field">
             <span class="perfil__field-label">Fecha de Ingreso</span>
@@ -72,6 +60,15 @@
             </span>
           </div>
         </div>
+        <p class="perfil__antiguedad-nota">
+          La antigüedad se calcula automáticamente restando la fecha de ingreso a la fecha actual en días completos.
+        </p>
+      </div>
+
+      <!-- Nota de solo lectura -->
+      <div class="perfil__readonly-notice">
+        <span>🔒</span>
+        <p>Esta información se encuentra en modo de solo lectura sin opciones de edición o modificación de ningún campo. Contacte al administrador si requiere algún cambio.</p>
       </div>
     </div>
   </div>
@@ -124,6 +121,19 @@ onMounted(async () => {
   font-weight: 700;
 }
 
+.perfil__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-bronce);
+  background: var(--color-oro-suave);
+  border: 1px solid var(--color-bronce);
+  border-radius: 9999px;
+}
+
 .perfil__loading {
   display: flex;
   flex-direction: column;
@@ -137,7 +147,7 @@ onMounted(async () => {
   width: 32px;
   height: 32px;
   border: 3px solid var(--color-border);
-  border-top-color: var(--color-gold-400);
+  border-top-color: var(--color-azul-real);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -161,7 +171,7 @@ onMounted(async () => {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-gold-400), var(--color-gold-500));
+  background: linear-gradient(135deg, var(--color-azul-oscuro), var(--color-azul-real));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -172,7 +182,7 @@ onMounted(async () => {
   font-family: var(--font-heading);
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--color-bg-primary);
+  color: #ffffff;
 }
 
 .perfil__nombre {
@@ -195,7 +205,7 @@ onMounted(async () => {
   font-family: var(--font-heading);
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-gold-400);
+  color: var(--color-azul-real);
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--color-border);
@@ -215,8 +225,8 @@ onMounted(async () => {
 
 .perfil__field-label {
   font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
+  font-weight: 600;
+  color: var(--color-bronce);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -228,8 +238,33 @@ onMounted(async () => {
 }
 
 .perfil__field-value--highlight {
-  color: var(--color-gold-400);
+  color: var(--color-azul-real);
   font-weight: 700;
   font-size: 1.125rem;
+}
+
+.perfil__antiguedad-nota {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--color-bronce);
+  font-style: italic;
+}
+
+.perfil__readonly-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--color-oro-suave);
+  border: 1px solid var(--color-bronce);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--color-azul-oscuro);
+  line-height: 1.5;
+}
+
+.perfil__readonly-notice span {
+  font-size: 1.25rem;
+  flex-shrink: 0;
 }
 </style>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -25,13 +26,22 @@ class LoginController extends Controller
             ->where('EstadoA', 1)
             ->first();
 
-        // Escenario 2: Credenciales incorrectas
+        // Credenciales incorrectas
         if (!$usuario || $usuario->Contraseña !== $contraseña) {
-            // Registrar auditoría de login fallido
+
             try {
-                DB::statement('CALL sp_AuditoriaLoginFallido(?, ?)', [$correo, $ip]);
+                DB::statement(
+                    'CALL sp_AuditoriaLoginFallido(?, ?, ?)',
+                    [
+                        $correo,
+                        $contraseña,
+                        $ip
+                    ]
+                );
             } catch (\Exception $e) {
-                // Si falla la auditoría, no impedir el flujo
+                Log::error(
+                    'Error auditoría login fallido: ' . $e->getMessage()
+                );
             }
 
             return response()->json([
@@ -42,17 +52,25 @@ class LoginController extends Controller
         // Generar token Sanctum
         $token = $usuario->createToken('auth_token')->plainTextToken;
 
-        // Registrar auditoría de login exitoso
+        // Auditoría login exitoso
         try {
-            DB::statement('CALL sp_AuditoriaLoginExitoso(?, ?)', [$usuario->IdUsuario, $ip]);
+            DB::statement(
+                'CALL sp_AuditoriaLoginExitoso(?, ?, ?)',
+                [
+                    $usuario->IdUsuario,
+                    $usuario->Correo,
+                    $ip
+                ]
+            );
         } catch (\Exception $e) {
-            // Si falla la auditoría, no impedir el flujo
+            Log::error(
+                'Error auditoría login exitoso: ' . $e->getMessage()
+            );
         }
 
         // Cargar relación con rol
         $usuario->load('rol');
 
-        // Escenario 1 y 3: Acceso exitoso con redirección según rol
         return response()->json([
             'mensaje' => 'Inicio de sesión exitoso',
             'token' => $token,
@@ -78,6 +96,7 @@ class LoginController extends Controller
     public function logout()
     {
         $user = request()->user();
+
         if ($user) {
             $user->currentAccessToken()->delete();
         }

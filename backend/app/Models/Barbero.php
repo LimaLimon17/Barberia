@@ -34,11 +34,11 @@ class Barbero extends Model
     }
 
     /**
-     * Relación con horarios semanales.
+     * Relación con HorariosBarberos (asignaciones de horario).
      */
-    public function horariosSemanales()
+    public function horariosBarberos()
     {
-        return $this->hasMany(HorarioSemanal::class, 'IdBarbero', 'IdBarbero');
+        return $this->hasMany(HorarioBarbero::class, 'IdBarbero', 'IdBarbero');
     }
 
     /**

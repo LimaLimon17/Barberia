@@ -12,7 +12,6 @@ class HorarioSemanalController extends Controller
 {
     /**
      * Devuelve el estado de horarios de una semana específica.
-     * Incluye barberos, día de descanso FIFO y turno de almuerzo tardío.
      */
     public function index(Request $request)
     {
@@ -26,7 +25,7 @@ class HorarioSemanalController extends Controller
             ->orderBy('FechaIngreso', 'asc')
             ->get();
 
-        // Horarios generados para esta semana
+        // Horarios ya generados para esta semana
         $horariosGenerados = HorarioSemanal::where('Semana', $semana)
             ->where('Año', $ano)
             ->where('EstadoA', 1)
@@ -35,29 +34,19 @@ class HorarioSemanalController extends Controller
 
         $semanaGenerada = count($horariosGenerados) > 0;
 
-        // Turno de almuerzo tardío esta semana
-        $turnoAlmuerzo = DB::table('TurnoAlmuerzosTardios')
-            ->where('Semana', $semana)
-            ->where('Año', $ano)
-            ->where('EstadoA', 1)
-            ->first();
-
-        // Días FIFO asignados (posición = día)
+        // Días FIFO: posición en la lista = día asignado
         $diasFifo = ['Lunes', 'Martes', 'Miércoles', 'Jueves'];
 
-        $listaBarberos = $barberos->values()->map(function ($b, $index) use ($diasFifo, $horariosGenerados, $turnoAlmuerzo) {
+        $listaBarberos = $barberos->values()->map(function ($b, $index) use ($diasFifo, $horariosGenerados) {
             $diaDescanso = $index < count($diasFifo) ? $diasFifo[$index] : null;
 
             return [
-                'id_barbero'       => $b->IdBarbero,
-                'nombre_completo'  => $b->usuario->nombre_completo,
-                'fecha_ingreso'    => $b->FechaIngreso->format('Y-m-d'),
-                'antiguedad_dias'  => $b->antiguedad_dias,
-                'dia_descanso_fifo'=> $diaDescanso,
-                'horario_generado' => in_array($b->IdBarbero, $horariosGenerados),
-                'turno_almuerzo_tardio' => $turnoAlmuerzo
-                    ? $turnoAlmuerzo->IdBarbero === $b->IdBarbero
-                    : false,
+                'id_barbero'        => $b->IdBarbero,
+                'nombre_completo'   => $b->usuario->nombre_completo,
+                'fecha_ingreso'     => $b->FechaIngreso->format('Y-m-d'),
+                'antiguedad_dias'   => $b->antiguedad_dias,
+                'dia_descanso_fifo' => $diaDescanso,
+                'horario_generado'  => in_array($b->IdBarbero, $horariosGenerados),
             ];
         });
 
@@ -65,15 +54,12 @@ class HorarioSemanalController extends Controller
             'semana'          => (int) $semana,
             'ano'             => (int) $ano,
             'semana_generada' => $semanaGenerada,
-            'turno_almuerzo'  => $turnoAlmuerzo ? [
-                'id_barbero' => $turnoAlmuerzo->IdBarbero,
-            ] : null,
             'barberos'        => $listaBarberos,
         ], 200);
     }
 
     /**
-     * Genera los horarios de la semana aplicando FIFO y rotación de almuerzo.
+     * Genera los horarios de la semana aplicando FIFO.
      */
     public function store(Request $request)
     {
@@ -112,8 +98,7 @@ class HorarioSemanalController extends Controller
     }
 
     /**
-     * Actualiza el día de descanso de un barbero específico para la semana.
-     * Permite al admin ajustar manualmente el FIFO si hay conflictos.
+     * Actualiza el día de descanso de un barbero para la semana.
      */
     public function update(Request $request, $idBarbero)
     {
@@ -134,7 +119,6 @@ class HorarioSemanalController extends Controller
             ], 404);
         }
 
-        // Actualizar el día de descanso en Horarios
         DB::table('Horarios')
             ->where('IdHorarioSemanal', $horario->IdHorarioSemanal)
             ->update(['DiaDescanso' => 0]);

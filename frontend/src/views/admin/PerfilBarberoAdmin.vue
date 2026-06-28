@@ -8,7 +8,7 @@
         <h1 class="perfil-admin__title">Perfil del Barbero</h1>
       </div>
       <div class="perfil-admin__actions" v-if="barbero">
-        <span class="perfil-admin__badge badge-active">● Solo lectura</span>
+        <span class="perfil-admin__badge">🔒 Solo lectura</span>
         <router-link
           :to="`/admin/barberos/${id}/editar`"
           class="btn-primary"
@@ -47,20 +47,8 @@
         <h3 class="perfil-admin__section-title">👤 Información Personal</h3>
         <div class="perfil-admin__grid">
           <div class="perfil-admin__field">
-            <span class="perfil-admin__label">Primer Nombre</span>
-            <span class="perfil-admin__value">{{ barbero.nombre1 }}</span>
-          </div>
-          <div class="perfil-admin__field">
-            <span class="perfil-admin__label">Segundo Nombre</span>
-            <span class="perfil-admin__value">{{ barbero.nombre2 || '—' }}</span>
-          </div>
-          <div class="perfil-admin__field">
-            <span class="perfil-admin__label">Primer Apellido</span>
-            <span class="perfil-admin__value">{{ barbero.apellido1 }}</span>
-          </div>
-          <div class="perfil-admin__field">
-            <span class="perfil-admin__label">Segundo Apellido</span>
-            <span class="perfil-admin__value">{{ barbero.apellido2 || '—' }}</span>
+            <span class="perfil-admin__label">Nombre Completo</span>
+            <span class="perfil-admin__value">{{ barbero.nombre_completo }}</span>
           </div>
           <div class="perfil-admin__field">
             <span class="perfil-admin__label">Correo Electrónico</span>
@@ -90,11 +78,14 @@
             </span>
           </div>
         </div>
+        <p class="perfil-admin__calc-note">
+          La antigüedad se calcula automáticamente restando la fecha de ingreso a la fecha actual en días completos.
+        </p>
       </div>
 
       <!-- Configuración de horario -->
       <div class="perfil-admin__section glass-card">
-        <h3 class="perfil-admin__section-title">🕐 Configuración de Horario</h3>
+        <h3 class="perfil-admin__section-title">🕐 Configuración de Horario Asignada</h3>
         <div v-if="barbero.horarios && barbero.horarios.length" class="perfil-admin__horarios">
           <div
             v-for="horario in barbero.horarios"
@@ -112,6 +103,12 @@
         <p v-else class="perfil-admin__empty">
           No hay horario asignado para este barbero.
         </p>
+      </div>
+
+      <!-- Nota de solo lectura -->
+      <div class="perfil-admin__readonly-notice">
+        <span>🔒</span>
+        <p>Esta sección se encuentra en modo de solo lectura. Para editar la información del barbero, haga clic en el botón <strong>Editar</strong> en la parte superior.</p>
       </div>
     </div>
   </div>
@@ -187,6 +184,19 @@ onMounted(async () => {
   gap: 0.75rem;
 }
 
+.perfil-admin__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-bronce);
+  background: var(--color-oro-suave);
+  border: 1px solid var(--color-bronce);
+  border-radius: 9999px;
+}
+
 .perfil-admin__loading {
   display: flex;
   flex-direction: column;
@@ -200,7 +210,7 @@ onMounted(async () => {
   width: 32px;
   height: 32px;
   border: 3px solid var(--color-border);
-  border-top-color: var(--color-gold-400);
+  border-top-color: var(--color-azul-real);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -224,7 +234,7 @@ onMounted(async () => {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-gold-400), var(--color-gold-500));
+  background: linear-gradient(135deg, var(--color-azul-oscuro), var(--color-azul-real));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -235,7 +245,7 @@ onMounted(async () => {
   font-family: var(--font-heading);
   font-size: 1.75rem;
   font-weight: 800;
-  color: var(--color-bg-primary);
+  color: #ffffff;
 }
 
 .perfil-admin__nombre {
@@ -258,7 +268,7 @@ onMounted(async () => {
   font-family: var(--font-heading);
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-gold-400);
+  color: var(--color-azul-real);
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--color-border);
@@ -278,8 +288,8 @@ onMounted(async () => {
 
 .perfil-admin__label {
   font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
+  font-weight: 600;
+  color: var(--color-bronce);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -291,9 +301,16 @@ onMounted(async () => {
 }
 
 .perfil-admin__value--gold {
-  color: var(--color-gold-400);
+  color: var(--color-azul-real);
   font-weight: 700;
   font-size: 1.125rem;
+}
+
+.perfil-admin__calc-note {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--color-bronce);
+  font-style: italic;
 }
 
 .perfil-admin__horarios {
@@ -329,7 +346,7 @@ onMounted(async () => {
 
 .perfil-admin__horario-descanso {
   font-size: 0.75rem;
-  color: var(--color-error);
+  color: var(--color-rojo-vintage);
   font-style: italic;
 }
 
@@ -338,5 +355,23 @@ onMounted(async () => {
   font-size: 0.875rem;
   text-align: center;
   padding: 1.5rem;
+}
+
+.perfil-admin__readonly-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--color-oro-suave);
+  border: 1px solid var(--color-bronce);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--color-azul-oscuro);
+  line-height: 1.5;
+}
+
+.perfil-admin__readonly-notice span {
+  font-size: 1.25rem;
+  flex-shrink: 0;
 }
 </style>

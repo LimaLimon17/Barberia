@@ -27,7 +27,7 @@
       @submit.prevent="guardarCambios"
       novalidate
     >
-      <h3 class="editar__section-title">👤 Información Personal</h3>
+      <h3 class="editar__section-title">👤 Editar Información Personal</h3>
 
       <div class="editar__grid">
         <div class="editar__group">
@@ -40,6 +40,7 @@
             v-model.trim="form.nombre1"
             placeholder="Nombre"
             @input="limpiarError('nombre1')"
+            required
           />
           <span v-if="errores.nombre1" class="editar__error">{{ errores.nombre1 }}</span>
         </div>
@@ -65,6 +66,7 @@
             v-model.trim="form.apellido1"
             placeholder="Apellido"
             @input="limpiarError('apellido1')"
+            required
           />
           <span v-if="errores.apellido1" class="editar__error">{{ errores.apellido1 }}</span>
         </div>
@@ -90,6 +92,7 @@
             v-model.trim="form.correo"
             placeholder="correo@barberia.com"
             @input="limpiarError('correo')"
+            required
           />
           <span v-if="errores.correo" class="editar__error">{{ errores.correo }}</span>
         </div>
@@ -104,6 +107,7 @@
             v-model="form.fecha_ingreso"
             :max="fechaMaxima"
             @input="limpiarError('fecha_ingreso')"
+            required
           />
           <span v-if="errores.fecha_ingreso" class="editar__error">{{ errores.fecha_ingreso }}</span>
         </div>
@@ -111,7 +115,7 @@
 
       <!-- Antigüedad calculada en tiempo real -->
       <div class="editar__antiguedad" v-if="form.fecha_ingreso">
-        <span class="editar__antiguedad-label">Antigüedad calculada:</span>
+        <span class="editar__antiguedad-label">Antigüedad recalculada:</span>
         <span class="editar__antiguedad-valor">{{ antiguedadCalculada }} días</span>
       </div>
 
@@ -175,11 +179,13 @@ const antiguedadCalculada = computed(() => {
 function limpiarError(campo) {
   errores[campo] = ''
   mensajeError.value = ''
+  mensajeExito.value = ''
 }
 
 function validarFormulario() {
   let valido = true
 
+  // Campos obligatorios
   if (!form.nombre1) {
     errores.nombre1 = 'El primer nombre es obligatorio'
     valido = false
@@ -198,11 +204,12 @@ function validarFormulario() {
     valido = false
   }
 
+  // Validación de fecha
   if (!form.fecha_ingreso) {
     errores.fecha_ingreso = 'La fecha de ingreso es obligatoria'
     valido = false
   } else if (form.fecha_ingreso > fechaMaxima.value) {
-    // Escenario 4: Fecha futura
+    // Escenario: Fecha posterior a la actual
     errores.fecha_ingreso = 'La fecha de ingreso no puede ser posterior a la fecha actual'
     valido = false
   }
@@ -228,7 +235,7 @@ async function guardarCambios() {
       fecha_ingreso: form.fecha_ingreso,
     })
 
-    // Escenario 5: Confirmación de cambios
+    // Escenario: Confirmación de cambios exitosa
     mensajeExito.value = 'Perfil del barbero actualizado correctamente'
 
     // Actualizar formulario con datos retornados
@@ -241,7 +248,7 @@ async function guardarCambios() {
       form.fecha_ingreso = data.barbero.fecha_ingreso
     }
   } catch (err) {
-    // Escenario 3: Correo duplicado / Escenario 4: Fecha futura
+    // Escenarios de error (Correo duplicado o fecha inválida lanzados por BD/API)
     const mensaje = err.response?.data?.mensaje || 'Error al guardar los cambios'
 
     if (mensaje.includes('correo')) {
@@ -313,7 +320,7 @@ onMounted(async () => {
   width: 32px;
   height: 32px;
   border: 3px solid var(--color-border);
-  border-top-color: var(--color-gold-400);
+  border-top-color: var(--color-azul-real);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -330,7 +337,7 @@ onMounted(async () => {
   font-family: var(--font-heading);
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-gold-400);
+  color: var(--color-azul-real);
   margin-bottom: 1.5rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--color-border);
@@ -355,7 +362,7 @@ onMounted(async () => {
 
 .input-field--error {
   border-color: var(--color-error) !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 0 3px rgba(166, 43, 43, 0.1);
 }
 
 .editar__antiguedad {
@@ -364,21 +371,21 @@ onMounted(async () => {
   gap: 0.5rem;
   margin-top: 1.5rem;
   padding: 0.875rem 1.25rem;
-  background: rgba(232, 184, 17, 0.08);
-  border: 1px solid rgba(232, 184, 17, 0.15);
+  background: var(--color-oro-suave);
+  border: 1px solid var(--color-bronce);
   border-radius: var(--radius-md);
 }
 
 .editar__antiguedad-label {
   font-size: 0.8125rem;
-  color: var(--color-text-secondary);
+  color: var(--color-azul-oscuro);
 }
 
 .editar__antiguedad-valor {
   font-family: var(--font-heading);
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--color-gold-400);
+  color: var(--color-azul-real);
 }
 
 .editar__footer {
@@ -393,8 +400,8 @@ onMounted(async () => {
 .editar__btn-spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(15, 15, 19, 0.3);
-  border-top-color: var(--color-bg-primary);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }

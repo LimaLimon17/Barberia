@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 class PublicController extends Controller
 {
     /**
-     * Retorna categorías, servicios con fotoURL y barberos activos para la Landing.
+     * Retorna categorías, servicios con fotoURL y barberos activos para la pagina publica.
      */
     public function obtenerCatalogoHome()
     {

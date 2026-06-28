@@ -186,7 +186,7 @@
                 height="100%"
                 frameborder="0"
                 scrolling="no"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=-68.1400%2C-16.5050%2C-68.1200%2C-16.4950&layer=mapnik&marker=-16.5000%2C-68.1300"
+                 src="https://www.openstreetmap.org/export/embed.html?bbox=-68.1745,-16.5808,-68.1645,-16.5708&layer=mapnik&marker=-16.5757709,-68.1694978">
                 style="border:0; filter:sepia(0.2) contrast(1.05); display:block; min-height: 320px;">
               </iframe>
             </div>
@@ -243,7 +243,7 @@ export default {
         { id: 'contacto',  label: 'Contacto'  },
       ],
       datosContacto: [
-        { label: 'Dirección', valor: 'Av. Central, Pasaje del Farol #124, Zona Central, La Paz.' },
+        { label: 'Dirección', valor: 'Av. 13 de Noviembre, Zona Huaynasi, Achocalla, La Paz.' },
         { label: 'Teléfono',  valor: '+591 76543210 / (2) 224-4668' },
         { label: 'Horarios',  valor: 'Lunes a Domingo · 10:00 – 22:00' },
         { label: 'Correo',    valor: 'benigno@thelamplight.com', href: 'mailto:benigno@thelamplight.com' },

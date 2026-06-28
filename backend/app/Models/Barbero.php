@@ -75,4 +75,9 @@ class Barbero extends Model
     {
         return $this->EstadoA ? 'Activo' : 'Inactivo';
     }
+    public function horarios()
+{
+    // Relación de uno a muchos: Un barbero tiene muchos horarios semanales asignados
+    return $this->hasMany(Horario::class, 'IdBarbero', 'IdBarbero');
+}
 }

@@ -11,11 +11,11 @@
         Todo
       </button>
       <button
-        v-for="cat in categoriasDisponibles"
-        :key="cat"
-        :class="['filtro-btn', store.idCategoriaFiltro === cat ? 'activo' : '']"
-        @click="cambiarCategoria(cat)">
-        Categoría {{ cat }}
+        v-for="cat in store.categorias"
+        :key="cat.IdCategoria"
+        :class="['filtro-btn', store.idCategoriaFiltro === cat.IdCategoria ? 'activo' : '']"
+        @click="cambiarCategoria(cat.IdCategoria)">
+        {{ cat.Nombre }}
       </button>
     </div>
 
@@ -29,6 +29,8 @@
         :key="s.IdServicio"
         :class="['item-servicio', estaSeleccionado(s) ? 'seleccionado' : '']">
         <input type="checkbox" :checked="estaSeleccionado(s)" @change="onToggle(s)" />
+        <img v-if="s.FotoURL" :src="s.FotoURL" class="img-servicio" alt="" loading="lazy" />
+        <span v-else class="img-servicio img-servicio-placeholder">{{ s.Nombre.charAt(0) }}</span>
         <span class="info-servicio">
           <span class="nombre-servicio">{{ s.Nombre }}</span>
           <span class="meta-servicio">{{ s.DuracionMinutos }} min · {{ Number(s.Precio).toFixed(0) }} Bs.</span>
@@ -98,12 +100,9 @@ const store = useReservaStore()
 const hoy = new Date().toISOString().slice(0, 10)
 
 onMounted(() => {
+  store.cargarCategorias()
   store.cargarServicios()
 })
-
-const categoriasDisponibles = computed(() =>
-  [...new Set(store.servicios.map((s) => s.IdCategoria))]
-)
 
 function cambiarCategoria(cat) {
   store.idCategoriaFiltro = cat
@@ -265,4 +264,23 @@ const puedeContinuar = computed(
 .btn-primario:hover { background: #c9a84c; color: #1a1a2e; }
 .btn-primario:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-secundario { background: transparent; border: 1px solid #1a1a2e; color: #1a1a2e; }
+
+.img-servicio {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.img-servicio-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ede9df;
+  color: #1a1a2e;
+  font-family: var(--font-vintage, serif);
+  font-weight: 800;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
 </style>

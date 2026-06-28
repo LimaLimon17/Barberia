@@ -14,6 +14,10 @@ use App\Services\ReservaService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Categoria;
+use App\Models\HorarioSemanal;
+
+use Illuminate\Support\Facades\DB;
 
 //CONTROLLER PARA EL FLUJO DE LA RESERVA 
 class ReservaController extends Controller
@@ -64,17 +68,61 @@ class ReservaController extends Controller
      * Paso 3 - MOSTRAR SERVICIOS ACTIVOS SEGÚN CATEGORIA
      * GET /api/servicios?id_categoria=
      */
+    public function categorias()
+{
+    $categorias = Categoria::where('EstadoA', 1)
+        ->select('IdCategoria', 'Nombre')
+        ->orderBy('Nombre')
+        ->get();
+
+    return response()->json(['categorias' => $categorias]);
+}
     public function serviciosPorCategoria(Request $request)
-    {
-        $query = Servicio::where('EstadoA', 1);
+{
+    $query = Servicio::with('categoria')->where('EstadoA', 1);
 
-        if ($request->filled('id_categoria')) {
-            $query->where('IdCategoria', $request->input('id_categoria'));
-        }
-
-        return response()->json(['servicios' => $query->get()]);
+    if ($request->filled('id_categoria')) {
+        $query->where('IdCategoria', $request->input('id_categoria'));
     }
 
+    $servicios = $query->get()->map(function ($s) {
+        return [
+            'IdServicio'      => $s->IdServicio,
+            'IdCategoria'     => $s->IdCategoria,
+            'NombreCategoria' => $s->categoria?->Nombre,
+            'Nombre'          => $s->Nombre,
+            'FotoURL'         => $s->FotoURL,
+            'Precio'          => $s->Precio,
+            'DuracionMinutos' => $s->DuracionMinutos,
+        ];
+    });
+
+    return response()->json(['servicios' => $servicios]);
+}
+
+public function fechaMaximaDisponible(Request $request)
+{
+    $idBarbero = $request->input('id_barbero');
+
+    $query = HorarioSemanal::where('EstadoA', 1);
+
+    if ($idBarbero) {
+        $query->where('IdBarbero', $idBarbero);
+    }
+
+    $ultimo = $query->orderByRaw('Año DESC, Semana DESC')->first();
+
+    if (!$ultimo) {
+        return response()->json(['fecha_maxima' => now()->toDateString()]);
+    }
+
+    // El domingo de esa semana ISO es la fecha máxima reservable
+    $fechaMax = Carbon::now()
+        ->setISODate($ultimo->Año, $ultimo->Semana, 7) // 7 = domingo
+        ->toDateString();
+
+    return response()->json(['fecha_maxima' => $fechaMax]);
+}
     /**
      * FUNCIÓN PARA 
      * Paso 3 - MOSTRAR HORARIOS DISPONIBLES SEGÚN BARBERO Y SERVICIO

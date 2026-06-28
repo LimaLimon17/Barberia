@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\HorarioSemanalController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Public\ReservaController;
+
+use App\Http\Controllers\Barbero\CitaPresencialController;
 /*
 |--------------------------------------------------------------------------
 | API Routes - Sistema Barbería
@@ -46,6 +48,7 @@ Route::get('/disponibilidad/slots', [ReservaController::class, 'slotsDisponibles
 
 Route::prefix('reservas')->group(function () {
     Route::post('/', [ReservaController::class, 'store']);
+    Route::get('/categorias', [ReservaController::class, 'categorias']);
     Route::get('/{idReserva}/estado', [ReservaController::class, 'estado']);
     Route::post('/{idReserva}/confirmar-pago', [ReservaController::class, 'confirmarPago']);
 });
@@ -61,9 +64,22 @@ Route::middleware('auth:sanctum')->group(function () {
     // ------------------------------------------
     // RUTAS DEL BARBERO (rol = 2)
     // ------------------------------------------
-    Route::middleware('role:barbero')->prefix('barbero')->group(function () {
-        Route::get('/perfil', [PerfilController::class, 'miPerfil']);
+   Route::middleware('role:barbero')->prefix('barbero')->group(function () {
+    Route::get('/perfil', [PerfilController::class, 'miPerfil']);
+
+    // RUTAS PARA CITA PRESENCIAL:
+    Route::prefix('cita-presencial')->group(function () {
+        Route::get('/inicializar',  [CitaPresencialController::class, 'inicializar']);
+        Route::get('/servicios',    [CitaPresencialController::class, 'servicios']);
+        Route::get('/slots',        [CitaPresencialController::class, 'slots']);
+        Route::get('/citas',        [CitaPresencialController::class, 'misCitas']);
+        Route::post('/crear',       [CitaPresencialController::class, 'crear']);
+        Route::post('/{idReserva}/confirmar-pago', [CitaPresencialController::class, 'confirmarPago']);
     });
+
+    // Búsqueda de cliente:
+    Route::get('/cliente/{ci}', [ReservaController::class, 'buscarClientePorCI']);
+});
 
     // ------------------------------------------
     // RUTAS DEL ADMINISTRADOR (rol = 1)

@@ -1,17 +1,20 @@
-import axios from 'axios'
+import api from './api.js'
 
 export const reservaService = {
   buscarClientePorCI(ci) {
-    return axios.get(`/api/clientes/${ci}`)
+    return api.get(`/clientes/${ci}`)
   },
   disponibilidadBarberos() {
-    return axios.get('/api/barberos/disponibilidad')
+    return api.get('/barberos/disponibilidad')
+  },
+   categorias() {
+    return api.get('/reservas/categorias')
   },
   serviciosPorCategoria(idCategoria) {
-    return axios.get('/api/servicios', { params: { id_categoria: idCategoria || undefined } })
+    return api.get('/servicios', { params: { id_categoria: idCategoria || undefined } })
   },
   slotsDisponibles({ idBarbero, fecha, servicios }) {
-    return axios.get('/api/disponibilidad/slots', {
+    return api.get('/disponibilidad/slots', {
       params: {
         id_barbero: idBarbero,
         fecha,
@@ -20,12 +23,12 @@ export const reservaService = {
     })
   },
   crearReserva(payload) {
-    return axios.post('/api/reservas', payload)
+    return api.post('/reservas', payload)
   },
   confirmarPago(idReserva, metodoPago = 'QR') {
-    return axios.post(`/api/reservas/${idReserva}/confirmar-pago`, { metodo_pago: metodoPago })
+    return api.post(`/reservas/${idReserva}/confirmar-pago`, { metodo_pago: metodoPago })
   },
   consultarEstado(idReserva) {
-    return axios.get(`/api/reservas/${idReserva}/estado`)
+    return api.get(`/reservas/${idReserva}/estado`)
   },
 }

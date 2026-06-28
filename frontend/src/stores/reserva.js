@@ -104,6 +104,14 @@ export const useReservaStore = defineStore('reserva', () => {
   }
 
   // ── Acciones Paso 3 ─────────────────────────────────────
+  async function cargarCategorias() {
+  try {
+    const { data } = await reservaService.categorias()
+    categorias.value = data.categorias
+  } catch (err) {
+    error.value = 'No se pudieron cargar las categorías.'
+  }
+}
   async function cargarServicios() {
     cargandoServicios.value = true
     try {
@@ -295,6 +303,7 @@ export const useReservaStore = defineStore('reserva', () => {
     iniciarPollingBarberos,
     detenerPollingBarberos,
     seleccionarBarbero,
+    cargarCategorias,
     cargarServicios,
     toggleServicio,
     cargarSlotsDisponibles,

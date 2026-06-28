@@ -4,13 +4,14 @@ namespace App\Services;
 
 use App\Models\Barbero;
 use App\Models\Horario;
-use App\Models\HorarioSemanal;
 use App\Models\Reserva;
 use App\Models\Servicio;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Models\Pago;
+
 
 class ReservaService
 {
@@ -22,21 +23,32 @@ class ReservaService
     public const PORCENTAJE_ANTICIPO = 0.5;
     public const MINUTOS_EXPIRACION_PAGO = 15;
 
-    // Estados posibles de Reservas.EstadoReserva
     public const PENDIENTE = 'Pendiente';
     public const CONFIRMADA = 'Confirmada';
     public const CANCELADA = 'Cancelada';
     public const EXPIRADA = 'Expirada';
-    public const INVALIDADA = 'Invalidada'; // perdió el slot ante otro cliente
+    public const INVALIDADA = 'Invalidada';
 
-    public function __construct(private AlmuerzoService $almuerzoService)
-    {
-    }
+    private const DIAS_ES = [
+        'Monday' => 'Lunes',
+        'Tuesday' => 'Martes',
+        'Wednesday' => 'Miércoles',
+        'Thursday' => 'Jueves',
+        'Friday' => 'Viernes',
+        'Saturday' => 'Sábado',
+        'Sunday' => 'Domingo',
+    ];
 
     /**
-     * Duración total del bloque (Escenario 4 y 5 de HU-04):
-     * suma de duraciones + 10 min limpieza + 5 min tolerancia.
+     * NOTA: ya no depende de AlmuerzoService. La restricción de almuerzo
+     * fue eliminada del negocio; esos horarios ahora se pueden reservar
+     * libremente si no hay otra cita en ese bloque.
      */
+    public static function nombreDiaEs(Carbon $fecha): string
+    {
+        return self::DIAS_ES[$fecha->format('l')];
+    }
+
     public function calcularDuracionTotal(Collection $servicios): int
     {
         $sumaServicios = (int) $servicios->sum('DuracionMinutos');
@@ -49,35 +61,77 @@ class ReservaService
     }
 
     /**
-     * Genera los slots de horaInicio candidatos del día (cada 15 min) que
-     * caben dentro del bloque [10:00, 22:00], excluyendo almuerzo/descanso
-     * y conflictos con otras reservas vigentes del barbero.
+     * Horario vigente del barbero para esa fecha exacta: busca en
+     * HorariosBarberos el rango activo (FechaInicio..FechaFin) que
+     * contenga la fecha, y dentro de ese rango el Horario (plantilla)
+     * configurado para el día de la semana correspondiente.
      *
-     * Devuelve: [['hora_inicio' => 'HH:mm', 'hora_fin' => 'HH:mm', 'disponible' => bool], ...]
+     * Si el barbero tuviera más de una asignación vigente para el mismo
+     * día (caso poco común), se toma la primera encontrada.
+     */
+    // Cambiar de 'private' a 'public':
+public function horarioVigenteDelDia(Barbero $barbero, Carbon $fecha): ?Horario
+{
+    $diaSemana = self::nombreDiaEs($fecha);
+
+    return Horario::where('DiaSemana', $diaSemana)
+        ->where('EstadoA', 1)
+        ->whereHas('horariosBarberos', function ($q) use ($barbero, $fecha) {
+            $q->where('IdBarbero', $barbero->IdBarbero)
+              ->where('EstadoA', 1)
+              ->where('FechaInicio', '<=', $fecha->format('Y-m-d'))
+              ->where('FechaFin', '>=', $fecha->format('Y-m-d'));
+        })
+        ->first();
+}
+
+/**
+ * Estado del barbero EN ESTE INSTANTE, para el grid de disponibilidad:
+ * 'fuera_de_horario'  -> antes de las 10:00 o después de las 22:00 (cierre operativo)
+ * 'descanso'          -> hoy es su día de descanso, o no tiene horario asignado
+ * 'ocupado'           -> tiene una reserva Confirmada que cubre este instante
+ * 'disponible'        -> cualquier otro caso
+ */
+public function estadoBarberoAhora(Barbero $barbero): string
+{
+    $ahora = Carbon::now();
+
+    if ($ahora->format('H:i:s') < self::HORA_APERTURA . ':00' || $ahora->format('H:i:s') >= self::HORA_CIERRE . ':00') {
+        return 'fuera_de_horario';
+    }
+
+    $horarioDia = $this->horarioVigenteDelDia($barbero, $ahora);
+
+    if (!$horarioDia || $horarioDia->DiaDescanso) {
+        return 'descanso';
+    }
+
+    // Fuera de su horario personal de entrada/salida ese día (aunque la barbería esté abierta)
+    if ($ahora->format('H:i:s') < $horarioDia->HoraEntrada || $ahora->format('H:i:s') >= $horarioDia->HoraSalida) {
+        return 'descanso';
+    }
+
+    if ($this->estaOcupadoAhora($barbero)) {
+        return 'ocupado';
+    }
+
+    return 'disponible';
+}
+
+    /**
+     * Genera los slots de horaInicio candidatos del día (cada 15 min) que
+     * caben dentro del bloque [10:00, 22:00], excluyendo solo conflictos
+     * con otras reservas vigentes del barbero. Ya NO hay bloqueo de
+     * almuerzo/descanso adicional: ese tramo es reservable si está libre.
      */
     public function obtenerSlotsDisponibles(Barbero $barbero, Carbon $fecha, int $duracionTotalMinutos): array
     {
-        $diaSemana = AlmuerzoService::nombreDiaEs($fecha);
-        $semana = (int) $fecha->isoWeek();
-        $anio = (int) $fecha->isoWeekYear();
+        $horarioDia = $this->horarioVigenteDelDia($barbero, $fecha);
 
-        $horarioSemanal = HorarioSemanal::where('IdBarbero', $barbero->IdBarbero)
-            ->where('Semana', $semana)->where('Año', $anio)->first();
-
-        if (!$horarioSemanal) {
-            return [];
-        }
-
-        $horarioDia = Horario::where('IdHorarioSemanal', $horarioSemanal->IdHorarioSemanal)
-            ->where('DiaSemana', $diaSemana)
-            ->first();
-
-        // Sin horario configurado o es su día de descanso semanal: no trabaja.
+        // Sin horario asignado ese día, o es su día de descanso: no trabaja.
         if (!$horarioDia || $horarioDia->DiaDescanso) {
             return [];
         }
-
-        [$almuerzoInicio, $almuerzoFin] = $this->almuerzoService->bloqueAlmuerzo($barbero, $fecha);
 
         $aperturaOperativa = Carbon::parse($fecha->format('Y-m-d') . ' ' . self::HORA_APERTURA);
         $cierreOperativo = Carbon::parse($fecha->format('Y-m-d') . ' ' . self::HORA_CIERRE);
@@ -87,9 +141,6 @@ class ReservaService
 
         $inicioVentana = $aperturaOperativa->max($entradaBarbero);
         $finVentana = $cierreOperativo->min($salidaBarbero);
-
-        $almuerzoInicioDt = Carbon::parse($fecha->format('Y-m-d') . ' ' . $almuerzoInicio);
-        $almuerzoFinDt = Carbon::parse($fecha->format('Y-m-d') . ' ' . $almuerzoFin);
 
         $reservasVigentes = $this->reservasVigentesDelDia($barbero->IdBarbero, $fecha);
 
@@ -105,17 +156,10 @@ class ReservaService
 
             $disponible = true;
 
-            // No puede superar el cierre operativo (10pm).
             if ($finBloque->gt($cierreOperativo)) {
                 $disponible = false;
             }
 
-            // No puede solaparse con el almuerzo/descanso.
-            if ($disponible && $this->seSolapan($cursor, $finBloque, $almuerzoInicioDt, $almuerzoFinDt)) {
-                $disponible = false;
-            }
-
-            // No puede solaparse con otra reserva vigente del mismo barbero.
             if ($disponible) {
                 foreach ($reservasVigentes as $r) {
                     $ocupadoInicio = Carbon::parse($fecha->format('Y-m-d') . ' ' . $r->HoraInicio);
@@ -144,10 +188,6 @@ class ReservaService
         return $inicioA->lt($finB) && $finA->gt($inicioB);
     }
 
-    /**
-     * Reservas que aún bloquean la agenda del barbero ese día:
-     * Confirmadas, o Pendientes que todavía no expiraron (< 15 min de antigüedad).
-     */
     private function reservasVigentesDelDia(int $idBarbero, Carbon $fecha): Collection
     {
         return Reserva::where('IdBarbero', $idBarbero)
@@ -162,9 +202,6 @@ class ReservaService
             ->get();
     }
 
-    /**
-     * Estado de disponibilidad "ahora" de un barbero, para el grid de RF3.
-     */
     public function estaOcupadoAhora(Barbero $barbero): bool
     {
         $ahora = Carbon::now();
@@ -176,12 +213,6 @@ class ReservaService
             ->exists();
     }
 
-    /**
-     * Valida y crea la reserva en estado Pendiente (Escenario 2 y 6 de HU-04).
-     * No bloquea contra otras reservas Pendientes (solo contra Confirmadas y
-     * Pendientes no expiradas) para permitir el flujo de "primero en pagar"
-     * descrito en HU-05 Escenario 5.
-     */
     public function crearReservaPendiente(array $datosCliente, Barbero $barbero, Collection $servicios, Carbon $fecha, string $horaInicio): Reserva
     {
         $duracionTotal = $this->calcularDuracionTotal($servicios);
@@ -226,72 +257,73 @@ class ReservaService
         });
     }
 
-    /**
-     * Confirma el pago del anticipo (HU-05 Escenario 2) y, en la misma
-     * transacción, invalida cualquier otra reserva Pendiente que compita
-     * por el mismo barbero/horario (HU-05 Escenario 5).
-     */
-    public function confirmarPago(Reserva $reserva, string $metodoPago): Reserva
-    {
-        return DB::transaction(function () use ($reserva, $metodoPago) {
-            /** @var Reserva $reservaLock */
-            $reservaLock = Reserva::where('IdReserva', $reserva->IdReserva)->lockForUpdate()->first();
 
-            if ($reservaLock->EstadoReserva !== self::PENDIENTE) {
-                throw ValidationException::withMessages([
-                    'estado' => 'Esta reserva ya no está pendiente de pago (Tiempo Expirado o ya fue procesada).',
-                ]);
-            }
+public function confirmarPago(Reserva $reserva, string $metodoPago): Reserva
+{
+    return DB::transaction(function () use ($reserva, $metodoPago) {
+        $reservaLock = Reserva::where('IdReserva', $reserva->IdReserva)->lockForUpdate()->first();
 
-            $minutosTranscurridos = Carbon::parse($reservaLock->FechaA)->diffInMinutes(now());
-            if ($minutosTranscurridos > self::MINUTOS_EXPIRACION_PAGO) {
-                $reservaLock->update(['EstadoReserva' => self::EXPIRADA]);
-                throw ValidationException::withMessages([
-                    'estado' => 'Tiempo Expirado: superó los 15 minutos para pagar el anticipo.',
-                ]);
-            }
-
-            // Re-validar que ninguna OTRA reserva ya esté Confirmada para ese
-            // mismo barbero/horario (alguien pagó primero).
-            $conflictoConfirmado = Reserva::where('IdBarbero', $reservaLock->IdBarbero)
-                ->where('FechaCita', $reservaLock->FechaCita)
-                ->where('IdReserva', '<>', $reservaLock->IdReserva)
-                ->where('EstadoReserva', self::CONFIRMADA)
-                ->where('HoraInicio', '<', $reservaLock->HoraFin)
-                ->where('HoraFin', '>', $reservaLock->HoraInicio)
-                ->exists();
-
-            if ($conflictoConfirmado) {
-                $reservaLock->update(['EstadoReserva' => self::INVALIDADA]);
-                throw ValidationException::withMessages([
-                    'estado' => 'El horario seleccionado ya no se encuentra disponible.',
-                ]);
-            }
-
-            $reservaLock->update([
-                'EstadoReserva' => self::CONFIRMADA,
-                'FechaPagoAnticipo' => now(),
-                'MetodoPagoFinal' => $metodoPago,
+        if ($reservaLock->EstadoReserva !== self::PENDIENTE) {
+            throw ValidationException::withMessages([
+                'estado' => 'Esta reserva ya no está pendiente de pago (Tiempo Expirado o ya fue procesada).',
             ]);
+        }
 
-            // Invalidar otras reservas Pendientes que compitan por el mismo
-            // bloque (Escenario 5 de HU-05): el Cliente A pierde el cupo.
-            Reserva::where('IdBarbero', $reservaLock->IdBarbero)
-                ->where('FechaCita', $reservaLock->FechaCita)
-                ->where('IdReserva', '<>', $reservaLock->IdReserva)
-                ->where('EstadoReserva', self::PENDIENTE)
-                ->where('HoraInicio', '<', $reservaLock->HoraFin)
-                ->where('HoraFin', '>', $reservaLock->HoraInicio)
-                ->update(['EstadoReserva' => self::INVALIDADA]);
+        $minutosTranscurridos = Carbon::parse($reservaLock->FechaA)->diffInMinutes(now());
+        if ($minutosTranscurridos > self::MINUTOS_EXPIRACION_PAGO) {
+            $reservaLock->update(['EstadoReserva' => self::EXPIRADA]);
+            throw ValidationException::withMessages([
+                'estado' => 'Tiempo Expirado: superó los 15 minutos para pagar el anticipo.',
+            ]);
+        }
 
-            return $reservaLock->fresh();
-        });
-    }
+        $conflictoConfirmado = Reserva::where('IdBarbero', $reservaLock->IdBarbero)
+            ->where('FechaCita', $reservaLock->FechaCita)
+            ->where('IdReserva', '<>', $reservaLock->IdReserva)
+            ->where('EstadoReserva', self::CONFIRMADA)
+            ->where('HoraInicio', '<', $reservaLock->HoraFin)
+            ->where('HoraFin', '>', $reservaLock->HoraInicio)
+            ->exists();
 
-    /**
-     * Expira una reserva si superó los 15 minutos sin pago (HU-05 Escenario 3).
-     * Pensado para ser llamado desde el Job programado al crear la reserva.
-     */
+        if ($conflictoConfirmado) {
+            $reservaLock->update(['EstadoReserva' => self::INVALIDADA]);
+            throw ValidationException::withMessages([
+                'estado' => 'El horario seleccionado ya no se encuentra disponible.',
+            ]);
+        }
+
+        $reservaLock->update([
+            'EstadoReserva' => self::CONFIRMADA,
+            'FechaPagoAnticipo' => now(),
+            'MetodoPagoAnticipo' => $metodoPago,
+        ]);
+
+        // Registro formal del pago (Anticipo = 50%, distinto del Total presencial)
+        Pago::create([
+            'IdReserva'  => $reservaLock->IdReserva,
+            'IdVenta'    => null,
+            'TipoPago'   => 'Anticipo',
+            'Monto'      => $reservaLock->MontoAnticipo,
+            'FechaPago'  => now(),
+            'MetodoPago' => $metodoPago,
+            'EstadoPago' => 'Pagado',
+            'EstadoA'    => 1,
+            'FechaA'     => now(),
+            'UsuarioA'   => 1, // flujo público: sin usuario autenticado, igual que el resto del archivo
+        ]);
+
+        Reserva::where('IdBarbero', $reservaLock->IdBarbero)
+            ->where('FechaCita', $reservaLock->FechaCita)
+            ->where('IdReserva', '<>', $reservaLock->IdReserva)
+            ->where('EstadoReserva', self::PENDIENTE)
+            ->where('HoraInicio', '<', $reservaLock->HoraFin)
+            ->where('HoraFin', '>', $reservaLock->HoraInicio)
+            ->update(['EstadoReserva' => self::INVALIDADA]);
+
+        return $reservaLock->fresh();
+    });
+}
+
     public function expirarSiCorresponde(Reserva $reserva): void
     {
         if ($reserva->EstadoReserva !== self::PENDIENTE) {
@@ -303,4 +335,5 @@ class ReservaService
             $reserva->update(['EstadoReserva' => self::EXPIRADA]);
         }
     }
+ 
 }

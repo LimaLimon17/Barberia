@@ -27,19 +27,13 @@ class HorarioBarbero extends Model
         'FechaA' => 'datetime',
     ];
 
-    /**
-     * Relación con Barbero.
-     */
-    public function barbero()
-    {
-        return $this->belongsTo(Barbero::class, 'IdBarbero', 'IdBarbero');
-    }
-
-    /**
-     * Relación con Horario (la plantilla de horario).
-     */
     public function horario()
     {
         return $this->belongsTo(Horario::class, 'IdHorario', 'IdHorario');
+    }
+
+    public function barbero()
+    {
+        return $this->belongsTo(Barbero::class, 'IdBarbero', 'IdBarbero');
     }
 }

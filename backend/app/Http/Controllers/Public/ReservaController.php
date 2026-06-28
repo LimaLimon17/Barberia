@@ -15,9 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Categoria;
-use App\Models\HorarioSemanal;
-
-use Illuminate\Support\Facades\DB;
+use App\Models\HorarioBarbero;
 
 //CONTROLLER PARA EL FLUJO DE LA RESERVA 
 class ReservaController extends Controller
@@ -48,20 +46,23 @@ class ReservaController extends Controller
      * Paso 2 - LISTAR BARBEROS CON SU DISPONIBILIDAD
      * GET /api/barberos/disponibilidad
      */
-    public function disponibilidadBarberos()
-    {
-        $barberos = Barbero::with('usuario')->where('EstadoA', 1)->get();
+   public function disponibilidadBarberos()
+{
+    $barberos = Barbero::with('usuario')->where('EstadoA', 1)->get();
 
-        $resultado = $barberos->map(function (Barbero $barbero) {
-            return [
-                'id_barbero' => $barbero->IdBarbero,
-                'nombre' => trim($barbero->usuario?->Nombre1 . ' ' . $barbero->usuario?->Apellido1),
-                'disponible_ahora' => !$this->reservaService->estaOcupadoAhora($barbero),
-            ];
-        });
+    $resultado = $barberos->map(function (Barbero $barbero) {
+        $estado = $this->reservaService->estadoBarberoAhora($barbero);
 
-        return response()->json(['barberos' => $resultado]);
-    }
+        return [
+            'id_barbero' => $barbero->IdBarbero,
+            'nombre' => trim($barbero->usuario?->Nombre1 . ' ' . $barbero->usuario?->Apellido1),
+            'estado' => $estado, // 'disponible' | 'ocupado' | 'descanso' | 'fuera_de_horario'
+            'disponible_ahora' => $estado === 'disponible', // se mantiene por compatibilidad, por si algo más lo usa
+        ];
+    });
+
+    return response()->json(['barberos' => $resultado]);
+}
 
     /**
      * FUNCION PARA 
@@ -69,64 +70,66 @@ class ReservaController extends Controller
      * GET /api/servicios?id_categoria=
      */
     public function categorias()
-{
-    $categorias = Categoria::where('EstadoA', 1)
-        ->select('IdCategoria', 'Nombre')
-        ->orderBy('Nombre')
-        ->get();
+    {
+        $categorias = Categoria::where('EstadoA', 1)
+            ->select('IdCategoria', 'Nombre')
+            ->orderBy('Nombre')
+            ->get();
 
-    return response()->json(['categorias' => $categorias]);
-}
+        return response()->json(['categorias' => $categorias]);
+    }
+
     public function serviciosPorCategoria(Request $request)
-{
-    $query = Servicio::with('categoria')->where('EstadoA', 1);
+    {
+        $query = Servicio::with('categoria')->where('EstadoA', 1);
 
-    if ($request->filled('id_categoria')) {
-        $query->where('IdCategoria', $request->input('id_categoria'));
+        if ($request->filled('id_categoria')) {
+            $query->where('IdCategoria', $request->input('id_categoria'));
+        }
+
+        $servicios = $query->get()->map(function ($s) {
+            return [
+                'IdServicio'      => $s->IdServicio,
+                'IdCategoria'     => $s->IdCategoria,
+                'NombreCategoria' => $s->categoria?->Nombre,
+                'Nombre'          => $s->Nombre,
+                'FotoURL'         => $s->FotoURL,
+                'Precio'          => $s->Precio,
+                'DuracionMinutos' => $s->DuracionMinutos,
+            ];
+        });
+
+        return response()->json(['servicios' => $servicios]);
     }
 
-    $servicios = $query->get()->map(function ($s) {
-        return [
-            'IdServicio'      => $s->IdServicio,
-            'IdCategoria'     => $s->IdCategoria,
-            'NombreCategoria' => $s->categoria?->Nombre,
-            'Nombre'          => $s->Nombre,
-            'FotoURL'         => $s->FotoURL,
-            'Precio'          => $s->Precio,
-            'DuracionMinutos' => $s->DuracionMinutos,
-        ];
-    });
+    /**
+     * FUNCION PARA
+     * Fecha máxima reservable: el FechaFin más lejano configurado en
+     * HorariosBarberos (antes se calculaba con HorarioSemanal, ya no existe).
+     * GET /api/disponibilidad/fecha-maxima?id_barbero=
+     */
+    public function fechaMaximaDisponible(Request $request)
+    {
+        $idBarbero = $request->input('id_barbero');
 
-    return response()->json(['servicios' => $servicios]);
-}
+        $query = HorarioBarbero::where('EstadoA', 1);
 
-public function fechaMaximaDisponible(Request $request)
-{
-    $idBarbero = $request->input('id_barbero');
+        if ($idBarbero) {
+            $query->where('IdBarbero', $idBarbero);
+        }
 
-    $query = HorarioSemanal::where('EstadoA', 1);
+        $fechaMax = $query->max('FechaFin');
 
-    if ($idBarbero) {
-        $query->where('IdBarbero', $idBarbero);
+        if (!$fechaMax) {
+            return response()->json(['fecha_maxima' => now()->toDateString()]);
+        }
+
+        return response()->json(['fecha_maxima' => $fechaMax]);
     }
 
-    $ultimo = $query->orderByRaw('Año DESC, Semana DESC')->first();
-
-    if (!$ultimo) {
-        return response()->json(['fecha_maxima' => now()->toDateString()]);
-    }
-
-    // El domingo de esa semana ISO es la fecha máxima reservable
-    $fechaMax = Carbon::now()
-        ->setISODate($ultimo->Año, $ultimo->Semana, 7) // 7 = domingo
-        ->toDateString();
-
-    return response()->json(['fecha_maxima' => $fechaMax]);
-}
     /**
      * FUNCIÓN PARA 
      * Paso 3 - MOSTRAR HORARIOS DISPONIBLES SEGÚN BARBERO Y SERVICIO
-     * barbero/fecha/duración total seleccionados
      * GET /api/disponibilidad/slots?id_barbero=&fecha=YYYY-MM-DD&servicios[]=
      */
     public function slotsDisponibles(Request $request)

@@ -29,8 +29,7 @@
             <h3 class="dashboard__card-title">Crear Cita</h3>
             <p class="dashboard__card-desc">Registrar cliente presencial ahora</p>
           </div>
-          <span class="card-badge">Nuevo</span>
-        </div>
+      </div>
 
         <div class="dashboard__card glass-card">
           <div class="dashboard__card-icon">💰</div>
@@ -39,16 +38,19 @@
             <p class="dashboard__card-desc">Revisa tus ganancias semanales</p>
           </div>
         </div>
+
+        
+  <router-link to="/barbero/perfil" class="dashboard__card glass-card dashboard__card--link" id="btn-ver-perfil">
+    <div class="dashboard__card-icon">👤</div>
+    <div class="dashboard__card-info">
+      <h3 class="dashboard__card-title">Visualizar Perfil</h3>
+      <p class="dashboard__card-desc">Ver tu información personal y antigüedad</p>
+    </div>
+    <span class="dashboard__card-arrow">→</span>
+  </router-link>
       </div>
 
-      <router-link to="/barbero/perfil" class="dashboard__card glass-card dashboard__card--link" id="btn-ver-perfil">
-        <div class="dashboard__card-icon">👤</div>
-        <div class="dashboard__card-info">
-          <h3 class="dashboard__card-title">Visualizar Perfil</h3>
-          <p class="dashboard__card-desc">Ver tu información personal y antigüedad</p>
-        </div>
-        <span class="dashboard__card-arrow">→</span>
-      </router-link>
+
     </template> <!-- <-- CORREGIDO: Cierre del v-if añadido -->
 
     <!-- ── Formulario crear cita presencial ─────────────────── -->

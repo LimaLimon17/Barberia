@@ -26,9 +26,6 @@ class Horario extends Model
         'FechaA' => 'datetime',
     ];
 
-    /**
-     * Relación con HorariosBarberos (pivot).
-     */
     public function horariosBarberos()
     {
         return $this->hasMany(HorarioBarbero::class, 'IdHorario', 'IdHorario');

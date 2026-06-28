@@ -263,6 +263,12 @@ function ingresarManual() {
 function cambiarDatos() {
   identidadConfirmada.value = false
   modoManual.value = true
+  // Vaciar los campos sensibles para no exponerlos al reabrir el formulario.
+  store.cliente.Telefono = ''
+  store.cliente.Correo = ''
+  // Evita que salten los mensajes de error en rojo apenas se abre el formulario.
+  tocado.value.Telefono = false
+  tocado.value.Correo = false
 }
 
 function siguiente() {

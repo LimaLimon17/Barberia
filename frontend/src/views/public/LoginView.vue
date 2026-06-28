@@ -89,6 +89,13 @@
           Solo acceso para personal autorizado
         </p>
       </div>
+
+      <!-- ── AGREGADO: Enlace para Volver al Sitio Público ── -->
+      <div class="login-back-container">
+        <router-link :to="{ name: 'Home' }" class="login-back-link">
+          ← Volver al Sitio Público
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -124,7 +131,6 @@ function limpiarErrorCampo(campo) {
 function validarFormulario() {
   let valido = true
 
-  // Campos vacíos (obligatorios)
   if (!form.correo) {
     errores.correo = 'Complete este campo'
     valido = false
@@ -149,11 +155,8 @@ async function handleLogin() {
 
   try {
     await authStore.login(form.correo, form.contraseña)
-
-    // Mensaje de inicio de sesión exitoso
     mensajeExito.value = 'Inicio de sesión exitoso. Redirigiendo...'
 
-    // Redirección según rol después de un breve delay para que vea el mensaje
     setTimeout(() => {
       if (authStore.esAdmin) {
         router.push({ name: 'DashboardAdmin' })
@@ -162,7 +165,6 @@ async function handleLogin() {
       }
     }, 1000)
   } catch (err) {
-    // Credenciales incorrectas
     error.value = 'Correo o contraseña incorrectos. Verifique sus credenciales.'
   }
 }
@@ -310,5 +312,29 @@ async function handleLogin() {
   margin-top: 1.5rem;
   font-size: 0.75rem;
   color: var(--color-bronce);
+}
+
+/* ── AGREGADO: Estilos para el enlace de regreso al sitio público ── */
+.login-back-container {
+  text-align: center;
+  margin-top: 1.5rem;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.login-back-link {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+
+.login-back-link:hover {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  transform: translateX(-3px);
 }
 </style>

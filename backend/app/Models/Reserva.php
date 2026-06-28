@@ -61,4 +61,8 @@ class Reserva extends Model
     {
         return $this->hasOne(NotaVenta::class, 'IdReserva', 'IdReserva');
     }
+    public function pagos()
+{
+    return $this->hasMany(Pago::class, 'IdReserva', 'IdReserva');
+}
 }

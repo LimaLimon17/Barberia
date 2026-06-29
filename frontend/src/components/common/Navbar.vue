@@ -19,18 +19,14 @@
     </div>
   </header>
 </template>
-
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
-
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-
 const pageTitle = computed(() => route.meta.title || 'Dashboard')
-
 const iniciales = computed(() => {
   const u = authStore.usuario
   if (!u) return '?'
@@ -38,13 +34,11 @@ const iniciales = computed(() => {
   const a1 = u.apellido1 ? u.apellido1.charAt(0) : ''
   return (n1 + a1).toUpperCase()
 })
-
 async function cerrarSesion() {
   await authStore.logout()
   router.push({ name: 'Login' })
 }
 </script>
-
 <style scoped>
 .navbar {
   display: flex;
@@ -58,26 +52,22 @@ async function cerrarSesion() {
   z-index: 40;
   backdrop-filter: blur(12px);
 }
-
 .navbar__title {
   font-family: var(--font-heading);
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-text-primary);
 }
-
 .navbar__right {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
-
 .navbar__user {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
-
 .navbar__avatar {
   width: 38px;
   height: 38px;
@@ -91,25 +81,21 @@ async function cerrarSesion() {
   font-weight: 700;
   font-size: 0.875rem;
 }
-
 .navbar__info {
   display: flex;
   flex-direction: column;
 }
-
 .navbar__name {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-primary);
   line-height: 1.2;
 }
-
 .navbar__role {
   font-size: 0.75rem;
   color: var(--color-gold-400);
   text-transform: capitalize;
 }
-
 .navbar__logout {
   background: none;
   border: 1px solid var(--color-border);
@@ -122,12 +108,10 @@ async function cerrarSesion() {
   align-items: center;
   justify-content: center;
 }
-
 .navbar__logout:hover {
   background: var(--color-bg-hover);
   border-color: var(--color-error);
 }
-
 @media (max-width: 768px) {
   .navbar {
     padding: 0.75rem 1rem;

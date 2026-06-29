@@ -1,27 +1,53 @@
 <template>
-  <div class="login-page">
-    <div class="login-container">
-      <div class="login-card glass-card">
-        <!-- Logo centrado -->
-        <div class="login-card__header">
-          <div class="login-card__logo-wrapper">
-            <img src="/logo.png" alt="Logo Barbería" class="login-card__logo-img" @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'" />
-            <div class="login-card__logo-fallback" style="display: none;">✂️</div>
+  <div class="login-modern-wrapper">
+    <!-- Mitad Decorativa (Solo visible en pantallas grandes) -->
+    <div class="login-modern__brand">
+      <div class="login-modern__brand-content">
+        <div class="login-modern__logo-box">
+          <img
+            src="/logo.png"
+            alt="The Lamplight Barber Shop"
+            class="login-modern__logo"
+            @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'"
+          />
+          <div class="login-modern__logo-fallback" style="display:none;">
+            ✂️
           </div>
-          <h1 class="login-card__title">Barbería</h1>
-          <p class="login-card__subtitle">Sistema de Gestión</p>
+        </div>
+        <h1 class="login-modern__hero-title">The Lamplight</h1>
+        <h2 class="login-modern__hero-subtitle">Barber Shop</h2>
+        
+        <div class="login-modern__pole-accent">
+          <div class="pole-stripe pole-stripe--red"></div>
+          <div class="pole-stripe pole-stripe--white"></div>
+          <div class="pole-stripe pole-stripe--blue"></div>
+          <div class="pole-stripe pole-stripe--white"></div>
+          <div class="pole-stripe pole-stripe--red"></div>
+        </div>
+        
+        <p class="login-modern__hero-text">
+          Sistema de gestión integral para profesionales del estilo.
+        </p>
+      </div>
+      <!-- Resplandor decorativo -->
+      <div class="login-modern__glow"></div>
+    </div>
+
+    <!-- Mitad del Formulario -->
+    <div class="login-modern__form-section">
+      <div class="login-modern__form-container">
+        
+        <div class="login-modern__mobile-header">
+          <h2 class="login-modern__mobile-title">The Lamplight</h2>
+          <p class="login-modern__mobile-subtitle">Barber Shop</p>
         </div>
 
-        <!-- Alerta de éxito -->
-        <AlertMessage
-          v-if="mensajeExito"
-          :mensaje="mensajeExito"
-          tipo="success"
-          :duracion="3000"
-          @close="mensajeExito = ''"
-        />
+        <div class="login-modern__welcome">
+          <h3>Bienvenido de vuelta</h3>
+          <p>Ingresa tus credenciales para acceder a tu panel.</p>
+        </div>
 
-        <!-- Alerta de error -->
+        <!-- Alertas -->
         <AlertMessage
           v-if="error"
           :mensaje="error"
@@ -30,63 +56,90 @@
           @close="error = ''"
         />
 
-        <!-- Formulario de login -->
-        <form id="form-login" class="login-form" @submit.prevent="handleLogin" novalidate>
-          <div class="login-form__group">
-            <label class="label" for="input-correo">Correo Electrónico</label>
+        <AlertMessage
+          v-if="mensajeExito"
+          :mensaje="mensajeExito"
+          tipo="success"
+          :duracion="3000"
+          @close="mensajeExito = ''"
+        />
+
+        <!-- Formulario -->
+        <form
+          id="form-login"
+          class="login-modern__form"
+          @submit.prevent="handleLogin"
+          novalidate
+        >
+          <!-- Grupo Correo (Estilo Moderno) -->
+          <div class="login-modern__input-group">
             <input
               id="input-correo"
               type="email"
-              class="input-field"
-              :class="{ 'input-field--error': errores.correo }"
+              class="login-modern__input"
+              :class="{ 'login-modern__input--error': errores.correo }"
               v-model.trim="form.correo"
-              placeholder="correo@barberia.com"
+              placeholder=" "
               autocomplete="email"
               required
               @input="limpiarErrorCampo('correo')"
             />
-            <span v-if="errores.correo" class="login-form__error">{{ errores.correo }}</span>
+            <label for="input-correo" class="login-modern__floating-label">
+              Correo Electrónico
+            </label>
+            <span v-if="errores.correo" class="login-modern__error-text">
+              {{ errores.correo }}
+            </span>
           </div>
 
-          <div class="login-form__group">
-            <label class="label" for="input-password">Contraseña</label>
-            <div class="login-form__password-wrapper">
+          <!-- Grupo Contraseña (Estilo Moderno) -->
+          <div class="login-modern__input-group">
+            <div class="login-modern__password-wrapper">
               <input
                 id="input-password"
                 :type="mostrarPassword ? 'text' : 'password'"
-                class="input-field"
-                :class="{ 'input-field--error': errores.contraseña }"
+                class="login-modern__input"
+                :class="{ 'login-modern__input--error': errores.contraseña }"
                 v-model="form.contraseña"
-                placeholder="••••••••"
+                placeholder=" "
                 autocomplete="current-password"
                 required
                 @input="limpiarErrorCampo('contraseña')"
               />
+              <label for="input-password" class="login-modern__floating-label">
+                Contraseña
+              </label>
               <button
                 type="button"
-                class="login-form__toggle-pw"
+                class="login-modern__toggle-pw"
                 @click="mostrarPassword = !mostrarPassword"
                 :title="mostrarPassword ? 'Ocultar' : 'Mostrar'"
               >
                 {{ mostrarPassword ? '🙈' : '👁️' }}
               </button>
             </div>
-            <span v-if="errores.contraseña" class="login-form__error">{{ errores.contraseña }}</span>
+            <span v-if="errores.contraseña" class="login-modern__error-text">
+              {{ errores.contraseña }}
+            </span>
           </div>
 
+          <!-- Botón de Login -->
           <button
             id="btn-login"
             type="submit"
-            class="btn-primary login-form__submit"
+            class="login-modern__btn"
             :disabled="authStore.cargando"
           >
-            <span v-if="authStore.cargando" class="login-form__spinner"></span>
-            <span v-else>Ingresar</span>
+            <span v-if="authStore.cargando" class="login-modern__spinner"></span>
+            <span v-else class="login-modern__btn-text">
+              Ingresar al Sistema
+              <span class="login-modern__btn-icon">→</span>
+            </span>
           </button>
         </form>
 
-        <p class="login-card__footer">
-          Solo acceso para personal autorizado
+        <p class="login-modern__footer-note">
+          🔒 Acceso restringido a personal autorizado.
         </p>
       </div>
 
@@ -103,60 +156,50 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/auth.js'
+import { useAuthStore } from '../../stores/auth'
 import AlertMessage from '../../components/common/AlertMessage.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
+const error = ref('')
+const mensajeExito = ref('')
+const mostrarPassword = ref(false)
+
 const form = reactive({
   correo: '',
-  contraseña: '',
+  contraseña: ''
 })
 
 const errores = reactive({
   correo: '',
-  contraseña: '',
+  contraseña: ''
 })
-
-const mostrarPassword = ref(false)
-const error = ref('')
-const mensajeExito = ref('')
 
 function limpiarErrorCampo(campo) {
   errores[campo] = ''
-  error.value = ''
-}
-
-function validarFormulario() {
-  let valido = true
-
-  if (!form.correo) {
-    errores.correo = 'Complete este campo'
-    valido = false
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo)) {
-    errores.correo = 'Ingrese un correo electrónico válido'
-    valido = false
-  }
-
-  if (!form.contraseña) {
-    errores.contraseña = 'Complete este campo'
-    valido = false
-  }
-
-  return valido
 }
 
 async function handleLogin() {
   error.value = ''
   mensajeExito.value = ''
 
-  if (!validarFormulario()) return
+  if (!form.correo) {
+    errores.correo = 'Complete este campo'
+  }
+
+  if (!form.contraseña) {
+    errores.contraseña = 'Complete este campo'
+  }
+
+  if (errores.correo || errores.contraseña) {
+    return
+  }
 
   try {
-    await authStore.login(form.correo, form.contraseña)
-    mensajeExito.value = 'Inicio de sesión exitoso. Redirigiendo...'
-
+    const data = await authStore.login(form.correo, form.contraseña)
+    mensajeExito.value = data.mensaje || 'Inicio de sesión exitoso'
+    
     setTimeout(() => {
       if (authStore.esAdmin) {
         router.push({ name: 'DashboardAdmin' })
@@ -164,153 +207,349 @@ async function handleLogin() {
         router.push({ name: 'DashboardBarbero' })
       }
     }, 1000)
+    
   } catch (err) {
+    // Credenciales incorrectas
     error.value = 'Correo o contraseña incorrectos. Verifique sus credenciales.'
   }
 }
 </script>
 
 <style scoped>
-.login-page {
-  width: 100%;
+/* =========================================
+   LOGIN MODERNO (TEMA VINTAGE PREMIUM)
+   ========================================= */
+
+.login-modern-wrapper {
+  display: flex;
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--color-azul-oscuro) 0%, var(--color-azul-real) 100%);
-  padding: 1rem;
-}
-
-.login-container {
   width: 100%;
-  max-width: 420px;
+  background-color: var(--color-crema);
+}
+
+/* --- Mitad Izquierda (Marca/Branding) --- */
+.login-modern__brand {
+  display: none;
   position: relative;
-  z-index: 1;
-}
-
-.login-card {
-  padding: 2.5rem;
-  animation: fadeIn 0.6s ease-out;
-}
-
-.login-card__header {
-  text-align: center;
-  margin-bottom: 2rem;
-  display: flex;
-  flex-direction: column;
+  width: 45%;
+  background-color: var(--color-azul-oscuro);
+  color: var(--color-crema);
+  overflow: hidden;
   align-items: center;
+  justify-content: center;
+  padding: 4rem;
 }
 
-.login-card__logo-wrapper {
-  margin-bottom: 0.75rem;
+@media (min-width: 1024px) {
+  .login-modern__brand {
+    display: flex;
+  }
 }
 
-.login-card__logo-img {
-  width: 90px;
-  height: 90px;
-  object-fit: contain;
-  animation: pulse-gold 2s ease infinite;
+.login-modern__brand-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 400px;
+}
+
+.login-modern__logo-box {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 2rem;
   border-radius: 50%;
-  display: block;
-}
-
-.login-card__logo-fallback {
-  width: 90px;
-  height: 90px;
-  font-size: 3rem;
+  background: var(--color-bg-glass);
+  padding: 10px;
+  border: 2px solid var(--color-bronce);
+  box-shadow: 0 0 20px rgba(208, 194, 167, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: pulse-gold 2s ease infinite;
 }
 
-.login-card__title {
+.login-modern__logo {
+  max-width: 100%;
+  height: auto;
+  border-radius: 50%;
+}
+
+.login-modern__logo-fallback {
+  font-size: 3rem;
+}
+
+.login-modern__hero-title {
   font-family: var(--font-heading);
-  font-size: 2rem;
+  font-size: 3rem;
   font-weight: 800;
-  color: var(--color-azul-oscuro);
+  line-height: 1.1;
+  color: var(--color-crema);
   margin-bottom: 0.25rem;
-}
-
-.login-card__subtitle {
-  font-size: 0.875rem;
-  color: var(--color-bronce);
+  text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.login-form {
+.login-modern__hero-subtitle {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--color-oro-suave);
+  margin-bottom: 2rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.login-modern__pole-accent {
   display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  height: 6px;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto 2rem;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-.login-form__group {
-  display: flex;
-  flex-direction: column;
+.pole-stripe {
+  flex: 1;
+  transform: skewX(-45deg);
+  margin: 0 -2px;
 }
 
-.login-form__password-wrapper {
-  position: relative;
+.pole-stripe--red { background-color: var(--color-rojo-vintage); }
+.pole-stripe--white { background-color: #FFFFFF; }
+.pole-stripe--blue { background-color: var(--color-azul-real); }
+
+.login-modern__hero-text {
+  font-size: 1.125rem;
+  color: rgba(246, 243, 234, 0.8);
+  line-height: 1.6;
 }
 
-.login-form__password-wrapper .input-field {
-  padding-right: 3rem;
-}
-
-.login-form__toggle-pw {
+.login-modern__glow {
   position: absolute;
-  right: 0.75rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(208,194,167,0.15) 0%, rgba(13,30,45,0) 70%);
+  z-index: 1;
+}
+
+/* --- Mitad Derecha (Formulario) --- */
+.login-modern__form-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .login-modern__form-section {
+    width: 55%;
+  }
+}
+
+.login-modern__form-container {
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-modern__mobile-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .login-modern__mobile-header {
+    display: none;
+  }
+}
+
+.login-modern__mobile-title {
+  font-family: var(--font-heading);
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--color-azul-oscuro);
+  line-height: 1.2;
+}
+
+.login-modern__mobile-subtitle {
+  font-size: 1rem;
+  color: var(--color-rojo-vintage);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.login-modern__welcome {
+  margin-bottom: 2.5rem;
+}
+
+.login-modern__welcome h3 {
+  font-size: 1.75rem;
+  color: var(--color-azul-oscuro);
+  margin-bottom: 0.5rem;
+}
+
+.login-modern__welcome p {
+  color: var(--color-bronce);
+  font-size: 1rem;
+}
+
+.login-modern__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* --- Inputs con Floating Labels --- */
+.login-modern__input-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-modern__password-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.login-modern__input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  color: var(--color-azul-oscuro);
+  background-color: transparent;
+  border: 2px solid var(--color-bronce);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.login-modern__input:focus {
+  border-color: var(--color-azul-real);
+  box-shadow: 0 4px 12px rgba(26, 70, 140, 0.1);
+}
+
+.login-modern__input--error {
+  border-color: var(--color-rojo-vintage) !important;
+}
+
+.login-modern__floating-label {
+  position: absolute;
+  left: 1rem;
+  top: 1.1rem;
+  color: var(--color-bronce);
+  font-size: 1rem;
+  pointer-events: none;
+  transition: 0.2s ease all;
+  background-color: var(--color-crema);
+  padding: 0 0.25rem;
+}
+
+/* Efecto de Floating Label */
+.login-modern__input:focus ~ .login-modern__floating-label,
+.login-modern__input:not(:placeholder-shown) ~ .login-modern__floating-label {
+  top: -0.6rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-azul-real);
+}
+
+.login-modern__input--error:focus ~ .login-modern__floating-label,
+.login-modern__input--error:not(:placeholder-shown) ~ .login-modern__floating-label {
+  color: var(--color-rojo-vintage);
+}
+
+.login-modern__toggle-pw {
+  position: absolute;
+  right: 1rem;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.125rem;
-  padding: 0.25rem;
-  opacity: 0.7;
-  transition: opacity 0.2s;
+  font-size: 1.25rem;
+  opacity: 0.6;
+  transition: opacity 0.3s;
 }
 
-.login-form__toggle-pw:hover {
+.login-modern__toggle-pw:hover {
   opacity: 1;
 }
 
-.login-form__error {
-  font-size: 0.75rem;
-  color: var(--color-error);
-  margin-top: 0.25rem;
+.login-modern__error-text {
+  font-size: 0.8125rem;
+  color: var(--color-rojo-vintage);
+  margin-top: 0.375rem;
   font-weight: 500;
 }
 
-.input-field--error {
-  border-color: var(--color-error) !important;
-  box-shadow: 0 0 0 3px rgba(166, 43, 43, 0.1);
-}
-
-.login-form__submit {
+/* --- Botón --- */
+.login-modern__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  margin-top: 0.5rem;
-  padding: 0.875rem;
-  font-size: 1rem;
+  padding: 1rem;
+  background: var(--color-azul-oscuro);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
 }
 
-.login-form__spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
+.login-modern__btn:hover:not(:disabled) {
+  background: var(--color-azul-real);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(26, 70, 140, 0.2);
+}
+
+.login-modern__btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-modern__btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-modern__btn-text {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.login-modern__btn-icon {
+  font-size: 1.25rem;
+  transition: transform 0.3s;
+}
+
+.login-modern__btn:hover:not(:disabled) .login-modern__btn-icon {
+  transform: translateX(4px);
+}
+
+.login-modern__spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
   border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.login-card__footer {
+.login-modern__footer-note {
+  margin-top: 2rem;
   text-align: center;
-  margin-top: 1.5rem;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: var(--color-bronce);
 }
 

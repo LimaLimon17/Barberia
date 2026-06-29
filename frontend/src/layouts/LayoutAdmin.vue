@@ -11,11 +11,9 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import Navbar from '../components/common/Navbar.vue'
 import Sidebar from '../components/common/Sidebar.vue'
-
 const menuItems = [
   {
     nombre: 'Dashboard',
@@ -28,9 +26,19 @@ const menuItems = [
     icono: '✂️',
   },
   {
-    nombre: 'Horarios',
-    ruta: '/admin/horarios',
-    icono: '🗓️',
+    nombre: 'Finanzas',
+    ruta: '/admin/finanzas',
+    icono: '💰',
+  },
+  {
+    nombre: 'Ventas',
+    ruta: '/admin/reportes/ventas',
+    icono: '📈',
+  },
+  {
+    nombre: 'Inventario',
+    ruta: '/admin/reportes/inventario',
+    icono: '📦',
   },
   {
     nombre: 'Servicios',
@@ -54,14 +62,12 @@ const menuItems = [
   },
 ]
 </script>
-
 <style scoped>
 .layout-panel {
   display: flex;
   min-height: 100vh;
   background: var(--color-bg-primary);
 }
-
 .layout-panel__main {
   flex: 1;
   display: flex;
@@ -69,13 +75,11 @@ const menuItems = [
   min-width: 0;
   margin-left: 260px;
 }
-
 .layout-panel__content {
   flex: 1;
   padding: 2rem;
   animation: fadeIn 0.4s ease-out;
 }
-
 @media (max-width: 768px) {
   .layout-panel__main {
     margin-left: 0;

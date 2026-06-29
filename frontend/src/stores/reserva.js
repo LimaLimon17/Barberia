@@ -256,17 +256,7 @@ export const useReservaStore = defineStore('reserva', () => {
     idCategoriaFiltro.value = ''
     serviciosSeleccionados.value = []
     fechaCita.value = ''
-    slots.value = []
-    horaInicioSeleccionada.value = null
-    reservaActual.value = null
-    qrPago.value = null
-    error.value = null
-    detenerPollingBarberos()
-    detenerPollingEstado()
-  }
-
-  function irAPaso(n) {
-    paso.value = n
+    horaInicio.value = ''
   }
 
   return {

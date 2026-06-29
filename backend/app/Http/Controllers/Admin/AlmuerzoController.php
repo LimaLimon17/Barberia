@@ -21,20 +21,20 @@ class AlmuerzoController extends Controller
             now()->endOfWeek()->toDateString()
         );
 
-        $registros = DB::table('RegistrosAlmuerzos as ra')
-            ->join('Barberos as b', 'ra.IdBarbero', '=', 'b.IdBarbero')
+        $registros = DB::table('Registros as r')
+            ->join('Barberos as b', 'r.IdBarbero', '=', 'b.IdBarbero')
             ->join('Usuarios as u', 'b.IdUsuario', '=', 'u.IdUsuario')
-            ->where('ra.IdBarbero', $idBarbero)
-            ->where('ra.EstadoA', 1)
-            ->whereBetween('ra.Fecha', [$fechaInicio, $fechaFin])
-            ->orderBy('ra.Fecha', 'asc')
-            ->orderBy('ra.HoraSalida', 'asc')
+            ->where('r.IdBarbero', $idBarbero)
+            ->where('r.EstadoA', 1)
+            ->whereBetween('r.Fecha', [$fechaInicio, $fechaFin])
+            ->orderBy('r.Fecha', 'asc')
+            ->orderBy('r.HoraInicio', 'asc')
             ->select(
-                'ra.IdRegistro as id_registro',
-                'ra.Fecha as fecha',
-                'ra.HoraSalida as hora_salida',
-                'ra.HoraRetorno as hora_retorno',
-                'ra.Observacion as observacion',
+                'r.IdRegistro as id_registro',
+                'r.Fecha as fecha',
+                'r.HoraInicio as hora_salida', // Alias para el frontend
+                'r.HoraFin as hora_retorno',   // Alias para el frontend
+                'r.Observacion as observacion',
                 DB::raw("CONCAT(u.Nombre1, ' ', u.Apellido1) as nombre_barbero")
             )
             ->get();
@@ -58,12 +58,13 @@ class AlmuerzoController extends Controller
             'observacion' => 'nullable|string|max:255',
         ]);
 
-        DB::table('RegistrosAlmuerzos')->insert([
+        DB::table('Registros')->insert([
             'IdBarbero'   => $idBarbero,
             'Fecha'       => $request->fecha,
-            'HoraSalida'  => $request->hora_salida,
-            'HoraRetorno' => null,
+            'HoraInicio'  => $request->hora_salida, // Hora de salida es HoraInicio en BD
+            'HoraFin'     => null,
             'Observacion' => $request->observacion,
+            'Ausencia'    => 1, // Asumimos que 1 = Ausencia o registro activo de almuerzo
             'EstadoA'     => 1,
             'FechaA'      => now(),
             'UsuarioA'    => $request->user()->IdUsuario,
@@ -83,11 +84,11 @@ class AlmuerzoController extends Controller
             'hora_retorno' => 'required|date_format:H:i',
         ]);
 
-        $actualizado = DB::table('RegistrosAlmuerzos')
+        $actualizado = DB::table('Registros')
             ->where('IdRegistro', $idRegistro)
             ->where('IdBarbero', $idBarbero)
-            ->whereNull('HoraRetorno')
-            ->update(['HoraRetorno' => $request->hora_retorno]);
+            ->whereNull('HoraFin')
+            ->update(['HoraFin' => $request->hora_retorno]);
 
         if (!$actualizado) {
             return response()->json([

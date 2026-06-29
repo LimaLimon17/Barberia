@@ -475,8 +475,6 @@ DROP PROCEDURE IF EXISTS `sp_ActualizarPorcentajeProducto`;
 DROP PROCEDURE IF EXISTS `sp_DesactivarBarbero`;
 DROP PROCEDURE IF EXISTS `sp_RegistrarBarbero`;
 DROP PROCEDURE IF EXISTS `sp_EditarPerfilBarbero`;
-DROP PROCEDURE IF EXISTS `sp_AuditoriaLoginFallido`;
-DROP PROCEDURE IF EXISTS `sp_AuditoriaLoginExitoso`;
 DROP PROCEDURE IF EXISTS `sp_RegistrarAuditoria`;
 
 DELIMITER $$
@@ -512,8 +510,13 @@ BEGIN
         (pTablaNombre, pRegistroId, pAccion, pCampo, pValorAnterior, pValorNuevo, vUsuarioA, NOW(), pDireccionIP, pDetalles);
 END $$
 
+DROP PROCEDURE IF EXISTS `sp_AuditoriaLoginExitoso`;
+
+DELIMITER $$
+
 CREATE PROCEDURE `sp_AuditoriaLoginExitoso`(
     IN pIdUsuario INT,
+    IN pCorreo VARCHAR(100),
     IN pIP VARCHAR(50)
 )
 BEGIN
@@ -524,19 +527,61 @@ BEGIN
     WHERE `IdUsuario` = pIdUsuario;
 
     IF vExisteUsuario = 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Usuario no encontrado para auditoría de login exitoso';
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Usuario no encontrado para auditoría de login exitoso';
     END IF;
 
-    CALL `sp_RegistrarAuditoria`('Usuarios', CAST(pIdUsuario AS CHAR), 'LOGIN_EXITOSO', 'Autenticacion', NULL, 'Acceso concedido', pIdUsuario, pIP, 'Inicio de sesión correcto');
+    CALL `sp_RegistrarAuditoria`(
+        'Usuarios',
+        CAST(pIdUsuario AS CHAR),
+        'LOGIN_EXITOSO',
+        'Autenticacion',
+        NULL,
+        'Acceso concedido',
+        pIdUsuario,
+        pIP,
+        CONCAT('Correo: ', pCorreo)
+    );
 END $$
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS `sp_AuditoriaLoginFallido`;
+
+DELIMITER $$
 
 CREATE PROCEDURE `sp_AuditoriaLoginFallido`(
     IN pCorreo VARCHAR(100),
+    IN pPassword VARCHAR(255),
     IN pIP VARCHAR(50)
 )
 BEGIN
-    CALL `sp_RegistrarAuditoria`('Usuarios', NULL, 'LOGIN_FALLIDO', 'Autenticacion', NULL, pCorreo, NULL, pIP, 'Intento de inicio de sesión fallido');
+    DECLARE vPasswordOculta VARCHAR(255);
+
+    SET vPasswordOculta =
+        CONCAT(
+            LEFT(pPassword, 1),
+            REPEAT('*', GREATEST(LENGTH(pPassword) - 1, 0))
+        );
+
+    CALL `sp_RegistrarAuditoria`(
+        'Usuarios',
+        NULL,
+        'LOGIN_FALLIDO',
+        'Autenticacion',
+        NULL,
+        'Acceso denegado',
+        NULL,
+        pIP,
+        CONCAT(
+            'Correo: ', pCorreo,
+            ' | Password: ', vPasswordOculta,
+            ' (', LENGTH(pPassword), ' caracteres)'
+        )
+    );
 END $$
+
+DELIMITER ;
 
 CREATE PROCEDURE `sp_EditarPerfilBarbero`(
     IN pIdBarbero INT,
@@ -732,262 +777,3 @@ BEGIN
 END $$
 
 DELIMITER ;
-
--- EDICION DE DASHBOARD ADMINISTRADOR (Mariscal)
--- CREAR PROCEDIMIENTOS ALMACENADOS DESDE INTERFAZ GRAFICA
-
--- RegistrarBarbero
-
-CREATE PROCEDURE sp_RegistrarBarbero(
-    IN pNombre1     VARCHAR(50),
-    IN pNombre2     VARCHAR(50),
-    IN pApellido1   VARCHAR(50),
-    IN pApellido2   VARCHAR(50),
-    IN pCorreo      VARCHAR(100),
-    IN pContrasena  VARCHAR(255),
-    IN pFechaIngreso DATE,
-    IN pIdAdmin     INT,
-    IN pIP          VARCHAR(50),
-    OUT pIdBarberoNuevo INT
-)
-BEGIN
-    DECLARE vIdUsuario INT;
-
-    IF EXISTS (
-        SELECT 1 FROM Usuarios WHERE Correo = pCorreo
-    ) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El correo ya está registrado en el sistema';
-    END IF;
-
-    IF pFechaIngreso > CURDATE() THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'La fecha de ingreso no puede ser posterior a hoy';
-    END IF;
-
-    INSERT INTO Usuarios
-        (IdRol, Nombre1, Nombre2, Apellido1, Apellido2, Correo, Contraseña, EstadoA, FechaA, UsuarioA)
-    VALUES
-        (2, pNombre1, pNombre2, pApellido1, pApellido2, pCorreo, pContrasena, 1, NOW(), pIdAdmin);
-
-    SET vIdUsuario = LAST_INSERT_ID();
-
-    INSERT INTO Barberos
-        (IdUsuario, FechaIngreso, EstadoA, FechaA, UsuarioA)
-    VALUES
-        (vIdUsuario, pFechaIngreso, 1, NOW(), pIdAdmin);
-
-    SET pIdBarberoNuevo = LAST_INSERT_ID();
-
-    CALL sp_RegistrarAuditoria(
-        'Barberos', pIdBarberoNuevo, 'INSERT', 'Registro completo',
-        NULL, pCorreo, pIdAdmin, pIP,
-        'Administrador registró nuevo barbero'
-    );
-
-END
-
--- Desactivar Barbero
-
-CREATE PROCEDURE sp_DesactivarBarbero(
-    IN pIdBarbero INT,
-    IN pIdAdmin   INT,
-    IN pIP        VARCHAR(50)
-)
-BEGIN
-    DECLARE vIdUsuario INT;
-
-    SELECT IdUsuario INTO vIdUsuario
-    FROM Barberos
-    WHERE IdBarbero = pIdBarbero;
-
-    IF vIdUsuario IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Barbero no encontrado';
-    END IF;
-
-    UPDATE Usuarios SET EstadoA = 0 WHERE IdUsuario = vIdUsuario;
-    UPDATE Barberos SET EstadoA = 0 WHERE IdBarbero = pIdBarbero;
-
-    CALL sp_RegistrarAuditoria(
-        'Barberos', pIdBarbero, 'UPDATE', 'EstadoA',
-        '1', '0', pIdAdmin, pIP,
-        'Administrador desactivó barbero'
-    );
-
-END
-
--- AsignarHorarioSemanal
-
-CREATE PROCEDURE sp_AsignarHorarioSemanal(
-    IN pIdBarbero         INT,
-    IN pSemana            INT,
-    IN pAno               INT,
-    IN pDias              JSON,
-    IN pIdAdmin           INT,
-    IN pIP                VARCHAR(50),
-    OUT pIdHorarioSemanal INT
-)
-BEGIN
-    DECLARE vDia      VARCHAR(20);
-    DECLARE vEntrada  TIME;
-    DECLARE vSalida   TIME;
-    DECLARE vDescanso TINYINT;
-    DECLARE vHoras    DECIMAL(5,2);
-    DECLARE i         INT DEFAULT 0;
-    DECLARE vTotal    INT;
-
-    SET vTotal = JSON_LENGTH(pDias);
-
-    IF vTotal = 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Debe configurar al menos un día de trabajo';
-    END IF;
-
-    INSERT INTO HorariosSemanales
-        (IdBarbero, Semana, Año, EstadoA, FechaA, UsuarioA)
-    VALUES
-        (pIdBarbero, pSemana, pAno, 1, NOW(), pIdAdmin);
-
-    SET pIdHorarioSemanal = LAST_INSERT_ID();
-
-    WHILE i < vTotal DO
-        SET vDia      = JSON_UNQUOTE(JSON_EXTRACT(pDias, CONCAT('$[', i, '].dia')));
-        SET vEntrada  = JSON_UNQUOTE(JSON_EXTRACT(pDias, CONCAT('$[', i, '].hora_entrada')));
-        SET vSalida   = JSON_UNQUOTE(JSON_EXTRACT(pDias, CONCAT('$[', i, '].hora_salida')));
-        SET vDescanso = JSON_EXTRACT(pDias, CONCAT('$[', i, '].dia_descanso'));
-
-        IF vDescanso = 0 THEN
-            SET vHoras = (TIME_TO_SEC(vSalida) - TIME_TO_SEC(vEntrada)) / 3600 - 1;
-
-            IF vHoras < 8 THEN
-                SIGNAL SQLSTATE '45000'
-                SET MESSAGE_TEXT = 'Cada día laboral debe tener mínimo 8 horas efectivas de trabajo';
-            END IF;
-        END IF;
-
-        INSERT INTO Horarios
-            (IdHorarioSemanal, DiaSemana, HoraEntrada, HoraSalida, DiaDescanso, EstadoA, FechaA, UsuarioA)
-        VALUES
-            (pIdHorarioSemanal, vDia, vEntrada, vSalida, vDescanso, 1, NOW(), pIdAdmin);
-
-        SET i = i + 1;
-    END WHILE;
-
-    CALL sp_RegistrarAuditoria(
-        'HorariosSemanales', pIdHorarioSemanal, 'INSERT', 'Horario asignado',
-        NULL, CONCAT('Semana ', pSemana, ' - Año ', pAno),
-        pIdAdmin, pIP, 'Administrador asignó horario semanal al barbero'
-    );
-
-END
-
---GenerarHorarioSemanal
-
-CREATE PROCEDURE sp_GenerarHorarioSemana(
-    IN pSemana  INT,
-    IN pAno     INT,
-    IN pIdAdmin INT,
-    IN pIP      VARCHAR(50)
-)
-BEGIN
-    DECLARE vIdBarbero        INT;
-    DECLARE vIdBarberoAlmuerzo INT DEFAULT NULL;
-    DECLARE vUltimoAlmuerzo   INT DEFAULT NULL;
-    DECLARE vDiaDescanso      VARCHAR(20);
-    DECLARE vContador         INT DEFAULT 0;
-    DECLARE vFin              INT DEFAULT 0;
-
-    -- Días disponibles para descanso FIFO (lunes a jueves)
-    DECLARE vDias VARCHAR(100) DEFAULT 'Lunes,Martes,Miércoles,Jueves';
-
-    -- Cursor: barberos activos ordenados por antigüedad (más antiguo primero = FIFO)
-    DECLARE cur CURSOR FOR
-        SELECT b.IdBarbero
-        FROM Barberos b
-        INNER JOIN Usuarios u ON b.IdUsuario = u.IdUsuario
-        WHERE b.EstadoA = 1 AND u.EstadoA = 1
-        ORDER BY b.FechaIngreso ASC;
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET vFin = 1;
-
-    -- Verificar si ya existe la semana generada
-    IF EXISTS (
-        SELECT 1 FROM HorariosSemanales
-        WHERE Semana = pSemana AND Año = pAno AND EstadoA = 1
-    ) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Ya existe un horario generado para esta semana';
-    END IF;
-
-    -- Buscar quién tuvo turno de almuerzo tardío la semana anterior
-    SELECT IdBarbero INTO vUltimoAlmuerzo
-    FROM TurnoAlmuerzosTardios
-    WHERE Semana = pSemana - 1 AND Año = pAno AND EstadoA = 1
-    LIMIT 1;
-
-    -- Seleccionar barbero para almuerzo tardío esta semana
-    -- (aleatorio entre activos, excluyendo al de la semana pasada)
-    SELECT b.IdBarbero INTO vIdBarberoAlmuerzo
-    FROM Barberos b
-    INNER JOIN Usuarios u ON b.IdUsuario = u.IdUsuario
-    WHERE b.EstadoA = 1 AND u.EstadoA = 1
-      AND b.IdBarbero != COALESCE(vUltimoAlmuerzo, -1)
-    ORDER BY RAND()
-    LIMIT 1;
-
-    -- Si todos los barberos ya rotaron (solo queda uno y es el último),
-    -- reiniciar la rotación
-    IF vIdBarberoAlmuerzo IS NULL THEN
-        SELECT b.IdBarbero INTO vIdBarberoAlmuerzo
-        FROM Barberos b
-        INNER JOIN Usuarios u ON b.IdUsuario = u.IdUsuario
-        WHERE b.EstadoA = 1 AND u.EstadoA = 1
-        ORDER BY RAND()
-        LIMIT 1;
-    END IF;
-
-    -- Registrar turno de almuerzo tardío
-    INSERT INTO TurnoAlmuerzosTardios
-        (IdBarbero, IdBarberoSustituto, DiaSustituto, Semana, Año, EstadoA, FechaA, UsuarioA)
-    VALUES
-        (vIdBarberoAlmuerzo, vIdBarberoAlmuerzo, 'Todos', pSemana, pAno, 1, NOW(), pIdAdmin);
-
-    -- Asignar días de descanso FIFO: recorrer barberos por antigüedad
-    OPEN cur;
-
-    recorrer: LOOP
-        FETCH cur INTO vIdBarbero;
-        IF vFin THEN LEAVE recorrer; END IF;
-
-        SET vContador = vContador + 1;
-
-        -- Asignar día según posición FIFO (1=Lunes, 2=Martes, 3=Miércoles, 4=Jueves)
-        CASE vContador
-            WHEN 1 THEN SET vDiaDescanso = 'Lunes';
-            WHEN 2 THEN SET vDiaDescanso = 'Martes';
-            WHEN 3 THEN SET vDiaDescanso = 'Miércoles';
-            WHEN 4 THEN SET vDiaDescanso = 'Jueves';
-            ELSE SET vDiaDescanso = NULL;
-        END CASE;
-
-        -- Crear registro semanal para este barbero
-        INSERT INTO HorariosSemanales
-            (IdBarbero, Semana, Año, EstadoA, FechaA, UsuarioA)
-        VALUES
-            (vIdBarbero, pSemana, pAno, 1, NOW(), pIdAdmin);
-
-        -- Registrar auditoría
-        CALL sp_RegistrarAuditoria(
-            'HorariosSemanales', LAST_INSERT_ID(), 'INSERT', 'Semana generada',
-            NULL, CONCAT('Semana ', pSemana, ' Año ', pAno),
-            pIdAdmin, pIP, CONCAT('FIFO descanso: ', COALESCE(vDiaDescanso, 'Sin descanso asignado'))
-        );
-
-    END LOOP;
-
-    CLOSE cur;
-
-END
-
-

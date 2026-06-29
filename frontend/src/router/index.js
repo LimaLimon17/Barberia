@@ -1,11 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
-
 // Layouts
 import LayoutPublico from '../layouts/LayoutPublico.vue'
 import LayoutBarbero from '../layouts/LayoutBarbero.vue'
 import LayoutAdmin from '../layouts/LayoutAdmin.vue'
-
 // Vistas públicas
 import LoginView from '../views/public/LoginView.vue'
 import HomeView from '../views/public/HomeView.vue'
@@ -15,11 +13,15 @@ import DashboardBarbero from '../views/barbero/DashboardBarbero.vue'
 import PerfilBarbero from '../views/barbero/PerfilBarbero.vue'
 import VentaProductosView from '../views/barbero/VentaProductosView.vue'
 
+import ReportesBarbero from '../views/barbero/ReportesBarbero.vue'
 // Vistas del administrador
 import DashboardAdmin from '../views/admin/DashboardAdmin.vue'
 import ListaBarberos from '../views/admin/ListaBarberos.vue'
 import PerfilBarberoAdmin from '../views/admin/PerfilBarberoAdmin.vue'
 import EditarBarbero from '../views/admin/EditarBarbero.vue'
+import FinanzasAdmin from '../views/admin/Finanzas.vue'
+import ReportesVentasAdmin from '../views/admin/ReportesVentas.vue'
+import ReportesInventarioAdmin from '../views/admin/ReportesInventario.vue'
 import RegistrarBarbero from '../views/admin/RegistrarBarbero.vue'
 import GestionHorarios from '../views/admin/GestionHorarios.vue'
 import RegistroAlmuerzos from '../views/admin/RegistroAlmuerzos.vue'
@@ -98,9 +100,14 @@ const routes = [
         component: VentaProductosView,
         meta: { title: 'Venta de Productos' },
       },
+      {
+        path: 'reportes',
+        name: 'ReportesBarbero',
+        component: ReportesBarbero,
+        meta: { title: 'Mis Reportes y Comisiones' },
+      },
     ],
   },
-
   // ==========================================
   // RUTAS DEL ADMINISTRADOR (Rol = 1)
   // ==========================================
@@ -118,6 +125,24 @@ const routes = [
         name: 'DashboardAdmin',
         component: DashboardAdmin,
         meta: { title: 'Panel de Administración' },
+      },
+      {
+        path: 'finanzas',
+        name: 'FinanzasAdmin',
+        component: FinanzasAdmin,
+        meta: { title: 'Finanzas' },
+      },
+      {
+        path: 'reportes/ventas',
+        name: 'ReportesVentasAdmin',
+        component: ReportesVentasAdmin,
+        meta: { title: 'Reporte de Ventas' },
+      },
+      {
+        path: 'reportes/inventario',
+        name: 'ReportesInventarioAdmin',
+        component: ReportesInventarioAdmin,
+        meta: { title: 'Reporte de Inventario' },
       },
       {
         path: 'barberos',
@@ -151,38 +176,34 @@ const routes = [
         component: GestionHorarios,
         meta: { title: 'Gestión de Horarios' },
       },
+        props: true,
+      },
     ],
   },
-
   // Ruta 404
   {
     path: '/:pathMatch(.*)*',
     redirect: '/login',
   },
 ]
-
 const router = createRouter({
   history: createWebHistory(),
   routes,
 })
-
 // ==========================================
 // GUARD DE NAVEGACIÓN - Protección por rol
 // ==========================================
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
-
   // Actualizar título de la página
   document.title = to.meta.title
     ? `${to.meta.title} | Barbería`
     : 'Barbería - Sistema de Gestión'
-
   // Si la ruta requiere autenticación
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!authStore.isAuthenticated) {
       return next({ name: 'Login' })
     }
-
     // Verificar rol
     const rolRequerido = to.matched.find((record) => record.meta.rol)?.meta.rol
 
@@ -196,7 +217,6 @@ router.beforeEach((to, from, next) => {
       }
     }
   }
-
   // Si ya está autenticado y va al login, redirigir al dashboard
   if (to.name === 'Login' && authStore.isAuthenticated) {
     if (authStore.esAdmin) {
@@ -207,8 +227,6 @@ router.beforeEach((to, from, next) => {
       return next({ name: 'DashboardBarbero' })
     }
   }
-
   next()
 })
-
 export default router

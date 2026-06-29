@@ -1,37 +1,58 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
-
 class Reserva extends Model
 {
     protected $table = 'Reservas';
     protected $primaryKey = 'IdReserva';
     public $timestamps = false;
-
     protected $fillable = [
-        'IdCliente', 'IdBarbero', 'FechaCita', 'HoraInicio', 'HoraFin',
-        'CostoTotal', 'MontoAnticipo', 'FechaPagoAnticipo', 'MetodoPagoAnticipo',
-        'EstadoReserva', 'HoraAusente', 'EstadoA', 'FechaA', 'UsuarioA'
+        'IdCliente',
+        'IdBarbero',
+        'FechaCita',
+        'HoraInicio',
+        'HoraFin',
+        'CostoTotal',
+        'MontoAnticipo',
+        'EstadoReserva',
+        'FechaPagoAnticipo',
+        'MetodoPagoAnticipo',
+        'HoraAusente',
+        'EstadoA',
+        'FechaA',
+        'UsuarioA',
     ];
-
+    protected $casts = [
+        'FechaCita' => 'date',
+        'CostoTotal' => 'decimal:2',
+        'MontoAnticipo' => 'decimal:2',
+        'FechaPagoAnticipo' => 'datetime',
+        'HoraAusente' => 'datetime',
+        'EstadoA' => 'boolean',
+        'FechaA' => 'datetime',
+    ];
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'IdCliente', 'CI');
     }
-
     public function barbero()
     {
         return $this->belongsTo(Barbero::class, 'IdBarbero', 'IdBarbero');
     }
-
     public function servicios()
     {
         return $this->belongsToMany(Servicio::class, 'ReservaServicios', 'IdReserva', 'IdServicio');
     }
+    public function ventas()
+    {
+        return $this->hasMany(Venta::class, 'IdReserva', 'IdReserva');
+    }
     public function pagos()
-{
-    return $this->hasMany(Pago::class, 'IdReserva', 'IdReserva');
-}
+    {
+        return $this->hasMany(Pago::class, 'IdReserva', 'IdReserva');
+    }
+    public function comisiones()
+    {
+        return $this->hasMany(Comision::class, 'IdReserva', 'IdReserva');
+    }
 }

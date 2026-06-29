@@ -15,8 +15,6 @@ class HorarioRequest extends FormRequest
     {
         return [
             'id_barbero'         => 'required|integer|exists:Barberos,IdBarbero',
-            'semana'             => 'required|integer|min:1|max:53',
-            'ano'                => 'required|integer|min:2020',
             'dias'               => 'required|array|min:1',
             'dias.*.dia'         => 'required|string',
             'dias.*.hora_entrada'=> 'required|date_format:H:i',
@@ -30,8 +28,6 @@ class HorarioRequest extends FormRequest
         return [
             'id_barbero.required' => 'Debe seleccionar un barbero',
             'id_barbero.exists'   => 'El barbero seleccionado no existe',
-            'semana.required'     => 'La semana es obligatoria',
-            'ano.required'        => 'El año es obligatorio',
             'dias.required'       => 'Debe configurar al menos un día',
             'dias.min'            => 'Debe configurar al menos un día',
         ];

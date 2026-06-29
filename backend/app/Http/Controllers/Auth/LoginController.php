@@ -1,13 +1,9 @@
 <?php
-
 namespace App\Http\Controllers\Auth;
-
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-
 class LoginController extends Controller
 {
     /**
@@ -20,57 +16,33 @@ class LoginController extends Controller
         $correo = $request->input('correo');
         $contraseña = $request->input('contraseña');
         $ip = $request->ip();
-
         // Buscar usuario por correo y estado activo
         $usuario = User::where('Correo', $correo)
             ->where('EstadoA', 1)
             ->first();
-
-        // Credenciales incorrectas
+        // Escenario 2: Credenciales incorrectas
         if (!$usuario || $usuario->Contraseña !== $contraseña) {
-
+            // Registrar auditoría de login fallido
             try {
-                DB::statement(
-                    'CALL sp_AuditoriaLoginFallido(?, ?, ?)',
-                    [
-                        $correo,
-                        $contraseña,
-                        $ip
-                    ]
-                );
+                DB::statement('CALL sp_AuditoriaLoginFallido(?, ?, ?)', [$correo, $contraseña, $ip]);
             } catch (\Exception $e) {
-                Log::error(
-                    'Error auditoría login fallido: ' . $e->getMessage()
-                );
+                // Si falla la auditoría, no impedir el flujo
             }
-
             return response()->json([
                 'mensaje' => 'Credenciales incorrectas. Verifique su correo y contraseña.',
             ], 401);
         }
-
         // Generar token Sanctum
         $token = $usuario->createToken('auth_token')->plainTextToken;
-
-        // Auditoría login exitoso
+        // Registrar auditoría de login exitoso
         try {
-            DB::statement(
-                'CALL sp_AuditoriaLoginExitoso(?, ?, ?)',
-                [
-                    $usuario->IdUsuario,
-                    $usuario->Correo,
-                    $ip
-                ]
-            );
+            DB::statement('CALL sp_AuditoriaLoginExitoso(?, ?, ?)', [$usuario->IdUsuario, $correo, $ip]);
         } catch (\Exception $e) {
-            Log::error(
-                'Error auditoría login exitoso: ' . $e->getMessage()
-            );
+            // Si falla la auditoría, no impedir el flujo
         }
-
         // Cargar relación con rol
         $usuario->load('rol');
-
+        // Escenario 1 y 3: Acceso exitoso con redirección según rol
         return response()->json([
             'mensaje' => 'Inicio de sesión exitoso',
             'token' => $token,
@@ -89,18 +61,15 @@ class LoginController extends Controller
             ],
         ], 200);
     }
-
     /**
      * Logout: Revoca el token actual.
      */
     public function logout()
     {
         $user = request()->user();
-
         if ($user) {
             $user->currentAccessToken()->delete();
         }
-
         return response()->json([
             'mensaje' => 'Sesión cerrada correctamente',
         ], 200);

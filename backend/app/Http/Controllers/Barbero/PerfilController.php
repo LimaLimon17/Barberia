@@ -1,12 +1,9 @@
 <?php
-
 namespace App\Http\Controllers\Barbero;
-
 use App\Http\Controllers\Controller;
 use App\Models\Barbero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
 class PerfilController extends Controller
 {
     /**
@@ -18,18 +15,15 @@ class PerfilController extends Controller
     {
         $usuario = $request->user();
         $ip = $request->ip();
-
         // Buscar el barbero asociado al usuario
         $barbero = Barbero::where('IdUsuario', $usuario->IdUsuario)
             ->where('EstadoA', 1)
             ->first();
-
         if (!$barbero) {
             return response()->json([
                 'mensaje' => 'No se encontró el perfil de barbero',
             ], 404);
         }
-
         // Registrar auditoría de consulta de perfil
         try {
             DB::statement('CALL sp_RegistrarAuditoria(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
@@ -46,7 +40,6 @@ class PerfilController extends Controller
         } catch (\Exception $e) {
             // Si falla la auditoría, no impedir el flujo
         }
-
         return response()->json([
             'barbero' => [
                 'id_barbero' => $barbero->IdBarbero,

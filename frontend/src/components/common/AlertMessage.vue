@@ -3,14 +3,12 @@
     {{ message }}
   </div>
 </template>
-
 <script setup>
 defineProps({
   message: { type: String, default: "" },
   type: { type: String, default: "info" },
 });
 </script>
-
 <style scoped>
 .alert-message {
   padding: 12px 14px;

@@ -1,24 +1,33 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
-
+use Carbon\Carbon;
 class Barbero extends Model
 {
     protected $table = 'Barberos';
     protected $primaryKey = 'IdBarbero';
     public $timestamps = false;
-
     protected $fillable = [
-        'IdUsuario', 'FechaIngreso', 'EstadoA', 'FechaA', 'UsuarioA'
+        'IdUsuario',
+        'FechaIngreso',
+        'EstadoA',
+        'FechaA',
+        'UsuarioA',
     ];
 
+    protected $casts = [
+        'FechaIngreso' => 'date',
+        'EstadoA' => 'boolean',
+        'FechaA' => 'datetime',
+    ];
+
+    /**
+     * Relación con el usuario.
+     */
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'IdUsuario', 'IdUsuario');
     }
-
     /**
      * Relación con HorariosBarberos (asignaciones de horario).
      */
@@ -26,7 +35,6 @@ class Barbero extends Model
     {
         return $this->hasMany(HorarioBarbero::class, 'IdBarbero', 'IdBarbero');
     }
-
     /**
      * Relación con reservas.
      */
@@ -34,7 +42,6 @@ class Barbero extends Model
     {
         return $this->hasMany(Reserva::class, 'IdBarbero', 'IdBarbero');
     }
-
     /**
      * Relación con comisiones semanales.
      */
@@ -42,7 +49,6 @@ class Barbero extends Model
     {
         return $this->hasMany(ComisionSemanal::class, 'IdBarbero', 'IdBarbero');
     }
-
     /**
      * Calcular antigüedad en días desde la fecha de ingreso.
      */
@@ -53,7 +59,6 @@ class Barbero extends Model
         }
         return $this->FechaIngreso->diffInDays(Carbon::today());
     }
-
     /**
      * Obtener el estado como texto legible.
      */

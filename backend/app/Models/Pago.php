@@ -4,34 +4,39 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Pago extends Model
+class DetalleComision extends Model
 {
-    protected $table = 'Pagos';
-    protected $primaryKey = 'IdPago';
+    protected $table = 'DetalleComisiones';
+    protected $primaryKey = 'IdDetalle';
     public $timestamps = false;
 
     protected $fillable = [
+        'IdComision',
         'IdReserva',
-        'IdVenta',
-        'TipoPago',
+        'Fecha',
         'Monto',
-        'FechaPago',
-        'MetodoPago',
-        'EstadoPago',
+        'Comision',
         'EstadoA',
         'FechaA',
         'UsuarioA',
     ];
 
     protected $casts = [
+        'Fecha' => 'datetime',
         'Monto' => 'decimal:2',
-        'FechaPago' => 'datetime',
+        'Comision' => 'decimal:2',
         'EstadoA' => 'boolean',
         'FechaA' => 'datetime',
     ];
+
+    public function comisionSemanal()
+    {
+        return $this->belongsTo(ComisionSemanal::class, 'IdComision', 'IdComision');
+    }
 
     public function reserva()
     {
         return $this->belongsTo(Reserva::class, 'IdReserva', 'IdReserva');
     }
 }
+

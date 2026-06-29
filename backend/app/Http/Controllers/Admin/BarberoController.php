@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\EditarBarberoRequest;
 use App\Http\Requests\RegistrarBarberoRequest;
 use App\Models\Barbero;
-use App\Models\HorarioSemanal;
+use App\Models\HorarioBarbero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -54,36 +54,39 @@ class BarberoController extends Controller
             ], 404);
         }
 
-        // Registrar auditoría de consulta admin
+        // Registrar auditoría de consulta admin (no bloquear si falla)
         try {
-            DB::statement('CALL sp_AuditoriaAdminVerPerfilBarbero(?, ?, ?)', [
-                $barbero->IdBarbero,
+            DB::statement('CALL sp_RegistrarAuditoria(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+                'Barberos',
+                (string) $barbero->IdBarbero,
+                'CONSULTA_ADMIN',
+                'Perfil',
+                null,
+                null,
                 $admin->IdUsuario,
                 $ip,
+                'Admin consultó perfil del barbero',
             ]);
         } catch (\Exception $e) {
             // Si falla la auditoría, no impedir el flujo
         }
 
-        // Obtener horario semanal más reciente
-        $horarioSemanal = HorarioSemanal::where('IdBarbero', $barbero->IdBarbero)
+        // Obtener horarios asignados al barbero via HorariosBarberos -> Horarios
+        $horariosBarbero = HorarioBarbero::where('IdBarbero', $barbero->IdBarbero)
             ->where('EstadoA', 1)
-            ->orderBy('Año', 'desc')
-            ->orderBy('Semana', 'desc')
-            ->with('horarios')
-            ->first();
+            ->with('horario')
+            ->get();
 
-        $horarios = [];
-        if ($horarioSemanal && $horarioSemanal->horarios) {
-            $horarios = $horarioSemanal->horarios->map(function ($h) {
-                return [
-                    'dia_semana' => $h->DiaSemana,
-                    'hora_entrada' => $h->HoraEntrada,
-                    'hora_salida' => $h->HoraSalida,
-                    'dia_descanso' => $h->DiaDescanso,
-                ];
-            });
-        }
+        $horarios = $horariosBarbero->map(function ($hb) {
+            $h = $hb->horario;
+            if (!$h) return null;
+            return [
+                'dia_semana' => $h->DiaSemana,
+                'hora_entrada' => $h->HoraEntrada,
+                'hora_salida' => $h->HoraSalida,
+                'dia_descanso' => $h->DiaDescanso,
+            ];
+        })->filter()->unique('dia_semana')->values();
 
         return response()->json([
             'barbero' => [

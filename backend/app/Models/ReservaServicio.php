@@ -4,28 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Pago extends Model
+class ReservaServicio extends Model
 {
-    protected $table = 'Pagos';
-    protected $primaryKey = 'IdPago';
+    protected $table = 'ReservaServicios';
+    protected $primaryKey = 'IdReservaServicio';
     public $timestamps = false;
 
     protected $fillable = [
+        'IdServicio',
         'IdReserva',
-        'IdVenta',
-        'TipoPago',
-        'Monto',
-        'FechaPago',
-        'MetodoPago',
-        'EstadoPago',
         'EstadoA',
         'FechaA',
         'UsuarioA',
     ];
 
     protected $casts = [
-        'Monto' => 'decimal:2',
-        'FechaPago' => 'datetime',
         'EstadoA' => 'boolean',
         'FechaA' => 'datetime',
     ];
@@ -33,5 +26,10 @@ class Pago extends Model
     public function reserva()
     {
         return $this->belongsTo(Reserva::class, 'IdReserva', 'IdReserva');
+    }
+
+    public function servicio()
+    {
+        return $this->belongsTo(Servicio::class, 'IdServicio', 'IdServicio');
     }
 }

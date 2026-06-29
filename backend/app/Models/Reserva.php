@@ -30,4 +30,8 @@ class Reserva extends Model
     {
         return $this->belongsToMany(Servicio::class, 'ReservaServicios', 'IdReserva', 'IdServicio');
     }
+    public function pagos()
+{
+    return $this->hasMany(Pago::class, 'IdReserva', 'IdReserva');
+}
 }

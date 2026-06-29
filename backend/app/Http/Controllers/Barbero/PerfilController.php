@@ -32,10 +32,16 @@ class PerfilController extends Controller
 
         // Registrar auditoría de consulta de perfil
         try {
-            DB::statement('CALL sp_AuditoriaVerPerfilBarbero(?, ?, ?)', [
-                $barbero->IdBarbero,
+            DB::statement('CALL sp_RegistrarAuditoria(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+                'Barberos',
+                (string) $barbero->IdBarbero,
+                'CONSULTA_PERFIL',
+                'Perfil',
+                null,
+                null,
                 $usuario->IdUsuario,
                 $ip,
+                'Barbero consultó su propio perfil',
             ]);
         } catch (\Exception $e) {
             // Si falla la auditoría, no impedir el flujo

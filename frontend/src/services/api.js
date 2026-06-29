@@ -11,8 +11,17 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error?.response?.data?.message || "Error de conexión con la API";
-    return Promise.reject({ ...error, friendlyMessage: message });
+    if (error.response && error.response.status === 401) {
+      // No recargar si es la petición de login fallida
+      if (error.config && error.config.url === '/login') {
+        return Promise.reject(error)
+      }
+
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('usuario')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
   }
 );
 

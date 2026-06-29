@@ -11,7 +11,6 @@ class Horario extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'IdHorarioSemanal',
         'DiaSemana',
         'HoraEntrada',
         'HoraSalida',
@@ -27,8 +26,8 @@ class Horario extends Model
         'FechaA' => 'datetime',
     ];
 
-    public function horarioSemanal()
+    public function horariosBarberos()
     {
-        return $this->belongsTo(HorarioSemanal::class, 'IdHorarioSemanal', 'IdHorarioSemanal');
+        return $this->hasMany(HorarioBarbero::class, 'IdHorario', 'IdHorario');
     }
 }

@@ -8,7 +8,8 @@ import LayoutAdmin from '../layouts/LayoutAdmin.vue'
 
 // Vistas públicas
 import LoginView from '../views/public/LoginView.vue'
-
+import HomeView from '../views/public/HomeView.vue'
+import ReservarView from '../views/public/ReservarView.vue'
 // Vistas del barbero
 import DashboardBarbero from '../views/barbero/DashboardBarbero.vue'
 import PerfilBarbero from '../views/barbero/PerfilBarbero.vue'
@@ -21,6 +22,9 @@ import PerfilBarberoAdmin from '../views/admin/PerfilBarberoAdmin.vue'
 import EditarBarbero from '../views/admin/EditarBarbero.vue'
 import RegistrarBarbero from '../views/admin/RegistrarBarbero.vue'
 import GestionHorarios from '../views/admin/GestionHorarios.vue'
+import RegistroAlmuerzos from '../views/admin/RegistroAlmuerzos.vue'
+import VerHorarioBarbero   from '../views/admin/VerHorarioBarbero.vue'
+import EditarHorarioBarbero from '../views/admin/EditarHorarioBarbero.vue'
 
 // Vistas del módulo catálogo, inventario y productos
 import ServiciosView from '../views/admin/ServiciosView.vue'
@@ -47,6 +51,21 @@ const routes = [
         meta: { requiresAuth: false, title: 'Iniciar Sesión' },
       },
     ],
+  },
+
+  //RUTA PAGINA PUBLICA
+  {
+    path: '/inicio',
+    name: 'Home',
+    component: HomeView,
+    meta: { title: 'The Lamplight Barber Shop' }
+  },
+ // RUTA PUBLICA - WIZARD DE RESERVA (HU-04 / HU-05)
+  {
+    path: '/reservar',
+    name: 'Reservar',
+    component: ReservarView,
+    meta: { title: 'Reservar Cita' },
   },
 
   // ==========================================
@@ -132,40 +151,10 @@ const routes = [
         component: GestionHorarios,
         meta: { title: 'Gestión de Horarios' },
       },
-
-      // ==========================================
-      // MÓDULO CATÁLOGO, INVENTARIO Y PRODUCTOS
-      // ==========================================
-      {
-        path: 'servicios',
-        name: 'ServiciosAdmin',
-        component: ServiciosView,
-        meta: { title: 'Catálogo de Servicios' },
-      },
-      {
-        path: 'inventario',
-        name: 'InventarioAdmin',
-        component: InventarioView,
-        meta: { title: 'Gestión de Inventario' },
-      },
-      {
-        path: 'productos/porcentajes',
-        name: 'PorcentajesProductosAdmin',
-        component: PorcentajesView,
-        meta: { title: 'Porcentajes de Productos' },
-      },
-      {
-        path: 'auditoria',
-        name: 'AuditoriaAdmin',
-        component: AuditoriaView,
-        meta: { title: 'Auditoría General' },
-      },
     ],
   },
 
-  // ==========================================
-  // RUTA 404
-  // ==========================================
+  // Ruta 404
   {
     path: '/:pathMatch(.*)*',
     redirect: '/login',

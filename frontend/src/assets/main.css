@@ -7,12 +7,12 @@
 /* ---------- Custom Theme ---------- */
 @theme {
   /* Paleta Base del Usuario */
-  --color-crema: #F4F0E6;
-  --color-azul-oscuro: #0D1B2A;
-  --color-bronce: #8C8275;
-  --color-rojo-vintage: #A62B2B;
-  --color-azul-real: #163E71;
-  --color-oro-suave: #E8DCC4;
+  --color-crema: #F6F3EA;
+  --color-azul-oscuro: #0D1E2D;
+  --color-bronce: #C6B9A3;
+  --color-rojo-vintage: #B82629;
+  --color-azul-real: #1A468C;
+  --color-oro-suave: #D0C2A7;
 
   /* Asignación Funcional */
   --color-bg-primary: var(--color-crema);

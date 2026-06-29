@@ -1,95 +1,58 @@
-# Sistema de Gestión de Barbería ✂️
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-Sistema integral desarrollado con arquitectura Cliente-Servidor para gestionar reservas, barberos, comisiones, inventario y más.
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-## 🛠️ Requisitos Previos (Lo que necesitas instalar)
+## About Laravel
 
-Para hacer funcionar el sistema en tu entorno local, asegúrate de tener instalados los siguientes programas:
-1. **XAMPP / Laragon / WAMP:** O cualquier servidor de MySQL local.
-2. **PHP 8.2+:** Asegúrate de que PHP esté en las variables de entorno de tu sistema (`php -v`).
-3. **Composer:** Gestor de dependencias de PHP (`composer -v`).
-4. **Node.js (v18+) y NPM:** Entorno de ejecución para el frontend (`node -v`, `npm -v`).
-5. **Git:** Para control de versiones.
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
----
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-## 🚀 Guía de Instalación y Ejecución
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-Sigue estos pasos en orden estricto para configurar tu entorno:
+## Learning Laravel
 
-### 1. Configuración de la Base de Datos (Nuevo Esquema)
-1. Inicia tu servidor de MySQL (por ejemplo, encendiendo MySQL en el panel de control de XAMPP).
-2. Abre phpMyAdmin o tu gestor de base de datos favorito (DBeaver, MySQL Workbench).
-3. No necesitas crear la base de datos manualmente. Simplemente **importa y ejecuta** el archivo `database_setup.sql` que se encuentra en la carpeta raíz del proyecto.
-   * *Este archivo contiene el script completo que crea automáticamente la base de datos `Barberia_bd`, las 20 tablas, relaciones, roles, procedimientos almacenados y los datos de prueba iniciales (clientes, barberos, productos, servicios, etc).*
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-### 2. Levantando el Backend (Laravel)
-1. Abre una terminal y navega hasta la carpeta del backend:
-   ```bash
-   cd backend
-   ```
-2. Instala las dependencias (si no lo has hecho antes):
-   ```bash
-   composer install
-   ```
-3. Crea tu archivo de entorno (si no existe):
-   ```bash
-   cp .env.example .env
-   ```
-4. Asegúrate de que el `.env` tenga las siguientes credenciales para la base de datos:
-   ```env
-   DB_CONNECTION=mysql
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_DATABASE=Barberia_bd
-   DB_USERNAME=root
-   DB_PASSWORD=
-   ```
-5. Levanta el servidor local de desarrollo:
-   ```bash
-   php artisan serve
-   ```
-   *La API estará corriendo en `http://localhost:8000` (déjalo abierto).*
+In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-### 3. Levantando el Frontend (Vue 3 + Vite)
-1. Abre **otra terminal nueva** y navega hasta la carpeta del frontend:
-   ```bash
-   cd frontend
-   ```
-2. Instala las dependencias de Node:
-   ```bash
-   npm install
-   ```
-3. Levanta el servidor visual:
-   ```bash
-   npm run dev
-   ```
-   *La aplicación estará corriendo en `http://localhost:5173`.*
+You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
 
----
+## Agentic Development
 
-## 🔐 Usuarios de Prueba Pre-registrados
+Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
 
-Una vez que tengas ambos servidores corriendo, entra a `http://localhost:5173` y puedes utilizar cualquiera de estos usuarios de prueba que ya vienen en la base de datos:
+```bash
+composer require laravel/boost --dev
 
-**1. Administrador (Control Total):**
-* **Correo:** `admin@barberia.com`
-* **Contraseña:** `123456`
+php artisan boost:install
+```
 
-**2. Barbero (Perfil limitado):**
-* **Correo:** `barbero1@barberia.com`
-* **Contraseña:** `123456`
-*(Existen otros barberos registrados del `barbero1` hasta `barbero10` con la misma contraseña).*
+Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
----
+## Contributing
 
-## ✨ Estructura de la Base de Datos Implementada
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-El sistema actual refleja la nueva arquitectura de base de datos relacional que maneja la Barbería:
-- **Seguridad:** `Usuarios`, `Roles`, `AuditoriaGeneral`
-- **Personal y Horarios:** `Barberos`, `Horarios`, `HorariosBarberos`, `Registros` (de entrada/salida/ausencias)
-- **Servicios y Reservas:** `Categorias`, `Servicios`, `Clientes`, `Reservas`, `ReservaServicios`
-- **Ventas y Comisiones:** `Ventas`, `DetalleVenta`, `Pagos`, `Comisiones`
-- **Inventario:** `Productos`, `Lotes`, `HistorialPorcentajeProductos`
+## Code of Conduct
 
-Todos los controladores del Backend (API) ya están ajustados para consultar estas tablas y hacer llamadas a los Procedimientos Almacenados (Auditorías, edición de perfiles, registro de barberos, etc).
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+
+## License
+
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

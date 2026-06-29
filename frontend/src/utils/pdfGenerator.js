@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
 import { format } from 'date-fns'
+import { auditoriaService } from '../services/auditoriaService'
 
 const THEME_COLOR = [15, 23, 42] // Slate 900
 const ACCENT_COLOR = [220, 38, 38] // Red 600
@@ -112,6 +113,12 @@ export const pdfGenerator = {
       doc.autoPrint()
     }
     
+    // Registrar auditoría
+    auditoriaService.registrarReporte('Nota de Venta (Comprobante)', { 
+      cliente: transaccion.cliente || 'Consumidor Final', 
+      barbero: transaccion.barbero 
+    })
+
     // Obtener blob URL para mostrar o imprimir directamente
     const blobUrl = doc.output('bloburl')
     return blobUrl
@@ -153,7 +160,8 @@ export const pdfGenerator = {
       styles: { fontSize: 8 }
     })
 
-    doc.save(`Reporte_Ventas_${filtros.inicio}.pdf`)
+    auditoriaService.registrarReporte('Reporte de Ventas Consolidadas', filtros)
+    window.open(doc.output('bloburl'), '_blank')
   },
 
   /**
@@ -200,7 +208,8 @@ export const pdfGenerator = {
       headStyles: { fillColor: THEME_COLOR },
     })
 
-    doc.save(`Finanzas_${datos.periodo.inicio}.pdf`)
+    auditoriaService.registrarReporte('Rendimiento Financiero (Admin)', datos.periodo)
+    window.open(doc.output('bloburl'), '_blank')
   },
 
   /**
@@ -234,7 +243,8 @@ export const pdfGenerator = {
       }
     })
 
-    doc.save(`Inventario_${filtros.inicio}.pdf`)
+    auditoriaService.registrarReporte('Reporte de Inventario', filtros)
+    window.open(doc.output('bloburl'), '_blank')
   },
 
   /**
@@ -277,7 +287,8 @@ export const pdfGenerator = {
       styles: { fontSize: 8 }
     })
 
-    doc.save(`Mi_Reporte_${datos.periodo.inicio}.pdf`)
+    auditoriaService.registrarReporte('Reporte Personal de Barbero', datos.periodo)
+    window.open(doc.output('bloburl'), '_blank')
   }
 }
 

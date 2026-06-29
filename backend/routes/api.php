@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FinanzaController;
 use App\Http\Controllers\Admin\ReporteController;
 use App\Http\Controllers\Barbero\ReporteBarberoController;
+use App\Http\Controllers\AuditoriaController;
 /*
 |--------------------------------------------------------------------------
 | API Routes - Sistema Barbería
@@ -26,6 +27,12 @@ Route::post('/login', [LoginController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     // Logout
     Route::post('/logout', [LoginController::class, 'logout']);
+
+    // ------------------------------------------
+    // RUTAS GENERALES (Cualquier rol autenticado)
+    // ------------------------------------------
+    Route::post('/auditoria/reporte', [AuditoriaController::class, 'registrarReporte']);
+
     // ------------------------------------------
     // RUTAS DEL BARBERO (rol = 2)
     // ------------------------------------------

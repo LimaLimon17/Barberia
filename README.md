@@ -112,5 +112,6 @@ Una vez que tengas ambos servidores corriendo, entra a `http://localhost:5173` y
 - **Gestión de Barberos:** Panel completo de registro, edición y revisión de horarios.
 - **Finanzas y Comisiones:** Panel financiero centralizado con desglose de ganancias por servicio, producto y anticipos (ausentes). Sistema de consolidación semanal (50% servicios/ausentes).
 - **Control de Inventario:** Historial de productos vendidos con alertas visuales por bajo stock e ingresos acumulados.
-- **Exportación en PDF:** Generación en tiempo real de "Notas de Venta", Reportes de Inventario, Reportes de Comisiones y Resúmenes Financieros (usando jsPDF).
+- **Exportación en PDF y Previsualización:** Generación en tiempo real de "Notas de Venta", Reportes de Inventario, Reportes de Comisiones y Resúmenes Financieros (usando jsPDF). Los documentos se abren en una **vista previa** en una nueva pestaña antes de su descarga definitiva.
+- **Trazabilidad y Auditoría (NUEVO):** El sistema cuenta con un endpoint protegido (`POST /api/auditoria/reporte`) que registra automáticamente en la tabla `AuditoriaGeneral` cada vez que un usuario visualiza o genera un reporte (Nota de venta, Finanzas, Inventario, etc.), almacenando el usuario, IP, filtros y la hora exacta de la acción.
 - **Estética Moderna:** Interfaz con Tailwind CSS, incorporando fondos y tarjetas pulidas para brindar una experiencia de usuario (UX) ágil e intuitiva.

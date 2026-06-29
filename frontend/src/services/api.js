@@ -1,36 +1,19 @@
-import axios from 'axios'
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
   headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    "Content-Type": "application/json",
+    Accept: "application/json",
   },
-})
+});
 
-// Interceptor para añadir token de autenticación
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('auth_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
-
-// Interceptor para manejar errores de autenticación
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('usuario')
-      window.location.href = '/login'
-    }
-    return Promise.reject(error)
+    const message = error?.response?.data?.message || "Error de conexión con la API";
+    return Promise.reject({ ...error, friendlyMessage: message });
   }
-)
+);
 
-export default api
+export default api;

@@ -11,30 +11,9 @@ class Reserva extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'IdCliente',
-        'IdBarbero',
-        'FechaCita',
-        'HoraInicio',
-        'HoraFin',
-        'CostoTotal',
-        'MontoAnticipo',
-        'EstadoReserva',
-        'FechaPagoAnticipo',
-        'MetodoPagoFinal',
-        'HoraAusente',
-        'EstadoA',
-        'FechaA',
-        'UsuarioA',
-    ];
-
-    protected $casts = [
-        'FechaCita' => 'date',
-        'CostoTotal' => 'decimal:2',
-        'MontoAnticipo' => 'decimal:2',
-        'FechaPagoAnticipo' => 'datetime',
-        'HoraAusente' => 'datetime',
-        'EstadoA' => 'boolean',
-        'FechaA' => 'datetime',
+        'IdCliente', 'IdBarbero', 'FechaCita', 'HoraInicio', 'HoraFin',
+        'CostoTotal', 'MontoAnticipo', 'FechaPagoAnticipo', 'MetodoPagoAnticipo',
+        'EstadoReserva', 'HoraAusente', 'EstadoA', 'FechaA', 'UsuarioA'
     ];
 
     public function cliente()
@@ -49,16 +28,6 @@ class Reserva extends Model
 
     public function servicios()
     {
-        return $this->belongsToMany(
-            Servicio::class,
-            'ReservaServicios',
-            'IdReserva',
-            'IdServicio'
-        );
-    }
-
-    public function notaVenta()
-    {
-        return $this->hasOne(NotaVenta::class, 'IdReserva', 'IdReserva');
+        return $this->belongsToMany(Servicio::class, 'ReservaServicios', 'IdReserva', 'IdServicio');
     }
 }

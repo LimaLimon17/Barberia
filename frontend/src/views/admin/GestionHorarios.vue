@@ -5,7 +5,7 @@
     <div class="horarios__header">
       <div>
         <h1 class="horarios__title">Gestión de <span class="gold-text">Horarios Semanales</span></h1>
-        <p class="horarios__subtitle">Asignación FIFO de descansos y rotación de turno de almuerzo</p>
+        <p class="horarios__subtitle">Asignación FIFO de descansos por antigüedad</p>
       </div>
     </div>
 
@@ -14,7 +14,7 @@
       <button @click="cambiarSemana(-1)" class="btn-secondary horarios__nav-btn">← Anterior</button>
       <div class="horarios__nav-info">
         <span class="horarios__semana-label">Semana {{ semana }}</span>
-        <span class="horarios__ano-label">Año {{ ano }}</span>
+        <span class="horarios__ano-label">{{ getRangoSemana(semana, ano) }} · {{ ano }}</span>
       </div>
       <button @click="cambiarSemana(1)" class="btn-secondary horarios__nav-btn">Siguiente →</button>
     </div>
@@ -25,45 +25,38 @@
       <p>Cargando horarios...</p>
     </div>
 
-    <!-- Error -->
-    <div v-if="error" class="horarios__alerta horarios__alerta--error">⚠️ {{ error }}</div>
-
-    <!-- Éxito -->
+    <!-- Alertas -->
+    <div v-if="error"        class="horarios__alerta horarios__alerta--error">⚠️ {{ error }}</div>
     <div v-if="mensajeExito" class="horarios__alerta horarios__alerta--exito">✅ {{ mensajeExito }}</div>
 
     <div v-if="!cargando && datos">
 
-      <!-- Panel explicativo -->
+      <!-- Panel informativo -->
       <div class="glass-card horarios__info">
         <div class="horarios__info-item">
-          <span class="horarios__info-ico">🕐</span>
+          <span class="horarios__info-ico">🟢</span>
           <div>
-            <strong>Almuerzo colectivo</strong>
-            <p>Todos los barberos: 12:00 – 13:00 bloqueado</p>
-          </div>
-        </div>
-        <div class="horarios__info-item">
-          <span class="horarios__info-ico">🔄</span>
-          <div>
-            <strong>Turno tardío esta semana</strong>
-            <p>
-              <span v-if="datos.turno_almuerzo">
-                {{ nombreBarberoAlmuerzo }} descansa 13:00 – 14:00
-              </span>
-              <span v-else class="horarios__muted">No generado aún</span>
-            </p>
+            <strong>Lógica FIFO</strong>
+            <p>Mayor antigüedad descansa primero — Lunes tiene prioridad</p>
           </div>
         </div>
         <div class="horarios__info-item">
           <span class="horarios__info-ico">📋</span>
           <div>
-            <strong>Lógica FIFO</strong>
-            <p>Mayor antigüedad → descansa primero (Lunes tiene prioridad)</p>
+            <strong>Días de descanso</strong>
+            <p>Se asignan de Lunes a Jueves según orden de antigüedad</p>
+          </div>
+        </div>
+        <div class="horarios__info-item">
+          <span class="horarios__info-ico">⏰</span>
+          <div>
+            <strong>Horario operativo</strong>
+            <p>10:00 – 22:00 · Mínimo 8 horas efectivas por día laboral</p>
           </div>
         </div>
       </div>
 
-      <!-- Tabla de barberos y descansos -->
+      <!-- Tabla -->
       <div class="glass-card horarios__tabla-wrap">
         <div class="horarios__tabla-header">
           <h2 class="horarios__tabla-titulo">📅 Barberos — Semana {{ semana }}</h2>
@@ -84,9 +77,9 @@
               <th>Orden FIFO</th>
               <th>Barbero</th>
               <th>Antigüedad</th>
-              <th>Día de descanso asignado</th>
-              <th>Turno almuerzo</th>
+              <th>Día de descanso</th>
               <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -94,7 +87,6 @@
               v-for="(barbero, index) in datos.barberos"
               :key="barbero.id_barbero"
               class="horarios__fila"
-              :class="{ 'horarios__fila--almuerzo': barbero.turno_almuerzo_tardio }"
             >
               <td>
                 <span class="horarios__orden">{{ index + 1 }}</span>
@@ -115,39 +107,55 @@
                 <span v-else class="horarios__muted">Sin descanso esta semana</span>
               </td>
               <td>
-                <span v-if="barbero.turno_almuerzo_tardio" class="horarios__almuerzo-badge">
-                  🍽️ 13:00 – 14:00
-                </span>
-                <span v-else class="horarios__muted">12:00 – 13:00</span>
-              </td>
-              <td>
                 <span v-if="barbero.horario_generado" class="badge-active">● Generado</span>
                 <span v-else class="badge-inactive">● Pendiente</span>
+              </td>
+              <td>
+                <div class="horarios__acciones">
+                  <router-link
+                    :to="`/admin/barberos/${barbero.id_barbero}/horario`"
+                    class="horarios__btn horarios__btn--ver"
+                  >
+                    📅 Ver horario
+                  </router-link>
+                  <router-link
+                    :to="`/admin/barberos/${barbero.id_barbero}/horario/editar`"
+                    class="horarios__btn horarios__btn--editar"
+                  >
+                    ✏️ Editar
+                  </router-link>
+                  <router-link
+                    :to="`/admin/barberos/${barbero.id_barbero}/almuerzos`"
+                    class="horarios__btn horarios__btn--almuerzo"
+                  >
+                    🍽️ Almuerzos
+                  </router-link>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Leyenda de reglas -->
+      <!-- Leyenda -->
       <div class="glass-card horarios__leyenda">
         <h3 class="horarios__leyenda-titulo">📌 Reglas del sistema</h3>
         <div class="horarios__leyenda-grid">
           <div class="horarios__leyenda-item">
-            <span class="horarios__leyenda-ico">🔴</span>
-            <span>12:00 – 13:00 bloqueado para <strong>todos</strong> los barberos excepto el de turno tardío</span>
-          </div>
-          <div class="horarios__leyenda-item">
-            <span class="horarios__leyenda-ico">🟡</span>
-            <span>El barbero de turno tardío descansa <strong>13:00 – 14:00</strong> en vez de 12:00 – 13:00</span>
+            <span class="horarios__leyenda-ico">🔵</span>
+            <span>Los días de descanso semanal van de <strong>Lunes a Jueves</strong></span>
           </div>
           <div class="horarios__leyenda-item">
             <span class="horarios__leyenda-ico">🟢</span>
-            <span>Días de descanso semanal: <strong>Lunes a Jueves</strong>, asignados por antigüedad FIFO</span>
+            <span>El barbero más antiguo tiene <strong>prioridad FIFO</strong> para elegir día</span>
           </div>
           <div class="horarios__leyenda-item">
-            <span class="horarios__leyenda-ico">🔵</span>
-            <span>El turno tardío rota cada semana sin repetir hasta que todos hayan pasado</span>
+            <span class="horarios__leyenda-ico">⚡</span>
+            <span>Al generar la semana se asignan descansos <strong>automáticamente</strong></span>
+          </div>
+          <div class="horarios__leyenda-item">
+            <span class="horarios__leyenda-ico">🍽️</span>
+            <span>Los almuerzos se registran manualmente desde cada perfil de barbero</span>
           </div>
         </div>
       </div>
@@ -157,10 +165,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import barberoService from '../../services/barberoService.js'
 
-// Semana actual
 const hoy    = new Date()
 const semana = ref(getWeekNumber(hoy))
 const ano    = ref(hoy.getFullYear())
@@ -171,20 +178,23 @@ const generando    = ref(false)
 const error        = ref('')
 const mensajeExito = ref('')
 
-const nombreBarberoAlmuerzo = computed(() => {
-  if (!datos.value?.turno_almuerzo) return ''
-  const b = datos.value.barberos.find(
-    x => x.id_barbero === datos.value.turno_almuerzo.id_barbero
-  )
-  return b ? b.nombre_completo : ''
-})
-
 function getWeekNumber(d) {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
   const dayNum = date.getUTCDay() || 7
   date.setUTCDate(date.getUTCDate() + 4 - dayNum)
   const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
   return Math.ceil((((date - yearStart) / 86400000) + 1) / 7)
+}
+
+function getRangoSemana(sem, yr) {
+  const simple = new Date(yr, 0, 1 + (sem - 1) * 7)
+  const dow    = simple.getDay()
+  const lunes  = new Date(simple)
+  lunes.setDate(simple.getDate() - (dow <= 4 ? dow - 1 : dow - 8))
+  const domingo = new Date(lunes)
+  domingo.setDate(lunes.getDate() + 6)
+  const opts = { day: 'numeric', month: 'short' }
+  return `${lunes.toLocaleDateString('es-BO', opts)} – ${domingo.toLocaleDateString('es-BO', opts)}`
 }
 
 async function cargar() {
@@ -205,7 +215,7 @@ async function generarSemana() {
   mensajeExito.value = ''
   try {
     await barberoService.generarHorarioSemana(semana.value, ano.value)
-    mensajeExito.value = `Semana ${semana.value} generada correctamente con FIFO y rotación de almuerzo`
+    mensajeExito.value = `Semana ${semana.value} generada correctamente`
     await cargar()
     setTimeout(() => { mensajeExito.value = '' }, 5000)
   } catch (err) {
@@ -247,7 +257,6 @@ onMounted(cargar)
   color: var(--color-text-muted);
 }
 
-/* Navegación semanas */
 .horarios__nav {
   display: flex;
   align-items: center;
@@ -277,7 +286,6 @@ onMounted(cargar)
   color: var(--color-text-muted);
 }
 
-/* Loading */
 .horarios__loading {
   display: flex;
   flex-direction: column;
@@ -298,18 +306,15 @@ onMounted(cargar)
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Alertas */
 .horarios__alerta {
   padding: 0.875rem 1.25rem;
   border-radius: var(--radius-lg);
   font-size: 0.875rem;
   margin-bottom: 1.25rem;
 }
+.horarios__alerta--error { background:#fef2f2; border:1px solid #fecaca; color:var(--color-rojo-vintage); }
+.horarios__alerta--exito { background:#f0fdf4; border:1px solid #bbf7d0; color:#15803d; }
 
-.horarios__alerta--error { background: #fef2f2; border: 1px solid #fecaca; color: var(--color-rojo-vintage); }
-.horarios__alerta--exito { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
-
-/* Panel info */
 .horarios__info {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -336,7 +341,6 @@ onMounted(cargar)
 
 .horarios__info-item p { font-size: 0.8125rem; color: var(--color-text-secondary); }
 
-/* Tabla */
 .horarios__tabla-wrap { padding: 0; overflow-x: auto; margin-bottom: 1.25rem; }
 
 .horarios__tabla-header {
@@ -363,10 +367,7 @@ onMounted(cargar)
   border-radius: 9999px;
 }
 
-.horarios__tabla {
-  width: 100%;
-  border-collapse: collapse;
-}
+.horarios__tabla { width: 100%; border-collapse: collapse; }
 
 .horarios__tabla th {
   text-align: left;
@@ -389,8 +390,6 @@ onMounted(cargar)
 .horarios__fila { transition: background 0.15s; }
 .horarios__fila:hover { background: var(--color-bg-hover); }
 .horarios__fila:last-child td { border-bottom: none; }
-
-.horarios__fila--almuerzo { background: rgba(232, 220, 196, 0.2); }
 
 .horarios__orden {
   display: inline-flex;
@@ -441,22 +440,37 @@ onMounted(cargar)
   font-weight: 600;
 }
 
-.horarios__almuerzo-badge {
+.horarios__muted { font-size: 0.8125rem; color: var(--color-text-muted); font-style: italic; }
+
+.horarios__acciones {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.horarios__btn {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.75rem;
-  background: var(--color-oro-suave);
-  color: var(--color-bronce);
-  border: 1px solid var(--color-bronce);
-  border-radius: 9999px;
+  padding: 0.35rem 0.65rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
 
-.horarios__muted { font-size: 0.8125rem; color: var(--color-text-muted); font-style: italic; }
+.horarios__btn--ver    { background:#EEF2FF; color:#3730a3; border-color:#c7d2fe; }
+.horarios__btn--ver:hover { background:#e0e7ff; }
 
-/* Leyenda */
+.horarios__btn--editar { background:var(--color-oro-suave); color:var(--color-bronce); border-color:var(--color-bronce); }
+.horarios__btn--editar:hover { background:#ddd5c0; }
+
+.horarios__btn--almuerzo { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
+.horarios__btn--almuerzo:hover { background:#dcfce7; }
+
 .horarios__leyenda { padding: 1.25rem 1.5rem; }
 
 .horarios__leyenda-titulo {

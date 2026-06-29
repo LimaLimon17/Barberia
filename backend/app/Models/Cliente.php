@@ -13,23 +13,17 @@ class Cliente extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'CI',
-        'Nombre1',
-        'Apellido1',
-        'Telefono',
-        'Correo',
-        'EstadoA',
-        'FechaA',
-        'UsuarioA',
-    ];
-
-    protected $casts = [
-        'EstadoA' => 'boolean',
-        'FechaA' => 'datetime',
+        'CI', 'Nombre1', 'Apellido1', 'Telefono', 'Correo',
+        'EstadoA', 'FechaA', 'UsuarioA'
     ];
 
     public function reservas()
     {
         return $this->hasMany(Reserva::class, 'IdCliente', 'CI');
+    }
+
+    public function ventas()
+    {
+        return $this->hasMany(Venta::class, 'IdCliente', 'CI');
     }
 }

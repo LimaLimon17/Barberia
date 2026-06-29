@@ -11,20 +11,11 @@ class Rol extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'Nombre',
-        'Descripcion',
-        'EstadoA',
-        'FechaA',
-        'UsuarioA',
-    ];
-
-    protected $casts = [
-        'EstadoA' => 'boolean',
-        'FechaA' => 'datetime',
+        'Nombre', 'Descripcion', 'EstadoA', 'FechaA', 'UsuarioA'
     ];
 
     public function usuarios()
     {
-        return $this->hasMany(User::class, 'IdRol', 'IdRol');
+        return $this->hasMany(Usuario::class, 'IdRol', 'IdRol');
     }
 }

@@ -1,8 +1,10 @@
 <template>
   <div class="layout-panel">
     <Sidebar :items="menuItems" :titulo="'Barbero'" />
+
     <div class="layout-panel__main">
       <Navbar />
+
       <main class="layout-panel__content">
         <router-view />
       </main>
@@ -19,6 +21,11 @@ const menuItems = [
     nombre: 'Mi Agenda',
     ruta: '/barbero/dashboard',
     icono: '📅',
+  },
+  {
+    nombre: 'Venta de Productos',
+    ruta: '/barbero/venta-productos',
+    icono: '🛒',
   },
   {
     nombre: 'Mi Perfil',
@@ -53,6 +60,7 @@ const menuItems = [
   .layout-panel__main {
     margin-left: 0;
   }
+
   .layout-panel__content {
     padding: 1rem;
   }

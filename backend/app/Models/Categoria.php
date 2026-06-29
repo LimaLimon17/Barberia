@@ -11,21 +11,13 @@ class Categoria extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'Nombre',
-        'DuracionMinimaMinutos',
-        'DuracionMaximaMinutos',
-        'PrecioMin',
-        'PrecioMax',
-        'EstadoA',
-        'FechaA',
-        'UsuarioA',
+        'Nombre', 'DuracionMinimaMinutos', 'DuracionMaximaMinutos',
+        'PrecioMin', 'PrecioMax', 'EstadoA', 'FechaA', 'UsuarioA'
     ];
 
     protected $casts = [
         'PrecioMin' => 'decimal:2',
         'PrecioMax' => 'decimal:2',
-        'EstadoA' => 'boolean',
-        'FechaA' => 'datetime',
     ];
 
     public function servicios()

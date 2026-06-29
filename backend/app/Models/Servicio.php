@@ -11,20 +11,13 @@ class Servicio extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'IdCategoria',
-        'Nombre',
-        'FotoURL',
-        'Precio',
-        'DuracionMinutos',
-        'EstadoA',
-        'FechaA',
-        'UsuarioA',
+        'IdCategoria', 'Nombre', 'FotoURL', 'Precio', 'DuracionMinutos',
+        'EstadoA', 'FechaA', 'UsuarioA'
     ];
 
     protected $casts = [
         'Precio' => 'decimal:2',
-        'EstadoA' => 'boolean',
-        'FechaA' => 'datetime',
+        'DuracionMinutos' => 'integer',
     ];
 
     public function categoria()

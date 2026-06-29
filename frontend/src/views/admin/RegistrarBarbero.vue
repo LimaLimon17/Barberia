@@ -87,16 +87,28 @@
 
           <div class="registrar__campo">
             <label class="label">Contraseña *</label>
-            <input
-              v-model="form.contrasena"
-              type="password"
-              placeholder="Mínimo 6 caracteres"
-              class="input-field"
-              :class="{ 'input-field--error': errores.contrasena }"
-            />
+            <div class="registrar__input-wrapper">
+              <input
+                v-model="form.contrasena"
+                :type="verContrasena ? 'text' : 'password'"
+                placeholder="Mínimo 6 caracteres"
+                class="input-field"
+                :class="{ 'input-field--error': errores.contrasena }"
+              />
+              <button
+                type="button"
+                @mousedown="verContrasena = true"
+                @mouseup="verContrasena = false"
+                @mouseleave="verContrasena = false"
+                class="registrar__ojo"
+                tabindex="-1"
+              >
+                {{ verContrasena ? '🙈' : '👁️' }}
+              </button>
+            </div>
             <span v-if="errores.contrasena" class="registrar__error">{{ errores.contrasena }}</span>
           </div>
-
+          
           <div class="registrar__campo">
             <label class="label">Fecha de ingreso *</label>
             <input
@@ -222,7 +234,8 @@ const cargando     = ref(false)
 const errorGeneral = ref('')
 const exitoso      = ref(false)
 const errores      = ref({})
-const hoy          = new Date().toISOString().split('T')[0]
+const hoy = new Date().toISOString().split('T')[0]
+const verContrasena = ref(false)
 
 const form = ref({
   nombre1:       '',
@@ -231,7 +244,7 @@ const form = ref({
   apellido2:     '',
   correo:        '',
   contrasena:    '',
-  fecha_ingreso: '',
+  fecha_ingreso: hoy,
 })
 
 const diasSemana = ref([
@@ -561,4 +574,28 @@ async function registrar() {
     grid-template-columns: 1fr;
   }
 }
+
+.registrar__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.registrar__input-wrapper .input-field {
+  padding-right: 2.75rem;
+}
+
+.registrar__ojo {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  line-height: 1;
+  color: var(--color-bronce);
+  user-select: none;
+}  
+  
 </style>

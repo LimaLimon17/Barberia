@@ -12,6 +12,7 @@ import LoginView from '../views/public/LoginView.vue'
 // Vistas del barbero
 import DashboardBarbero from '../views/barbero/DashboardBarbero.vue'
 import PerfilBarbero from '../views/barbero/PerfilBarbero.vue'
+import VentaProductosView from '../views/barbero/VentaProductosView.vue'
 
 // Vistas del administrador
 import DashboardAdmin from '../views/admin/DashboardAdmin.vue'
@@ -20,6 +21,12 @@ import PerfilBarberoAdmin from '../views/admin/PerfilBarberoAdmin.vue'
 import EditarBarbero from '../views/admin/EditarBarbero.vue'
 import RegistrarBarbero from '../views/admin/RegistrarBarbero.vue'
 import GestionHorarios from '../views/admin/GestionHorarios.vue'
+
+// Vistas del módulo catálogo, inventario y productos
+import ServiciosView from '../views/admin/ServiciosView.vue'
+import InventarioView from '../views/admin/InventarioView.vue'
+import PorcentajesView from '../views/admin/PorcentajesView.vue'
+import AuditoriaView from '../views/admin/AuditoriaView.vue'
 
 const routes = [
   // ==========================================
@@ -48,7 +55,7 @@ const routes = [
   {
     path: '/barbero',
     component: LayoutBarbero,
-    meta: { requiresAuth: true, rol: 'barbero' },
+    meta: { requiresAuth: false, rol: 'barbero' },
     children: [
       {
         path: '',
@@ -66,6 +73,12 @@ const routes = [
         component: PerfilBarbero,
         meta: { title: 'Mi Perfil' },
       },
+      {
+        path: 'venta-productos',
+        name: 'VentaProductosBarbero',
+        component: VentaProductosView,
+        meta: { title: 'Venta de Productos' },
+      },
     ],
   },
 
@@ -75,7 +88,7 @@ const routes = [
   {
     path: '/admin',
     component: LayoutAdmin,
-    meta: { requiresAuth: true, rol: 'admin' },
+    meta: { requiresAuth: false, rol: 'admin' },
     children: [
       {
         path: '',
@@ -94,6 +107,12 @@ const routes = [
         meta: { title: 'Gestión de Barberos' },
       },
       {
+        path: 'barberos/nuevo',
+        name: 'RegistrarBarbero',
+        component: RegistrarBarbero,
+        meta: { title: 'Registrar Barbero' },
+      },
+      {
         path: 'barberos/:id',
         name: 'PerfilBarberoAdmin',
         component: PerfilBarberoAdmin,
@@ -101,28 +120,52 @@ const routes = [
         props: true,
       },
       {
-        path: 'barberos/nuevo',
-        name: 'RegistrarBarbero',
-        component: RegistrarBarbero,
-        meta: { title: 'Registrar Barbero' },
-      },
-       {
         path: 'barberos/:id/editar',
         name: 'EditarBarbero',
         component: EditarBarbero,
         meta: { title: 'Editar Barbero' },
         props: true,
-        },
-        {
+      },
+      {
         path: 'horarios',
         name: 'GestionHorarios',
         component: GestionHorarios,
         meta: { title: 'Gestión de Horarios' },
       },
+
+      // ==========================================
+      // MÓDULO CATÁLOGO, INVENTARIO Y PRODUCTOS
+      // ==========================================
+      {
+        path: 'servicios',
+        name: 'ServiciosAdmin',
+        component: ServiciosView,
+        meta: { title: 'Catálogo de Servicios' },
+      },
+      {
+        path: 'inventario',
+        name: 'InventarioAdmin',
+        component: InventarioView,
+        meta: { title: 'Gestión de Inventario' },
+      },
+      {
+        path: 'productos/porcentajes',
+        name: 'PorcentajesProductosAdmin',
+        component: PorcentajesView,
+        meta: { title: 'Porcentajes de Productos' },
+      },
+      {
+        path: 'auditoria',
+        name: 'AuditoriaAdmin',
+        component: AuditoriaView,
+        meta: { title: 'Auditoría General' },
+      },
     ],
   },
 
-  // Ruta 404
+  // ==========================================
+  // RUTA 404
+  // ==========================================
   {
     path: '/:pathMatch(.*)*',
     redirect: '/login',
@@ -153,10 +196,12 @@ router.beforeEach((to, from, next) => {
 
     // Verificar rol
     const rolRequerido = to.matched.find((record) => record.meta.rol)?.meta.rol
+
     if (rolRequerido) {
       if (rolRequerido === 'admin' && !authStore.esAdmin) {
         return next({ name: 'DashboardBarbero' })
       }
+
       if (rolRequerido === 'barbero' && !authStore.esBarbero) {
         return next({ name: 'DashboardAdmin' })
       }
@@ -168,6 +213,7 @@ router.beforeEach((to, from, next) => {
     if (authStore.esAdmin) {
       return next({ name: 'DashboardAdmin' })
     }
+
     if (authStore.esBarbero) {
       return next({ name: 'DashboardBarbero' })
     }

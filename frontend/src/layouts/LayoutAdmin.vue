@@ -1,8 +1,10 @@
 <template>
   <div class="layout-panel">
     <Sidebar :items="menuItems" :titulo="'Administrador'" />
+
     <div class="layout-panel__main">
       <Navbar />
+
       <main class="layout-panel__content">
         <router-view />
       </main>
@@ -29,6 +31,26 @@ const menuItems = [
     nombre: 'Horarios',
     ruta: '/admin/horarios',
     icono: '🗓️',
+  },
+  {
+    nombre: 'Servicios',
+    ruta: '/admin/servicios',
+    icono: '💈',
+  },
+  {
+    nombre: 'Inventario',
+    ruta: '/admin/inventario',
+    icono: '📦',
+  },
+  {
+    nombre: 'Porcentajes',
+    ruta: '/admin/productos/porcentajes',
+    icono: '📈',
+  },
+  {
+    nombre: 'Auditoría',
+    ruta: '/admin/auditoria',
+    icono: '🧾',
   },
 ]
 </script>
@@ -58,6 +80,7 @@ const menuItems = [
   .layout-panel__main {
     margin-left: 0;
   }
+
   .layout-panel__content {
     padding: 1rem;
   }

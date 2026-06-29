@@ -14,10 +14,8 @@
     </div>
   </transition>
 </template>
-
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-
 const props = defineProps({
   mensaje: {
     type: String,
@@ -37,31 +35,24 @@ const props = defineProps({
     default: true,
   },
 })
-
 const emit = defineEmits(['close'])
-
 const visible = ref(true)
-
 const iconos = {
   success: '✅',
   error: '❌',
   warning: '⚠️',
   info: 'ℹ️',
 }
-
 let timer = null
-
 function cerrar() {
   visible.value = false
   emit('close')
 }
-
 onMounted(() => {
   if (props.autoClose && props.duracion > 0) {
     timer = setTimeout(cerrar, props.duracion)
   }
 })
-
 watch(() => props.mensaje, () => {
   visible.value = true
   if (timer) clearTimeout(timer)
@@ -70,7 +61,6 @@ watch(() => props.mensaje, () => {
   }
 })
 </script>
-
 <style scoped>
 .alert {
   display: flex;
@@ -81,46 +71,38 @@ watch(() => props.mensaje, () => {
   margin-bottom: 1rem;
   animation: fadeIn 0.3s ease-out;
 }
-
 .alert--success {
   background: rgba(34, 197, 94, 0.1);
   border: 1px solid rgba(34, 197, 94, 0.2);
   color: var(--color-success);
 }
-
 .alert--error {
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.2);
   color: var(--color-error);
 }
-
 .alert--warning {
   background: rgba(245, 158, 11, 0.1);
   border: 1px solid rgba(245, 158, 11, 0.2);
   color: var(--color-warning);
 }
-
 .alert--info {
   background: rgba(59, 130, 246, 0.1);
   border: 1px solid rgba(59, 130, 246, 0.2);
   color: var(--color-info);
 }
-
 .alert__icon {
   font-size: 1.125rem;
   flex-shrink: 0;
 }
-
 .alert__content {
   flex: 1;
 }
-
 .alert__message {
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.4;
 }
-
 .alert__close {
   background: none;
   border: none;
@@ -131,16 +113,13 @@ watch(() => props.mensaje, () => {
   transition: opacity 0.2s;
   padding: 0.25rem;
 }
-
 .alert__close:hover {
   opacity: 1;
 }
-
 .alert-fade-enter-active,
 .alert-fade-leave-active {
   transition: all 0.3s ease;
 }
-
 .alert-fade-enter-from,
 .alert-fade-leave-to {
   opacity: 0;

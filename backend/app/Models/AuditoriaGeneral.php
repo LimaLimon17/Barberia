@@ -1,15 +1,11 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
-
 class AuditoriaGeneral extends Model
 {
     protected $table = 'AuditoriaGeneral';
     protected $primaryKey = 'IdAuditoria';
     public $timestamps = false;
-
     protected $fillable = [
         'TablaNombre',
         'RegistroId',
@@ -22,11 +18,9 @@ class AuditoriaGeneral extends Model
         'DireccionIP',
         'Detalles',
     ];
-
     protected $casts = [
         'FechaA' => 'datetime',
     ];
-
     public function usuario()
     {
         return $this->belongsTo(User::class, 'UsuarioA', 'IdUsuario');

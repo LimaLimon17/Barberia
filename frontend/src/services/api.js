@@ -1,5 +1,4 @@
 import axios from 'axios'
-
 const api = axios.create({
   baseURL: '/api',
   headers: {
@@ -7,7 +6,6 @@ const api = axios.create({
     'Accept': 'application/json',
   },
 })
-
 // Interceptor para añadir token de autenticación
 api.interceptors.request.use(
   (config) => {
@@ -19,7 +17,6 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 )
-
 // Interceptor para manejar errores de autenticación
 api.interceptors.response.use(
   (response) => response,
@@ -29,7 +26,6 @@ api.interceptors.response.use(
       if (error.config && error.config.url === '/login') {
         return Promise.reject(error)
       }
-
       localStorage.removeItem('auth_token')
       localStorage.removeItem('usuario')
       window.location.href = '/login'
@@ -37,5 +33,4 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
-
 export default api

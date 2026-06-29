@@ -1,5 +1,4 @@
 import api from './api.js'
-
 export const authService = {
   /**
    * Login con correo y contraseña.
@@ -9,7 +8,6 @@ export const authService = {
     const response = await api.post('/login', { correo, contraseña })
     return response.data
   },
-
   /**
    * Logout: revoca el token actual.
    */
@@ -18,5 +16,4 @@ export const authService = {
     return response.data
   },
 }
-
 export default authService

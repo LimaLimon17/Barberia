@@ -3,12 +3,10 @@
     <router-view />
   </div>
 </template>
-
 <script setup>
 // LayoutPublico - Diseño para páginas públicas (Login)
 // Sin sidebar ni navbar, diseño de pantalla completa
 </script>
-
 <style scoped>
 .layout-publico {
   min-height: 100vh;
@@ -19,7 +17,6 @@
   position: relative;
   overflow: hidden;
 }
-
 /* Fondo con efecto decorativo sutil */
 .layout-publico::before {
   content: '';
@@ -32,7 +29,6 @@
   background: radial-gradient(circle, rgba(232, 184, 17, 0.06) 0%, transparent 70%);
   pointer-events: none;
 }
-
 .layout-publico::after {
   content: '';
   position: absolute;

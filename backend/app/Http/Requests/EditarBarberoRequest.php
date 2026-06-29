@@ -1,16 +1,12 @@
 <?php
-
 namespace App\Http\Requests;
-
 use Illuminate\Foundation\Http\FormRequest;
-
 class EditarBarberoRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
     }
-
     public function rules(): array
     {
         return [
@@ -22,7 +18,6 @@ class EditarBarberoRequest extends FormRequest
             'fecha_ingreso' => 'required|date|before_or_equal:today',
         ];
     }
-
     public function messages(): array
     {
         return [

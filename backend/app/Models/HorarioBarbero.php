@@ -1,15 +1,11 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
-
 class HorarioBarbero extends Model
 {
     protected $table = 'HorariosBarberos';
     protected $primaryKey = 'IdHorarioBarbero';
     public $timestamps = false;
-
     protected $fillable = [
         'IdBarbero',
         'IdHorario',
@@ -19,14 +15,12 @@ class HorarioBarbero extends Model
         'FechaA',
         'UsuarioA',
     ];
-
     protected $casts = [
         'FechaInicio' => 'date',
         'FechaFin' => 'date',
         'EstadoA' => 'boolean',
         'FechaA' => 'datetime',
     ];
-
     /**
      * Relación con Barbero.
      */
@@ -34,7 +28,6 @@ class HorarioBarbero extends Model
     {
         return $this->belongsTo(Barbero::class, 'IdBarbero', 'IdBarbero');
     }
-
     /**
      * Relación con Horario (la plantilla de horario).
      */

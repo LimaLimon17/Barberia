@@ -1,15 +1,11 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
-
 class Horario extends Model
 {
     protected $table = 'Horarios';
     protected $primaryKey = 'IdHorario';
     public $timestamps = false;
-
     protected $fillable = [
         'DiaSemana',
         'HoraEntrada',
@@ -19,13 +15,11 @@ class Horario extends Model
         'FechaA',
         'UsuarioA',
     ];
-
     protected $casts = [
         'DiaDescanso' => 'boolean',
         'EstadoA' => 'boolean',
         'FechaA' => 'datetime',
     ];
-
     /**
      * Relación con HorariosBarberos (pivot).
      */

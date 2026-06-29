@@ -1,37 +1,35 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
-
-class NotaVenta extends Model
+class Pago extends Model
 {
-    protected $table = 'NotaVentas';
-    protected $primaryKey = 'IdNota';
+    protected $table = 'Pagos';
+    protected $primaryKey = 'IdPago';
     public $timestamps = false;
-
     protected $fillable = [
         'IdReserva',
-        'FechaEmision',
-        'MontoServicios',
-        'MontoProductos',
-        'MontoTotal',
+        'IdVenta',
+        'TipoPago',
+        'Monto',
+        'FechaPago',
+        'MetodoPago',
+        'EstadoPago',
         'EstadoA',
         'FechaA',
         'UsuarioA',
     ];
-
     protected $casts = [
-        'FechaEmision' => 'datetime',
-        'MontoServicios' => 'decimal:2',
-        'MontoProductos' => 'decimal:2',
-        'MontoTotal' => 'decimal:2',
+        'Monto' => 'decimal:2',
+        'FechaPago' => 'datetime',
         'EstadoA' => 'boolean',
         'FechaA' => 'datetime',
     ];
-
     public function reserva()
     {
         return $this->belongsTo(Reserva::class, 'IdReserva', 'IdReserva');
+    }
+    public function venta()
+    {
+        return $this->belongsTo(Venta::class, 'IdVenta', 'IdVenta');
     }
 }

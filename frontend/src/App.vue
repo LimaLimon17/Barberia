@@ -5,7 +5,6 @@
     </transition>
   </router-view>
 </template>
-
 <script setup>
 // App.vue - Componente raíz con transiciones de página
 </script>

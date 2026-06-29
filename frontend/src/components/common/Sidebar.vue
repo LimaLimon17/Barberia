@@ -2,17 +2,13 @@
   <aside class="sidebar">
     <div class="sidebar__header">
       <div class="sidebar__logo">
-        <!-- Reemplazado el emoji por una imagen del logo. El usuario pondrá su logo en public/logo.png -->
-        <img src="/logo.png" alt="Logo Barbería" class="sidebar__logo-img" @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='inline'" />
-        <!-- Fallback si la imagen no existe -->
-        <span class="sidebar__logo-icon" style="display: none;">✂️</span>
+        <span class="sidebar__logo-icon">✂️</span>
         <div>
           <h1 class="sidebar__brand">Barbería</h1>
           <span class="sidebar__role-badge">{{ titulo }}</span>
         </div>
       </div>
     </div>
-
     <nav class="sidebar__nav">
       <router-link
         v-for="item in items"
@@ -25,16 +21,13 @@
         <span class="sidebar__link-text">{{ item.nombre }}</span>
       </router-link>
     </nav>
-
     <div class="sidebar__footer">
       <p class="sidebar__version">v1.0.0</p>
     </div>
   </aside>
 </template>
-
 <script setup>
 import { useRoute } from 'vue-router'
-
 const props = defineProps({
   items: {
     type: Array,
@@ -45,14 +38,11 @@ const props = defineProps({
     default: 'Panel',
   },
 })
-
 const route = useRoute()
-
 function isActive(ruta) {
   return route.path.startsWith(ruta)
 }
 </script>
-
 <style scoped>
 .sidebar {
   position: fixed;
@@ -67,29 +57,18 @@ function isActive(ruta) {
   z-index: 50;
   animation: slideInLeft 0.4s ease-out;
 }
-
 .sidebar__header {
   padding: 1.5rem;
   border-bottom: 1px solid var(--color-border);
 }
-
 .sidebar__logo {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
-
 .sidebar__logo-icon {
   font-size: 2rem;
 }
-
-.sidebar__logo-img {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-  border-radius: 50%; /* Opcional, dependiendo de la forma de su logo */
-}
-
 .sidebar__brand {
   font-family: var(--font-heading);
   font-size: 1.375rem;
@@ -100,7 +79,6 @@ function isActive(ruta) {
   background-clip: text;
   line-height: 1.2;
 }
-
 .sidebar__role-badge {
   font-size: 0.6875rem;
   font-weight: 600;
@@ -108,7 +86,6 @@ function isActive(ruta) {
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
-
 .sidebar__nav {
   flex: 1;
   padding: 1rem 0.75rem;
@@ -117,7 +94,6 @@ function isActive(ruta) {
   gap: 0.25rem;
   overflow-y: auto;
 }
-
 .sidebar__link {
   display: flex;
   align-items: center;
@@ -130,18 +106,15 @@ function isActive(ruta) {
   font-weight: 500;
   transition: all 0.2s ease;
 }
-
 .sidebar__link:hover {
   background: var(--color-bg-hover);
   color: var(--color-text-primary);
 }
-
 .sidebar__link--active {
   background: rgba(232, 184, 17, 0.1);
   color: var(--color-gold-400);
   font-weight: 600;
 }
-
 .sidebar__link--active::before {
   content: '';
   position: absolute;
@@ -153,23 +126,19 @@ function isActive(ruta) {
   background: var(--color-gold-400);
   border-radius: 0 3px 3px 0;
 }
-
 .sidebar__link-icon {
   font-size: 1.25rem;
   width: 28px;
   text-align: center;
 }
-
 .sidebar__footer {
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--color-border);
 }
-
 .sidebar__version {
   font-size: 0.75rem;
   color: var(--color-text-muted);
 }
-
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);

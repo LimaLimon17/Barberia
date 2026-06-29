@@ -12,7 +12,6 @@ export function formatearFecha(fecha) {
     year: 'numeric',
   })
 }
-
 /**
  * Formatea una fecha a formato corto.
  * @param {string} fecha - Fecha en formato YYYY-MM-DD
@@ -27,7 +26,6 @@ export function formatearFechaCorta(fecha) {
     year: 'numeric',
   })
 }
-
 /**
  * Calcula la antigüedad en días entre una fecha y hoy.
  * @param {string} fechaIngreso - Fecha en formato YYYY-MM-DD
@@ -41,7 +39,6 @@ export function calcularAntiguedad(fechaIngreso) {
   const diff = hoy.getTime() - ingreso.getTime()
   return Math.floor(diff / (1000 * 60 * 60 * 24))
 }
-
 /**
  * Formatea un monto en Bolivianos.
  * @param {number} monto
@@ -51,7 +48,6 @@ export function formatearMonto(monto) {
   if (monto === null || monto === undefined) return 'Bs. 0.00'
   return `Bs. ${Number(monto).toFixed(2)}`
 }
-
 /**
  * Formatea hora de HH:MM:SS a HH:MM.
  * @param {string} hora

@@ -5,55 +5,75 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\HorarioRequest;
 use App\Models\Barbero;
-use App\Models\HorarioBarbero;
+use App\Models\HorarioSemanal;
+use App\Models\Horario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class HorarioController extends Controller
 {
     /**
-     * Lista los horarios de un barbero.
+     * Lista los horarios asignados a un barbero.
      */
     public function index(Request $request, $idBarbero)
     {
         $barbero = Barbero::find($idBarbero);
-
+    
         if (!$barbero) {
             return response()->json(['mensaje' => 'Barbero no encontrado'], 404);
         }
-
-        $horarios = HorarioBarbero::where('IdBarbero', $idBarbero)
+    
+        $horariosBarbero = HorarioSemanal::where('IdBarbero', $idBarbero)
             ->where('EstadoA', 1)
             ->with('horario')
-            ->get()
-            ->map(function ($hb) {
-                return [
-                    'id_horario_barbero' => $hb->IdHorarioBarbero,
-                    'fecha_inicio'       => $hb->FechaInicio,
-                    'fecha_fin'          => $hb->FechaFin,
-                    'dias' => $hb->horario->map(fn($h) => [
-                        'dia'          => $h->DiaSemana,
-                        'hora_entrada' => $h->HoraEntrada,
-                        'hora_salida'  => $h->HoraSalida,
-                        'dia_descanso' => (bool) $h->DiaDescanso,
-                    ]),
+            ->get();
+    
+        // Agrupar por semana ISO derivada de FechaInicio
+        $agrupados = [];
+    
+        foreach ($horariosBarbero as $hb) {
+            $fecha  = \Carbon\Carbon::parse($hb->FechaInicio);
+            $semana = $fecha->weekOfYear;
+            $ano    = $fecha->year;
+            $clave  = "{$ano}-{$semana}";
+        
+            if (!isset($agrupados[$clave])) {
+                $agrupados[$clave] = [
+                    'id_horario_semanal' => $hb->IdHorarioBarbero, // ← clave que usa la vista
+                    'semana'             => $semana,
+                    'ano'                => $ano,
+                    'dias'               => [],
                 ];
-            });
-
+            }
+        
+            $agrupados[$clave]['dias'][] = [
+                'dia'          => $hb->horario->DiaSemana   ?? null,
+                'hora_entrada' => $hb->horario->HoraEntrada ?? null,
+                'hora_salida'  => $hb->horario->HoraSalida  ?? null,
+                'dia_descanso' => (bool) ($hb->horario->DiaDescanso ?? false),
+            ];
+        }
+    
+        // Ordenar por año y semana descendente (más reciente primero)
+        $horarios = collect(array_values($agrupados))
+            ->sortByDesc(fn($h) => $h['ano'] * 100 + $h['semana'])
+            ->values();
+    
         return response()->json(['horarios' => $horarios], 200);
     }
 
     /**
-     * HU-11 Escenario 8: Crear nueva configuración de horario.
+     * Crear nueva asignación de horario para un barbero.
      */
     public function store(HorarioRequest $request)
     {
-        $admin  = $request->user();
-        $ip     = $request->ip();
-        $dias   = json_encode($request->input('dias'));
+        $admin = $request->user();
+        $ip    = $request->ip();
+        $dias  = json_encode($request->input('dias'));
 
         try {
-            DB::statement('CALL sp_AsignarHorarioBarbero(?, ?, ?, ?, ?, ?)', [
+            DB::statement('CALL sp_AsignarHorarioSemanal(?, ?, ?, ?, ?, ?)', [
                 $request->input('id_barbero'),
                 $request->input('fecha_inicio'),
                 $request->input('fecha_fin'),
@@ -61,8 +81,6 @@ class HorarioController extends Controller
                 $admin->IdUsuario,
                 $ip,
             ]);
-
-            // Asumiendo que el SP maneja el retorno o la inserción
         } catch (\Exception $e) {
             $message = $e->getMessage();
 
@@ -71,7 +89,6 @@ class HorarioController extends Controller
                     'mensaje' => 'Cada día laboral debe tener mínimo 8 horas efectivas de trabajo',
                 ], 422);
             }
-
             if (str_contains($message, 'al menos un día')) {
                 return response()->json([
                     'mensaje' => 'Debe configurar al menos un día de trabajo',
@@ -90,7 +107,7 @@ class HorarioController extends Controller
     }
 
     /**
-     * HU-11 Escenario 9: Modificar configuración de horario existente.
+     * Modificar horario existente de un barbero (por IdHorarioBarbero).
      */
     public function update(Request $request, $idHorarioBarbero)
     {
@@ -98,53 +115,67 @@ class HorarioController extends Controller
         $ip    = $request->ip();
 
         $request->validate([
-            'dias'              => 'required|array|min:1',
-            'dias.*.dia'        => 'required|string',
-            'dias.*.hora_entrada'=> 'required|date_format:H:i',
-            'dias.*.hora_salida' => 'required|date_format:H:i',
-            'dias.*.dia_descanso'=> 'required|boolean',
+            'dias'                => 'required|array|min:1',
+            'dias.*.dia'          => 'required|string',
+            'dias.*.hora_entrada' => 'nullable|date_format:H:i',
+            'dias.*.hora_salida'  => 'nullable|date_format:H:i',
+            'dias.*.dia_descanso' => 'required|boolean',
         ]);
 
-        $horarioBarbero = HorarioBarbero::find($idHorarioBarbero);
+        $horarioBarbero = HorarioSemanal::find($idHorarioBarbero);
 
         if (!$horarioBarbero) {
             return response()->json(['mensaje' => 'Horario no encontrado'], 404);
         }
 
-        // Validar 8 horas mínimas y rango 10:00-22:00
         foreach ($request->input('dias') as $dia) {
             if ($dia['dia_descanso']) continue;
 
-            if ($dia['hora_entrada'] < '10:00' || $dia['hora_salida'] > '22:00') {
-                return response()->json(['mensaje' => "El horario debe estar entre 10:00 y 22:00"], 422);
-            }
-
             $entrada = strtotime($dia['hora_entrada']);
             $salida  = strtotime($dia['hora_salida']);
-            $horas   = ($salida - $entrada) / 3600 - 1; // Resta 1 hora de descanso
+            $horas   = ($salida - $entrada) / 3600 - 1;
 
             if ($horas < 8) {
-                return response()->json(['mensaje' => "El día {$dia['dia']} no cumple las 8 horas mínimas"], 422);
+                return response()->json([
+                    'mensaje' => "El día {$dia['dia']} no cumple las 8 horas mínimas efectivas",
+                ], 422);
             }
         }
 
-        // Eliminar días existentes y reemplazar en tabla Horarios (usando IdHorarioBarbero)
-        DB::table('Horarios')
-            ->where('IdHorarioBarbero', $idHorarioBarbero)
-            ->delete();
-
         foreach ($request->input('dias') as $dia) {
-            DB::table('Horarios')->insert([
-                'IdHorarioBarbero' => $idHorarioBarbero,
-                'DiaSemana'        => $dia['dia'],
-                'HoraEntrada'      => $dia['hora_entrada'],
-                'HoraSalida'       => $dia['hora_salida'],
-                'DiaDescanso'      => $dia['dia_descanso'] ? 1 : 0,
-                'EstadoA'          => 1,
-                'FechaA'           => now(),
-                'UsuarioA'         => $admin->IdUsuario,
-            ]);
+            // Buscar o crear el horario plantilla
+            $horario = Horario::where('DiaSemana', $dia['dia'])
+                ->where('DiaDescanso', $dia['dia_descanso'] ? 1 : 0)
+                ->when(!$dia['dia_descanso'], function ($q) use ($dia) {
+                    $q->where('HoraEntrada', $dia['hora_entrada'])
+                      ->where('HoraSalida',  $dia['hora_salida']);
+                })
+                ->first();
+
+            if (!$horario) {
+                $horario = Horario::create([
+                    'DiaSemana'  => $dia['dia'],
+                    'HoraEntrada'=> $dia['dia_descanso'] ? null : $dia['hora_entrada'],
+                    'HoraSalida' => $dia['dia_descanso'] ? null : $dia['hora_salida'],
+                    'DiaDescanso'=> $dia['dia_descanso'] ? 1 : 0,
+                    'EstadoA'    => 1,
+                    'FechaA'     => now(),
+                    'UsuarioA'   => $admin->IdUsuario,
+                ]);
+            }
+
+            // Actualizar la asignación del barbero al nuevo horario
+            HorarioSemanal::where('IdBarbero', $horarioBarbero->IdBarbero)
+                ->where('EstadoA', 1)
+                ->whereHas('horario', fn($q) => $q->where('DiaSemana', $dia['dia']))
+                ->update(['IdHorario' => $horario->IdHorario]);
         }
+
+        DB::statement('CALL sp_RegistrarAuditoria(?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+            'HorariosBarberos', $idHorarioBarbero, 'UPDATE', 'Horario editado',
+            null, 'Días actualizados', $admin->IdUsuario, $ip,
+            'Admin modificó horario del barbero',
+        ]);
 
         return response()->json(['mensaje' => 'Horario actualizado correctamente'], 200);
     }

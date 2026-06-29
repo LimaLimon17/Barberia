@@ -59,9 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/horarios/{id}', [HorarioController::class, 'update']);
 
         // Horarios semanales (FIFO + rotación almuerzo)
-        //Route::get('/horarios-semana',               [HorarioSemanalController::class, 'index']);
-        //Route::post('/horarios-semana',              [HorarioSemanalController::class, 'store']);
-        //Route::put('/horarios-semana/{id}/descanso', [HorarioSemanalController::class, 'update']);
+        Route::get('/horarios-semana',               [HorarioSemanalController::class, 'index']);
+        Route::post('/horarios-semana',              [HorarioSemanalController::class, 'store']);
+        Route::put('/horarios-semana/{id}/descanso', [HorarioSemanalController::class, 'update']);
 
         // Registros de almuerzo
        // Route::get('/barberos/{id}/almuerzos',           [AlmuerzoController::class, 'index']);

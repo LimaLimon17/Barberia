@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\EditarBarberoRequest;
 use App\Http\Requests\RegistrarBarberoRequest;
 use App\Models\Barbero;
+use App\Models\HorarioSemanal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -215,18 +216,14 @@ class BarberoController extends Controller
                 'error'   => $message,
             ], 500);
         }
-
         // Asignar horario inicial obligatorio
-        $dias         = json_encode($request->input('dias'));
-        $fecha_inicio = $request->input('fecha_inicio', now()->format('Y-m-d'));
-        $fecha_fin    = $request->input('fecha_fin'); // Puede ser null si no expira
+        $dias = json_encode($request->input('dias'));
 
         try {
-            // SP modificado para recibir los 6 parámetros (sin semana, año ni OUT parameter)
-            DB::statement('CALL sp_AsignarHorarioBarbero(?, ?, ?, ?, ?, ?)', [
+            DB::statement('CALL sp_AsignarHorarioSemanal(?, ?, ?, ?, ?, ?)', [
                 $idBarberoNuevo,
-                $fecha_inicio,
-                $fecha_fin,
+                $request->input('fecha_ingreso'),   // FechaInicio
+                $request->input('fecha_ingreso'),   // FechaFin (mismo día de inicio)
                 $dias,
                 $admin->IdUsuario,
                 $ip,

@@ -28,6 +28,6 @@ class Horario extends Model
 
     public function horariosBarberos()
     {
-        return $this->hasMany(HorarioBarbero::class, 'IdHorario', 'IdHorario');
+        return $this->hasMany(HorarioSemanal::class, 'IdHorario', 'IdHorario');
     }
 }

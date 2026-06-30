@@ -30,6 +30,8 @@
       <h3 class="editar__section-title">👤 Editar Información Personal</h3>
 
       <div class="editar__grid">
+
+
         <div class="editar__group">
           <label class="label" for="input-nombre1">Primer Nombre *</label>
           <input
@@ -51,10 +53,14 @@
             id="input-nombre2"
             type="text"
             class="input-field"
+            :class="{ 'input-field--error': errores.nombre2 }"
             v-model.trim="form.nombre2"
             placeholder="Segundo nombre (opcional)"
+            @input="limpiarError('nombre2')"
           />
+          <span v-if="errores.nombre2" class="editar__error">{{ errores.nombre2 }}</span>
         </div>
+        
 
         <div class="editar__group">
           <label class="label" for="input-apellido1">Primer Apellido *</label>
@@ -77,9 +83,12 @@
             id="input-apellido2"
             type="text"
             class="input-field"
+            :class="{ 'input-field--error': errores.apellido2 }"
             v-model.trim="form.apellido2"
             placeholder="Segundo apellido (opcional)"
+            @input="limpiarError('apellido2')"
           />
+          <span v-if="errores.apellido2" class="editar__error">{{ errores.apellido2 }}</span>
         </div>
 
         <div class="editar__group">
@@ -96,6 +105,7 @@
           />
           <span v-if="errores.correo" class="editar__error">{{ errores.correo }}</span>
         </div>
+
 
         <div class="editar__group">
           <label class="label" for="input-fecha">Fecha de Ingreso *</label>
@@ -158,7 +168,9 @@ const form = reactive({
 
 const errores = reactive({
   nombre1: '',
+  nombre2: '', 
   apellido1: '',
+  apellido2: '', 
   correo: '',
   fecha_ingreso: '',
 })
@@ -184,33 +196,47 @@ function limpiarError(campo) {
 
 function validarFormulario() {
   let valido = true
+  const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/
 
-  // Campos obligatorios
-  if (!form.nombre1) {
+  // Limpiar errores previos
+  Object.keys(errores).forEach(key => errores[key] = '')
+
+  if (!form.nombre1.trim()) {
     errores.nombre1 = 'El primer nombre es obligatorio'
     valido = false
+  } else if (!soloLetras.test(form.nombre1.trim())) {
+    errores.nombre1 = 'Solo debe contener letras'
+    valido = false
   }
 
-  if (!form.apellido1) {
+  if (!form.apellido1.trim()) {
     errores.apellido1 = 'El primer apellido es obligatorio'
     valido = false
+  } else if (!soloLetras.test(form.apellido1.trim())) {
+    errores.apellido1 = 'Solo debe contener letras'
+    valido = false
   }
 
-  if (!form.correo) {
-    errores.correo = 'El correo electrónico es obligatorio'
+  if (form.nombre2.trim() && !soloLetras.test(form.nombre2.trim())) {
+    errores.nombre2 = 'Solo debe contener letras'
+    valido = false
+  }
+
+  if (form.apellido2.trim() && !soloLetras.test(form.apellido2.trim())) {
+    errores.apellido2 = 'Solo debe contener letras'
+    valido = false
+  }
+
+  if (!form.correo.trim()) {
+    errores.correo = 'El correo es obligatorio'
     valido = false
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo)) {
-    errores.correo = 'Ingrese un correo electrónico válido'
+    errores.correo = 'Ingrese un formato válido'
     valido = false
   }
 
-  // Validación de fecha
   if (!form.fecha_ingreso) {
-    errores.fecha_ingreso = 'La fecha de ingreso es obligatoria'
-    valido = false
-  } else if (form.fecha_ingreso > fechaMaxima.value) {
-    // Escenario: Fecha posterior a la actual
-    errores.fecha_ingreso = 'La fecha de ingreso no puede ser posterior a la fecha actual'
+    errores.fecha_ingreso = 'La fecha es obligatoria'
     valido = false
   }
 
@@ -247,21 +273,21 @@ async function guardarCambios() {
       form.correo = data.barbero.correo
       form.fecha_ingreso = data.barbero.fecha_ingreso
     }
-  } catch (err) {
-    // Escenarios de error (Correo duplicado o fecha inválida lanzados por BD/API)
-    const mensaje = err.response?.data?.mensaje || 'Error al guardar los cambios'
-
-    if (mensaje.includes('correo')) {
-      errores.correo = mensaje
-    } else if (mensaje.includes('fecha')) {
-      errores.fecha_ingreso = mensaje
+  } catch (err) { // <--- MANTEN ESTA LLAVE AQUÍ
+    // Si el servidor responde con errores de validación (422)
+    if (err.response?.status === 422) {
+      const serverErrors = err.response.data.errors
+      if (serverErrors) {
+        if (serverErrors.correo) errores.correo = serverErrors.correo[0]
+        if (serverErrors.nombre1) errores.nombre1 = serverErrors.nombre1[0]
+      }
     } else {
-      mensajeError.value = mensaje
+      mensajeError.value = err.response?.data?.mensaje || 'Error al guardar los cambios'
     }
-  } finally {
+  } finally { // <--- Agregué el finally para asegurar que el spinner se detenga siempre
     guardando.value = false
   }
-}
+} // <--- ESTA ES LA ÚNICA LLAVE QUE DEBE CERRAR LA FUNCIÓN
 
 onMounted(async () => {
   try {
@@ -279,6 +305,7 @@ onMounted(async () => {
     cargandoInicial.value = false
   }
 })
+
 </script>
 
 <style scoped>

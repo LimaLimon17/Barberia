@@ -22,6 +22,13 @@ use App\Http\Controllers\Barbero\ComisionController;
 use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\PorcentajeProductoController;
 use App\Http\Controllers\Admin\ServicioController;
+
+// Imports nuevos, junto a los demás use:
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FinanzaController;
+use App\Http\Controllers\Admin\ReporteController;
+use App\Http\Controllers\Barbero\ReporteBarberoController;
+use App\Http\Controllers\AuditoriaController;
 /*
 |--------------------------------------------------------------------------
 | API Routes - Sistema Barbería
@@ -67,6 +74,9 @@ Route::prefix('reservas')->group(function () {
 // RUTAS PROTEGIDAS (requieren token Sanctum)
 // ==========================================
 Route::middleware('auth:sanctum')->group(function () {
+    // Dentro de Route::middleware('auth:sanctum')->group(...), al mismo nivel
+// que el Logout, fuera de los sub-grupos de rol (la auditoría la usan ambos roles):
+Route::post('/auditoria/reporte', [AuditoriaController::class, 'registrarReporte']);
 
     // Logout
     Route::post('/logout', [LoginController::class, 'logout']);
@@ -119,6 +129,9 @@ Route::get('/comisiones', [ComisionController::class, 'semana']);
 Route::get('/comisiones/filtrar', [ComisionController::class, 'filtrar']);
 
 Route::put('/perfil/cambiar-password', [PerfilController::class, 'cambiarPassword']);
+// Dentro de Route::middleware('role:barbero')->prefix('barbero')->group(...),
+// junto a las rutas que ya tenemos (perfil, agenda, comisiones, etc.):
+Route::get('/reportes', [ReporteBarberoController::class, 'index']);
 });
 
     // ------------------------------------------
@@ -164,5 +177,9 @@ Route::post('/servicios', [ServicioController::class, 'store']);
 Route::put('/servicios/{id}', [ServicioController::class, 'update']);
 Route::patch('/servicios/{id}/desactivar', [ServicioController::class, 'desactivar']);
         
+Route::get('/dashboard', [DashboardController::class, 'index']);
+Route::get('/finanzas', [FinanzaController::class, 'index']);
+Route::get('/reportes/ventas', [ReporteController::class, 'ventas']);
+Route::get('/reportes/inventario', [ReporteController::class, 'inventario']);
 });
 });

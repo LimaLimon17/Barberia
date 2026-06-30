@@ -22,6 +22,7 @@ const menuItems = [
   { nombre: 'Comisiones', ruta: '/barbero/dashboard?vista=comisiones', icono: '💰' },
   { nombre: 'Mi Perfil', ruta: '/barbero/perfil', icono: '👤' },
 ]
+
 </script>
 
 <style scoped>

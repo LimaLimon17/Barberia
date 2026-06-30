@@ -65,4 +65,10 @@ class Reserva extends Model
 {
     return $this->hasMany(Pago::class, 'IdReserva', 'IdReserva');
 }
+// Agregar dentro de la clase Reserva, junto a servicios() y pagos():
+
+public function ventas()
+{
+    return $this->hasMany(Venta::class, 'IdReserva', 'IdReserva');
+}
 }

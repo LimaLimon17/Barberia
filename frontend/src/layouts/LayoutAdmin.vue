@@ -14,25 +14,19 @@
 import Navbar from '../components/common/Navbar.vue'
 import Sidebar from '../components/common/Sidebar.vue'
 
+// LayoutAdmin.vue
 const menuItems = [
-  {
-    nombre: 'Dashboard',
-    ruta: '/admin/dashboard',
-    icono: '📊',
-  },
-  {
-    nombre: 'Barberos',
-    ruta: '/admin/barberos',
-    icono: '✂️',
-  },
-  {
-    nombre: 'Horarios',
-    ruta: '/admin/horarios',
-    icono: '🗓️',
-  },
+  { nombre: 'Dashboard', ruta: '/admin/dashboard', icono: '📊' },
+  { nombre: 'Barberos', ruta: '/admin/barberos', icono: '✂️' },
+  { nombre: 'Horarios', ruta: '/admin/horarios', icono: '🗓️' },
+  { nombre: 'Servicios', ruta: '/admin/servicios', icono: '🗂️' },
+  { nombre: 'Inventario', ruta: '/admin/productos', icono: '📦' },
+  { nombre: 'Porcentajes', ruta: '/admin/productos/porcentajes', icono: '🏷️' },
+  { nombre: 'Finanzas', ruta: '/admin/finanzas', icono: '💰' },
+  { nombre: 'Reporte de Ventas', ruta: '/admin/reportes/ventas', icono: '📈' },
+  { nombre: 'Reporte de Inventario', ruta: '/admin/reportes/inventario', icono: '📋' },
 ]
 </script>
-
 <style scoped>
 .layout-panel {
   display: flex;

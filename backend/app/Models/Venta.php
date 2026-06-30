@@ -42,4 +42,15 @@ class Venta extends Model
     {
         return $this->belongsTo(Barbero::class, 'IdBarbero', 'IdBarbero');
     }
+    // Agregar dentro de la clase Venta, junto a detalles()/reserva()/barbero():
+
+public function pagos()
+{
+    return $this->hasMany(Pago::class, 'IdVenta', 'IdVenta');
+}
+
+public function cliente()
+{
+    return $this->belongsTo(Cliente::class, 'IdCliente', 'CI');
+}
 }

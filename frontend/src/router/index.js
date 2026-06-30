@@ -10,9 +10,11 @@ import LayoutAdmin from '../layouts/LayoutAdmin.vue'
 import LoginView from '../views/public/LoginView.vue'
 import HomeView from '../views/public/HomeView.vue'
 import ReservarView from '../views/public/ReservarView.vue'
+
 // Vistas del barbero
 import DashboardBarbero from '../views/barbero/DashboardBarbero.vue'
 import PerfilBarbero from '../views/barbero/PerfilBarbero.vue'
+import ReportesBarbero from '../views/barbero/ReportesBarbero.vue'
 
 // Vistas del administrador
 import DashboardAdmin from '../views/admin/DashboardAdmin.vue'
@@ -21,10 +23,14 @@ import PerfilBarberoAdmin from '../views/admin/PerfilBarberoAdmin.vue'
 import EditarBarbero from '../views/admin/EditarBarbero.vue'
 import RegistrarBarbero from '../views/admin/RegistrarBarbero.vue'
 import GestionHorarios from '../views/admin/GestionHorarios.vue'
-import VerHorarioBarbero   from '../views/admin/VerHorarioBarbero.vue'
+import VerHorarioBarbero from '../views/admin/VerHorarioBarbero.vue'
 import ServiciosView from '../views/admin/ServiciosView.vue'
 import PorcentajesView from '../views/admin/PorcentajesView.vue'
 import ProductosView from '../views/admin/ProductosView.vue'
+import Finanzas from '../views/admin/Finanzas.vue'
+import ReportesVentas from '../views/admin/ReportesVentas.vue'
+import ReportesInventario from '../views/admin/ReportesInventario.vue'
+
 const routes = [
   // ==========================================
   // RUTAS PÚBLICAS
@@ -45,15 +51,12 @@ const routes = [
       },
     ],
   },
-
-  //RUTA PAGINA PUBLICA
   {
     path: '/inicio',
     name: 'Home',
     component: HomeView,
-    meta: { title: 'The Lamplight Barber Shop' }
+    meta: { title: 'The Lamplight Barber Shop' },
   },
- // RUTA PUBLICA - WIZARD DE RESERVA (HU-04 / HU-05)
   {
     path: '/reservar',
     name: 'Reservar',
@@ -84,6 +87,12 @@ const routes = [
         name: 'PerfilBarbero',
         component: PerfilBarbero,
         meta: { title: 'Mi Perfil' },
+      },
+      {
+        path: 'reportes',
+        name: 'ReportesBarbero',
+        component: ReportesBarbero,
+        meta: { title: 'Mis Reportes' },
       },
     ],
   },
@@ -125,46 +134,61 @@ const routes = [
         component: RegistrarBarbero,
         meta: { title: 'Registrar Barbero' },
       },
-       {
+      {
         path: 'barberos/:id/editar',
         name: 'EditarBarbero',
         component: EditarBarbero,
         meta: { title: 'Editar Barbero' },
         props: true,
-        },
-        {
+      },
+      {
         path: 'horarios',
         name: 'GestionHorarios',
         component: GestionHorarios,
         meta: { title: 'Gestión de Horarios' },
-        },
-       
-        {
-          path: 'barberos/:id/horario',
-          name: 'VerHorarioBarbero',
-          component: VerHorarioBarbero,
-          props: true,
-        },
-        {
-  path: 'servicios',
-  name: 'CatalogoServicios',
-  component: ServiciosView,
-  meta: { title: 'Catálogo de Servicios' },
-},
-{
-  path: 'productos/porcentajes',
-  name: 'PorcentajesProductos',
-  component: PorcentajesView,
-  meta: { title: 'Porcentajes de Productos' },
-},
-
-{
-  path: 'productos',
-  name: 'Productos',
-  component: ProductosView,
-  meta: { title: 'Inventario de Productos' },
-},
-        
+      },
+      {
+        path: 'barberos/:id/horario',
+        name: 'VerHorarioBarbero',
+        component: VerHorarioBarbero,
+        props: true,
+      },
+      {
+        path: 'servicios',
+        name: 'CatalogoServicios',
+        component: ServiciosView,
+        meta: { title: 'Catálogo de Servicios' },
+      },
+      {
+        path: 'productos',
+        name: 'Productos',
+        component: ProductosView,
+        meta: { title: 'Inventario de Productos' },
+      },
+      {
+        path: 'productos/porcentajes',
+        name: 'PorcentajesProductos',
+        component: PorcentajesView,
+        meta: { title: 'Porcentajes de Productos' },
+      },
+      {
+        path: 'finanzas',
+        name: 'FinanzasAdmin',
+        component: Finanzas,
+        meta: { title: 'Finanzas' },
+      },
+      {
+        path: 'reportes/ventas',
+        name: 'ReportesVentasAdmin',
+        component: ReportesVentas,
+        meta: { title: 'Reporte de Ventas' },
+      },
+      {
+        path: 'reportes/inventario',
+        name: 'ReportesInventarioAdmin',
+        component: ReportesInventario,
+        meta: { title: 'Reporte de Inventario' },
+      },
     ],
   },
 
@@ -186,18 +210,15 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
 
-  // Actualizar título de la página
   document.title = to.meta.title
     ? `${to.meta.title} | Barbería`
     : 'Barbería - Sistema de Gestión'
 
-  // Si la ruta requiere autenticación
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!authStore.isAuthenticated) {
       return next({ name: 'Login' })
     }
 
-    // Verificar rol
     const rolRequerido = to.matched.find((record) => record.meta.rol)?.meta.rol
     if (rolRequerido) {
       if (rolRequerido === 'admin' && !authStore.esAdmin) {
@@ -209,7 +230,6 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // Si ya está autenticado y va al login, redirigir al dashboard
   if (to.name === 'Login' && authStore.isAuthenticated) {
     if (authStore.esAdmin) {
       return next({ name: 'DashboardAdmin' })

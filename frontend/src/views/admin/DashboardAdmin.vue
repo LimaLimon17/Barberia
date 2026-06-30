@@ -16,6 +16,14 @@
     </div>
   </router-link>
 
+  <router-link to="/admin/horarios" class="dashboard__card glass-card" style="text-decoration:none;">
+    <div class="dashboard__card-icon">🗓️</div>
+    <div class="dashboard__card-info">
+      <h3 class="dashboard__card-title">Horarios</h3>
+      <p class="dashboard__card-desc">Asignación de descansos FIFO</p>
+    </div>
+  </router-link>
+
   <router-link to="/admin/servicios" class="dashboard__card glass-card" style="text-decoration:none;">
     <div class="dashboard__card-icon">🗂️</div>
     <div class="dashboard__card-info">
@@ -33,28 +41,36 @@
   </router-link>
 
   <router-link to="/admin/productos" class="dashboard__card glass-card" style="text-decoration:none;">
-  <div class="dashboard__card-icon">📦</div>
-  <div class="dashboard__card-info">
-    <h3 class="dashboard__card-title">Inventario</h3>
-    <p class="dashboard__card-desc">Control de productos y stock</p>
-  </div>
-</router-link>
+    <div class="dashboard__card-icon">📦</div>
+    <div class="dashboard__card-info">
+      <h3 class="dashboard__card-title">Inventario</h3>
+      <p class="dashboard__card-desc">Control de productos y stock</p>
+    </div>
+  </router-link>
 
-  <div class="dashboard__card glass-card">
+  <router-link to="/admin/finanzas" class="dashboard__card glass-card" style="text-decoration:none;">
     <div class="dashboard__card-icon">💰</div>
     <div class="dashboard__card-info">
-      <h3 class="dashboard__card-title">Comisiones</h3>
-      <p class="dashboard__card-desc">Reportes de ganancias</p>
+      <h3 class="dashboard__card-title">Finanzas</h3>
+      <p class="dashboard__card-desc">Ingresos, fondos y comisiones a pagar</p>
     </div>
-  </div>
+  </router-link>
 
-  <div class="dashboard__card glass-card">
-    <div class="dashboard__card-icon">📊</div>
+  <router-link to="/admin/reportes/ventas" class="dashboard__card glass-card" style="text-decoration:none;">
+    <div class="dashboard__card-icon">📈</div>
     <div class="dashboard__card-info">
-      <h3 class="dashboard__card-title">Reportes</h3>
-      <p class="dashboard__card-desc">Estadísticas del negocio</p>
+      <h3 class="dashboard__card-title">Reporte de Ventas</h3>
+      <p class="dashboard__card-desc">Transacciones filtradas por barbero/servicio</p>
     </div>
-  </div>
+  </router-link>
+
+  <router-link to="/admin/reportes/inventario" class="dashboard__card glass-card" style="text-decoration:none;">
+    <div class="dashboard__card-icon">📋</div>
+    <div class="dashboard__card-info">
+      <h3 class="dashboard__card-title">Reporte de Inventario</h3>
+      <p class="dashboard__card-desc">Stock, ventas y alertas por producto</p>
+    </div>
+  </router-link>
 </div>
 </div>
 </template>

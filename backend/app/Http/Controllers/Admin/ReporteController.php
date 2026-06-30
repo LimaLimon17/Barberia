@@ -19,6 +19,7 @@ class ReporteController extends Controller
         $fechaInicio = $request->input('inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $fechaFin = $request->input('fin', Carbon::now()->endOfMonth()->format('Y-m-d'));
         $idBarbero = $request->input('id_barbero');
+        $idServicio = $request->input('id_servicio');
 
         $reservasQuery = Reserva::with(['cliente', 'barbero.usuario', 'servicios', 'pagos'])
             ->whereBetween('FechaCita', [$fechaInicio, $fechaFin])
@@ -33,8 +34,17 @@ class ReporteController extends Controller
             $ventasQuery->where('IdBarbero', $idBarbero);
         }
 
+        if ($idServicio) {
+            $reservasQuery->whereHas('servicios', function ($q) use ($idServicio) {
+                $q->where('Servicios.IdServicio', $idServicio);
+            });
+            // Si filtra por servicio, no mostramos ventas directas de productos
+            $ventas = collect();
+        } else {
+            $ventas = $ventasQuery->get();
+        }
+
         $reservas = $reservasQuery->get();
-        $ventas = $ventasQuery->get();
 
         $transacciones = collect();
         $ingresoTotal = 0;

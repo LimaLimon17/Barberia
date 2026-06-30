@@ -24,7 +24,7 @@ const menuItems = [
     icono: '👤',
   },
   {
-    nombre: 'Reportes y Comisiones',
+    nombre: 'Comisiones y Reportes',
     ruta: '/barbero/reportes',
     icono: '💰',
   },

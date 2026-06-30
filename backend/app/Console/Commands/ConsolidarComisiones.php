@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\ComisionService;
-use Carbon\Carbon;
 
 class ConsolidarComisiones extends Command
 {
@@ -13,27 +12,33 @@ class ConsolidarComisiones extends Command
      *
      * @var string
      */
-    protected $signature = 'app:consolidar-comisiones';
+    protected $signature = 'comisiones:consolidar';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Consolida las comisiones de los barberos para la semana actual';
+    protected $description = 'Consolida las comisiones semanales de los barberos (HU-10/RF19)';
+
+    protected $comisionService;
+
+    public function __construct(ComisionService $comisionService)
+    {
+        parent::__construct();
+        $this->comisionService = $comisionService;
+    }
 
     /**
      * Execute the console command.
      */
-    public function handle(ComisionService $comisionService)
+    public function handle()
     {
         $this->info('Iniciando consolidación de comisiones...');
         
-        $fechaInicio = Carbon::now()->startOfWeek();
-        $fechaFin = Carbon::now()->endOfWeek();
-
-        $registros = $comisionService->consolidarSemana($fechaInicio, $fechaFin);
-
-        $this->info("Consolidación finalizada. Registros creados: {$registros}");
+        $total = $this->comisionService->consolidarSemana();
+        
+        $this->info("Consolidación finalizada exitosamente. Se generaron {$total} registros de comisión.");
+        return 0;
     }
 }

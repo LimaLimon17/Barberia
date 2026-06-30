@@ -1,98 +1,95 @@
 <template>
-  <div class="space-y-6 max-w-[1100px] mx-auto p-4 sm:p-0">
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Mis Reportes y Comisiones</h1>
-          <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            Revisa tus citas completadas, productos vendidos y ganancias.
-          </p>
-        </div>
-        
-        <div class="flex flex-wrap gap-3 w-full md:w-auto">
-          <select v-model="filtros.periodo" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 transition-colors">
-            <option value="diario">Diario</option>
-            <option value="semanal">Semanal</option>
-          </select>
+  <div class="reportes animate-fade-in">
+    <div class="reportes__header">
+      <h1 class="reportes__title">💰 Mis <span class="gold-text">Comisiones y Reportes</span></h1>
+    </div>
 
-          <input type="date" v-model="filtros.fecha" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 transition-colors">
-          
-          <button @click="cargarReporte" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-            Filtrar
-          </button>
-          
-          <button @click="exportarPDF" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-all duration-200 bg-red-600 border border-transparent rounded-lg hover:bg-red-700 shadow-lg shadow-red-500/30">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            Exportar a PDF
-          </button>
-        </div>
+    <!-- Filtros (HU-17 Esc.5) -->
+    <div class="reportes__filtros glass-card">
+      <div class="reportes__filtro-group">
+        <label class="label">Periodo</label>
+        <select class="input-field" v-model="filtroPeriodo" @change="cargarReporte">
+          <option value="semana">Semanal (Lunes - Domingo)</option>
+          <option value="dia">Diario (Hoy)</option>
+        </select>
       </div>
     </div>
 
-    <div v-if="cargando" class="flex justify-center items-center py-20">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-    </div>
+    <div v-if="cargando" class="reportes__loading glass-card"><p>Cargando tu reporte...</p></div>
 
-    <div v-else-if="datos" class="space-y-6">
-      
-      <!-- Tarjetas de Resumen -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-          <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Ingresos Totales Brutos</p>
-          <h3 class="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Bs. {{ formatNumber(datos.ingresos_totales) }}</h3>
-          <p class="text-xs text-slate-400 mt-2">Suma de todos tus servicios y ventas.</p>
+    <template v-if="datos && !cargando">
+      <p class="reportes__periodo-text">Periodo: {{ datos.periodo.inicio }} al {{ datos.periodo.fin }}</p>
+
+      <!-- Resumen de Rendimiento (HU-17 Esc.3, 4) -->
+      <div class="reportes__resumen">
+        <div class="reportes__stat glass-card">
+          <span class="reportes__stat-icon">📊</span>
+          <div>
+            <p class="reportes__stat-label">Ingresos Totales Brutos</p>
+            <p class="reportes__stat-value">Bs. {{ parseFloat(datos.ingresos_totales).toFixed(2) }}</p>
+          </div>
         </div>
-
-        <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg shadow-indigo-500/30">
-          <p class="text-indigo-100 text-sm font-medium mb-1">Mi Comisión Total</p>
-          <h3 class="text-4xl font-bold tracking-tight">Bs. {{ formatNumber(datos.comision_calculada) }}</h3>
-          <div class="mt-4 flex flex-col gap-1 text-xs text-indigo-100">
-            <div class="flex justify-between"><span>Por Servicios:</span> <span>Bs. {{ formatNumber(datos.desglose_ganancias.servicios) }}</span></div>
-            <div class="flex justify-between"><span>Por Productos:</span> <span>Bs. {{ formatNumber(datos.desglose_ganancias.productos) }}</span></div>
-            <div class="flex justify-between"><span>Por Ausentes:</span> <span>Bs. {{ formatNumber(datos.desglose_ganancias.ausentes) }}</span></div>
+        <div class="reportes__stat glass-card reportes__stat--highlight">
+          <span class="reportes__stat-icon">💎</span>
+          <div>
+            <p class="reportes__stat-label">Comisión Total a Cobrar</p>
+            <p class="reportes__stat-value reportes__stat-value--big">Bs. {{ parseFloat(datos.comision_calculada).toFixed(2) }}</p>
           </div>
         </div>
       </div>
 
-      <!-- Tabla Detalle -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-          <h3 class="text-lg font-bold text-slate-800 dark:text-white">Detalle de Transacciones</h3>
-          <span class="text-xs text-slate-500 bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-full">
-            {{ datos.detalle_transacciones.length }} registros
-          </span>
+      <!-- Desglose de Ganancias (HU-10 / RF18) -->
+      <div class="reportes__desglose glass-card">
+        <h2 class="reportes__section-title">📋 Desglose de Comisiones</h2>
+        <div class="reportes__desglose-grid">
+          <div class="reportes__desglose-item">
+            <span>✂️ Servicios (50%)</span>
+            <strong>Bs. {{ parseFloat(datos.desglose_ganancias.servicios).toFixed(2) }}</strong>
+          </div>
+          <div class="reportes__desglose-item">
+            <span>🛍️ Productos</span>
+            <strong>Bs. {{ parseFloat(datos.desglose_ganancias.productos).toFixed(2) }}</strong>
+          </div>
+          <div class="reportes__desglose-item">
+            <span>🚫 Ausentes (50%)</span>
+            <strong>Bs. {{ parseFloat(datos.desglose_ganancias.ausentes).toFixed(2) }}</strong>
+          </div>
         </div>
-        <div class="overflow-x-auto max-h-[500px]">
-          <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
-            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-900/50 dark:text-slate-300 sticky top-0 shadow-sm z-10">
+      </div>
+
+      <!-- Detalle Cronológico (HU-17 Esc.1, 2 / RF17) -->
+      <div class="reportes__section glass-card">
+        <h2 class="reportes__section-title">🗓️ Detalle Cronológico</h2>
+        <div class="reportes__table-wrapper" v-if="datos.detalle_transacciones.length > 0">
+          <table class="reportes__table">
+            <thead>
               <tr>
-                <th scope="col" class="px-6 py-4 font-semibold">Fecha y Hora</th>
-                <th scope="col" class="px-6 py-4 font-semibold">Cliente</th>
-                <th scope="col" class="px-6 py-4 font-semibold">Detalle</th>
-                <th scope="col" class="px-6 py-4 font-semibold text-right">Monto Bruto</th>
-                <th scope="col" class="px-6 py-4 font-semibold text-right">Mi Comisión</th>
+                <th>Fecha y Hora</th>
+                <th>Cliente</th>
+                <th>Detalle</th>
+                <th>Monto Bruto</th>
+                <th>Comisión Ganada</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(t, i) in datos.detalle_transacciones" :key="i" class="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">{{ formatFechaHora(t.Fecha) }}</td>
-                <td class="px-6 py-4">{{ t.Cliente }}</td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex max-w-[200px] truncate" :title="t.Detalle">{{ t.Detalle }}</span>
-                </td>
-                <td class="px-6 py-4 text-right">Bs. {{ formatNumber(t.MontoTotal) }}</td>
-                <td class="px-6 py-4 text-right font-bold text-indigo-600 dark:text-indigo-400">Bs. {{ formatNumber(t.Comision) }}</td>
-              </tr>
-              <tr v-if="datos.detalle_transacciones.length === 0">
-                <td colspan="5" class="px-6 py-10 text-center text-slate-500">
-                  No hay transacciones registradas en el periodo seleccionado.
-                </td>
+              <tr v-for="(t, i) in datos.detalle_transacciones" :key="i">
+                <td class="reportes__td-fecha">{{ t.Fecha }}</td>
+                <td>{{ t.Cliente }}</td>
+                <td>{{ t.Detalle }}</td>
+                <td>Bs. {{ parseFloat(t.MontoTotal).toFixed(2) }}</td>
+                <td class="reportes__td-comision">Bs. {{ parseFloat(t.Comision).toFixed(2) }}</td>
               </tr>
             </tbody>
           </table>
         </div>
+        <p v-else class="reportes__empty">No hay transacciones en este periodo.</p>
       </div>
-    </div>
+
+      <!-- Exportar (HU-17 Esc.6 / HU-10 Esc.6) -->
+      <div class="reportes__actions">
+        <button class="btn-primary" @click="exportarPDF" id="btn-exportar-barbero">📄 Exportar a PDF (Vista Previa)</button>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -101,39 +98,20 @@ import { ref, onMounted } from 'vue'
 import { reportesService } from '../../services/reportesService'
 import { pdfGenerator } from '../../utils/pdfGenerator'
 
-const hoy = new Date()
-
-const formatFechaInput = (d) => d.toISOString().split('T')[0]
-const formatFechaHora = (str) => {
-  const d = new Date(str)
-  return d.toLocaleString('es-BO', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  })
-}
-
-const filtros = ref({
-  periodo: 'semanal',
-  fecha: formatFechaInput(hoy)
-})
-
+const filtroPeriodo = ref('semana')
 const datos = ref(null)
-const cargando = ref(true)
+const cargando = ref(false)
 
 const cargarReporte = async () => {
-  cargando.value = true
   try {
-    const params = { periodo: filtros.value.periodo, fecha: filtros.value.fecha }
-    const res = await reportesService.getReporteBarbero(params)
-    datos.value = res
+    cargando.value = true
+    datos.value = await reportesService.getReporteBarbero({ periodo: filtroPeriodo.value })
   } catch (error) {
-    console.error('Error cargando reporte de barbero:', error)
+    console.error('Error cargando reporte:', error)
   } finally {
     cargando.value = false
   }
 }
-
-const formatNumber = (num) => parseFloat(num).toFixed(2)
 
 const exportarPDF = () => {
   if (datos.value) {
@@ -141,7 +119,38 @@ const exportarPDF = () => {
   }
 }
 
-onMounted(() => {
-  cargarReporte()
-})
+onMounted(cargarReporte)
 </script>
+
+<style scoped>
+.reportes { max-width: 1100px; }
+.reportes__header { margin-bottom: 1.5rem; }
+.reportes__title { font-family: var(--font-heading); font-size: 1.75rem; font-weight: 700; }
+.reportes__filtros { padding: 1.25rem 1.5rem; margin-bottom: 1rem; display: flex; align-items: flex-end; gap: 1rem; }
+.reportes__filtro-group { display: flex; flex-direction: column; min-width: 250px; }
+.reportes__loading { padding: 2rem; text-align: center; color: var(--color-text-muted); }
+.reportes__periodo-text { font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1rem; }
+.reportes__resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.reportes__stat { display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem; }
+.reportes__stat--highlight { border: 2px solid var(--color-azul-real); }
+.reportes__stat-icon { font-size: 2rem; }
+.reportes__stat-label { font-size: 0.8125rem; color: var(--color-text-muted); margin-bottom: 0.125rem; }
+.reportes__stat-value { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--color-azul-oscuro); }
+.reportes__stat-value--big { font-size: 1.5rem; color: var(--color-success); }
+.reportes__desglose { padding: 1.5rem; margin-bottom: 1.5rem; }
+.reportes__section-title { font-family: var(--font-heading); font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; }
+.reportes__desglose-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
+.reportes__desglose-item { display: flex; justify-content: space-between; padding: 0.75rem 1rem; background: var(--color-bg-primary); border-radius: var(--radius-sm); font-size: 0.9375rem; }
+.reportes__section { padding: 1.5rem; margin-bottom: 1.5rem; }
+.reportes__table-wrapper { overflow-x: auto; }
+.reportes__table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.reportes__table th { text-align: left; padding: 0.75rem 1rem; background: var(--color-azul-oscuro); color: #fff; font-family: var(--font-heading); font-weight: 600; text-transform: uppercase; font-size: 0.8125rem; }
+.reportes__table th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+.reportes__table th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
+.reportes__table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border-light); }
+.reportes__table tbody tr:hover { background: var(--color-bg-hover); }
+.reportes__td-fecha { font-weight: 600; color: var(--color-azul-real); }
+.reportes__td-comision { font-weight: 700; color: var(--color-success); }
+.reportes__empty { text-align: center; padding: 2rem; color: var(--color-text-muted); font-size: 0.875rem; }
+.reportes__actions { display: flex; justify-content: flex-end; margin-top: 1rem; }
+</style>

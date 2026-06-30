@@ -29,7 +29,7 @@ const menuItems = [
     icono: '💰',
   },
   {
-    nombre: 'Ventas',
+    nombre: 'Reporte de Ventas',
     ruta: '/admin/reportes/ventas',
     icono: '📈',
   },

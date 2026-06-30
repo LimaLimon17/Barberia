@@ -58,6 +58,7 @@
       <router-link
         to="/barbero/reportes"
         class="dashboard__card glass-card dashboard__card--link"
+        id="btn-ver-comisiones"
       >
         <div class="dashboard__card-icon">💰</div>
 
@@ -70,7 +71,7 @@
             Revisa tus ganancias y citas
           </p>
         </div>
-        
+
         <span class="dashboard__card-arrow">
           →
         </span>

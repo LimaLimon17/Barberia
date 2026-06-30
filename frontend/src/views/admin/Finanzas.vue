@@ -1,142 +1,133 @@
 <template>
-  <div class="space-y-6">
-    <!-- Encabezado y Filtros -->
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Panel de Finanzas</h1>
-          <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            Rendimiento consolidado de la semana actual
-            <span v-if="datos" class="font-medium text-indigo-600 dark:text-indigo-400">
-              ({{ datos.periodo.inicio }} al {{ datos.periodo.fin }})
-            </span>
-          </p>
-        </div>
-        
-        <div class="flex flex-wrap gap-3">
-          <!-- Filtro Barbero -->
-          <select 
-            v-model="filtroBarbero" 
-            @change="cargarFinanzas"
-            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors"
-          >
-            <option value="">Todos los Barberos</option>
-            <option v-for="b in listaBarberos" :key="b.IdBarbero" :value="b.IdBarbero">
-              {{ b.usuario?.Nombre1 }} {{ b.usuario?.Apellido1 }}
-            </option>
-          </select>
-          
-          <button 
-            @click="exportarPDF"
-            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-all duration-200 bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-lg shadow-red-500/30"
-          >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            Exportar a PDF
-          </button>
-        </div>
-      </div>
+  <div class="finanzas animate-fade-in">
+    <div class="finanzas__header">
+      <h1 class="finanzas__title">💰 Panel de <span class="gold-text">Finanzas</span></h1>
+      <p class="finanzas__subtitle" v-if="datos">Semana: {{ datos.periodo.inicio }} al {{ datos.periodo.fin }}</p>
     </div>
 
-    <div v-if="cargando" class="flex justify-center items-center py-20">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+    <!-- Filtro por Barbero (HU-16 Esc.7) -->
+    <div class="finanzas__filtro glass-card">
+      <label class="label" for="select-barbero">Filtrar por Barbero</label>
+      <select id="select-barbero" class="input-field" v-model="filtroBarbero" @change="cargarFinanzas">
+        <option value="">Todos los barberos</option>
+        <option v-for="b in listaBarberos" :key="b.IdBarbero" :value="b.IdBarbero">
+          {{ b.usuario.Nombre1 }} {{ b.usuario.Apellido1 }}
+        </option>
+      </select>
     </div>
 
-    <div v-else-if="datos" class="space-y-6">
-      <!-- Tarjetas Generales -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Ingresos Totales -->
-        <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white shadow-lg shadow-indigo-500/30 relative overflow-hidden group">
-          <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform duration-500">
-            <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"></path></svg>
-          </div>
-          <p class="text-indigo-100 text-sm font-medium mb-1">Ingresos Brutos Totales</p>
-          <h3 class="text-3xl font-bold tracking-tight">Bs. {{ formatNumber(datos.ingresos_totales) }}</h3>
-          <div class="mt-4 flex gap-4 text-xs font-medium text-indigo-100">
-            <div>Serv: {{ formatNumber(datos.ingresos_servicios) }}</div>
-            <div>Prod: {{ formatNumber(datos.ingresos_ventas) }}</div>
-          </div>
-        </div>
-        
-        <!-- Fondos Barberia -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-          <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Fondo Barbería</p>
-          <h3 class="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">Bs. {{ formatNumber(datos.fondos_barberia.total) }}</h3>
-          <div class="mt-4 flex flex-col gap-1 text-xs text-slate-500 dark:text-slate-400">
-            <div class="flex justify-between"><span>Servicios (50%):</span> <span class="font-medium">Bs. {{ formatNumber(datos.fondos_barberia.servicios) }}</span></div>
-            <div class="flex justify-between"><span>Productos:</span> <span class="font-medium">Bs. {{ formatNumber(datos.fondos_barberia.productos) }}</span></div>
-            <div class="flex justify-between"><span>Ausentes (50%):</span> <span class="font-medium">Bs. {{ formatNumber(datos.fondos_barberia.ausentes) }}</span></div>
-          </div>
-        </div>
+    <div v-if="cargando" class="finanzas__loading glass-card">
+      <p>Cargando datos financieros...</p>
+    </div>
 
-        <!-- Comisiones a Pagar -->
-        <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg shadow-emerald-500/30 relative overflow-hidden group lg:col-span-2">
-          <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform duration-500">
-            <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path></svg>
+    <template v-if="datos && !cargando">
+      <!-- Resumen de Ingresos (HU-16 Esc. 1, 2, 3) -->
+      <div class="finanzas__resumen">
+        <div class="finanzas__stat-card glass-card">
+          <span class="finanzas__stat-icon">🎯</span>
+          <div>
+            <p class="finanzas__stat-label">Ingresos por Servicios</p>
+            <p class="finanzas__stat-value">Bs. {{ parseFloat(datos.ingresos_servicios).toFixed(2) }}</p>
           </div>
-          <p class="text-emerald-100 text-sm font-medium mb-1">Total Comisiones a Pagar (Semana)</p>
-          <h3 class="text-4xl font-bold tracking-tight">Bs. {{ formatNumber(datos.comisiones_a_pagar) }}</h3>
-          <p class="mt-2 text-sm text-emerald-100">Para {{ datos.desglose_barberos.length }} barbero(s) activos</p>
+        </div>
+        <div class="finanzas__stat-card glass-card">
+          <span class="finanzas__stat-icon">🛍️</span>
+          <div>
+            <p class="finanzas__stat-label">Ingresos por Productos</p>
+            <p class="finanzas__stat-value">Bs. {{ parseFloat(datos.ingresos_ventas).toFixed(2) }}</p>
+          </div>
+        </div>
+        <div class="finanzas__stat-card glass-card finanzas__stat-card--highlight">
+          <span class="finanzas__stat-icon">💎</span>
+          <div>
+            <p class="finanzas__stat-label">Total Ingresos</p>
+            <p class="finanzas__stat-value finanzas__stat-value--big">Bs. {{ parseFloat(datos.ingresos_totales).toFixed(2) }}</p>
+          </div>
         </div>
       </div>
 
-      <!-- Tabla de Desglose por Barbero -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700">
-          <h3 class="text-lg font-bold text-slate-800 dark:text-white">Desglose de Ganancias por Barbero</h3>
+      <!-- Fondos de la Barbería (HU-16 Esc. 4) -->
+      <div class="finanzas__section glass-card">
+        <h2 class="finanzas__section-title">🏦 Fondos de la Barbería</h2>
+        <div class="finanzas__fondos-grid">
+          <div class="finanzas__fondo-item">
+            <span class="finanzas__fondo-label">Retención Servicios (50%)</span>
+            <span class="finanzas__fondo-value">Bs. {{ parseFloat(datos.fondos_barberia.servicios).toFixed(2) }}</span>
+          </div>
+          <div class="finanzas__fondo-item">
+            <span class="finanzas__fondo-label">Retención Productos</span>
+            <span class="finanzas__fondo-value">Bs. {{ parseFloat(datos.fondos_barberia.productos).toFixed(2) }}</span>
+          </div>
+          <div class="finanzas__fondo-item">
+            <span class="finanzas__fondo-label">Ausentes (50%)</span>
+            <span class="finanzas__fondo-value">Bs. {{ parseFloat(datos.fondos_barberia.ausentes).toFixed(2) }}</span>
+          </div>
+          <div class="finanzas__fondo-item finanzas__fondo-item--total">
+            <span class="finanzas__fondo-label">Fondo Total</span>
+            <span class="finanzas__fondo-value">Bs. {{ parseFloat(datos.fondos_barberia.total).toFixed(2) }}</span>
+          </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
-            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-900/50 dark:text-slate-300">
+      </div>
+
+      <!-- Comisiones a Pagar (HU-16 Esc. 5) -->
+      <div class="finanzas__section glass-card">
+        <h2 class="finanzas__section-title">💸 Comisiones a Pagar: <span class="finanzas__comision-total">Bs. {{ parseFloat(datos.comisiones_a_pagar).toFixed(2) }}</span></h2>
+      </div>
+
+      <!-- Desglose por Barbero (HU-16 Esc. 6) -->
+      <div class="finanzas__section glass-card">
+        <h2 class="finanzas__section-title">👥 Desglose por Barbero</h2>
+        <div class="finanzas__table-wrapper" v-if="datos.desglose_barberos.length > 0">
+          <table class="finanzas__table">
+            <thead>
               <tr>
-                <th scope="col" class="px-6 py-4 rounded-tl-lg font-semibold">Barbero</th>
-                <th scope="col" class="px-6 py-4 font-semibold text-right">Comisión Servicios</th>
-                <th scope="col" class="px-6 py-4 font-semibold text-right">Comisión Productos</th>
-                <th scope="col" class="px-6 py-4 font-semibold text-right">Ausentes (50%)</th>
-                <th scope="col" class="px-6 py-4 font-semibold text-right rounded-tr-lg">Total a Pagar</th>
+                <th>Barbero</th>
+                <th>Comisión Servicios</th>
+                <th>Comisión Productos</th>
+                <th>Comisión Ausentes</th>
+                <th>Total a Pagar</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="b in datos.desglose_barberos" :key="b.id" class="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                <td class="px-6 py-4 font-medium text-slate-900 dark:text-white flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
-                    {{ b.nombre.charAt(0) }}
-                  </div>
-                  {{ b.nombre }}
-                </td>
-                <td class="px-6 py-4 text-right">Bs. {{ formatNumber(b.servicios) }}</td>
-                <td class="px-6 py-4 text-right">Bs. {{ formatNumber(b.productos) }}</td>
-                <td class="px-6 py-4 text-right">Bs. {{ formatNumber(b.ausentes) }}</td>
-                <td class="px-6 py-4 text-right font-bold text-slate-900 dark:text-white">Bs. {{ formatNumber(b.total) }}</td>
-              </tr>
-              <tr v-if="datos.desglose_barberos.length === 0">
-                <td colspan="5" class="px-6 py-8 text-center text-slate-500">
-                  No hay transacciones registradas para la semana seleccionada.
-                </td>
+              <tr v-for="b in datos.desglose_barberos" :key="b.id">
+                <td class="finanzas__td-name">{{ b.nombre }}</td>
+                <td>Bs. {{ parseFloat(b.servicios).toFixed(2) }}</td>
+                <td>Bs. {{ parseFloat(b.productos).toFixed(2) }}</td>
+                <td>Bs. {{ parseFloat(b.ausentes).toFixed(2) }}</td>
+                <td class="finanzas__td-total">Bs. {{ parseFloat(b.total).toFixed(2) }}</td>
               </tr>
             </tbody>
           </table>
         </div>
+        <p v-else class="finanzas__empty">No hay datos para mostrar.</p>
       </div>
-    </div>
+
+      <!-- Botón Exportar (HU-16 Esc. 9) -->
+      <div class="finanzas__actions">
+        <button class="btn-primary" @click="exportarPDF" id="btn-exportar-finanzas">
+          📄 Exportar a PDF (Vista Previa)
+        </button>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { finanzasService } from '../../services/finanzasService'
-import { barberoService } from '../../services/barberoService'
 import { pdfGenerator } from '../../utils/pdfGenerator'
+import api from '../../services/api.js'
 
 const datos = ref(null)
 const cargando = ref(true)
-const listaBarberos = ref([])
 const filtroBarbero = ref('')
+const listaBarberos = ref([])
 
 const cargarFinanzas = async () => {
-  cargando.value = true
   try {
-    const res = await finanzasService.getFinanzas(filtroBarbero.value)
-    datos.value = res
+    cargando.value = true
+    const data = await finanzasService.getFinanzas(filtroBarbero.value || null)
+    datos.value = data
   } catch (error) {
     console.error('Error cargando finanzas:', error)
   } finally {
@@ -146,15 +137,11 @@ const cargarFinanzas = async () => {
 
 const cargarBarberos = async () => {
   try {
-    const res = await barberoService.getBarberos()
-    listaBarberos.value = res.data || res // asumiendo respuesta estándar
+    const response = await api.get('/admin/barberos')
+    listaBarberos.value = response.data
   } catch (error) {
     console.error('Error cargando barberos:', error)
   }
-}
-
-const formatNumber = (num) => {
-  return parseFloat(num).toFixed(2)
 }
 
 const exportarPDF = () => {
@@ -164,7 +151,44 @@ const exportarPDF = () => {
 }
 
 onMounted(() => {
-  cargarBarberos()
   cargarFinanzas()
+  cargarBarberos()
 })
 </script>
+
+<style scoped>
+.finanzas { max-width: 1200px; }
+.finanzas__header { margin-bottom: 1.5rem; }
+.finanzas__title { font-family: var(--font-heading); font-size: 1.75rem; font-weight: 700; }
+.finanzas__subtitle { font-size: 0.875rem; color: var(--color-text-muted); margin-top: 0.25rem; }
+.finanzas__filtro { padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; }
+.finanzas__filtro select { max-width: 300px; }
+.finanzas__loading { padding: 2rem; text-align: center; color: var(--color-text-muted); }
+.finanzas__resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.finanzas__stat-card { display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem; }
+.finanzas__stat-card--highlight { border: 2px solid var(--color-azul-real); }
+.finanzas__stat-icon { font-size: 2rem; }
+.finanzas__stat-label { font-size: 0.8125rem; color: var(--color-text-muted); margin-bottom: 0.125rem; }
+.finanzas__stat-value { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--color-azul-oscuro); }
+.finanzas__stat-value--big { font-size: 1.5rem; color: var(--color-success); }
+.finanzas__section { padding: 1.5rem; margin-bottom: 1.5rem; }
+.finanzas__section-title { font-family: var(--font-heading); font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; }
+.finanzas__fondos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
+.finanzas__fondo-item { display: flex; justify-content: space-between; padding: 0.75rem 1rem; background: var(--color-bg-primary); border-radius: var(--radius-sm); }
+.finanzas__fondo-item--total { background: var(--color-azul-oscuro); color: #fff; border-radius: var(--radius-md); }
+.finanzas__fondo-item--total .finanzas__fondo-value { color: #fff; font-weight: 700; }
+.finanzas__fondo-label { font-size: 0.875rem; }
+.finanzas__fondo-value { font-family: var(--font-heading); font-weight: 600; color: var(--color-azul-oscuro); }
+.finanzas__comision-total { color: var(--color-rojo-vintage); }
+.finanzas__table-wrapper { overflow-x: auto; }
+.finanzas__table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.finanzas__table th { text-align: left; padding: 0.75rem 1rem; background: var(--color-azul-oscuro); color: #fff; font-family: var(--font-heading); font-weight: 600; font-size: 0.8125rem; text-transform: uppercase; }
+.finanzas__table th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+.finanzas__table th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
+.finanzas__table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border-light); }
+.finanzas__table tbody tr:hover { background: var(--color-bg-hover); }
+.finanzas__td-name { font-weight: 600; color: var(--color-azul-oscuro); }
+.finanzas__td-total { font-weight: 700; color: var(--color-success); }
+.finanzas__empty { text-align: center; padding: 2rem; color: var(--color-text-muted); font-size: 0.875rem; }
+.finanzas__actions { display: flex; justify-content: flex-end; margin-top: 1rem; }
+</style>

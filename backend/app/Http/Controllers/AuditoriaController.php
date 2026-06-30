@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -9,8 +8,7 @@ use Illuminate\Support\Facades\Log;
 class AuditoriaController extends Controller
 {
     /**
-     * Registra una auditoría cada vez que un usuario genera o visualiza
-     * de forma previa un reporte en el sistema (antes o durante la exportación a PDF).
+     * Registra una auditoría cada vez que un usuario genera o visualiza un reporte
      */
     public function registrarReporte(Request $request)
     {
@@ -43,8 +41,7 @@ class AuditoriaController extends Controller
                 'Detalles' => $detalles
             ]);
 
-            return response()->json(['message' => 'Auditoría de reporte registrada exitosamente'], 201);
-
+            return response()->json(['message' => 'Auditoría registrada exitosamente'], 201);
         } catch (\Exception $e) {
             Log::error('Error registrando auditoría de reporte: ' . $e->getMessage());
             return response()->json(['message' => 'Error interno al registrar auditoría'], 500);

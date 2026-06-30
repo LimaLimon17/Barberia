@@ -1,131 +1,114 @@
 <template>
-  <div class="space-y-6">
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Reporte de Ventas Consolidadas</h1>
-          <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Historial de servicios prestados y productos vendidos</p>
-        </div>
-        
-        <div class="flex flex-wrap gap-3 w-full md:w-auto">
-          <input type="date" v-model="filtros.inicio" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 transition-colors">
-          <span class="self-center text-slate-500">-</span>
-          <input type="date" v-model="filtros.fin" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 transition-colors">
-          
-          <select v-model="filtros.id_barbero" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 transition-colors">
-            <option value="">Todos los Barberos</option>
-            <option v-for="b in listaBarberos" :key="b.IdBarbero" :value="b.IdBarbero">
-              {{ b.usuario?.Nombre1 }} {{ b.usuario?.Apellido1 }}
-            </option>
-          </select>
-          
-          <button @click="cargarReporte" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-            Filtrar
-          </button>
-          
-          <button @click="exportarPDF" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-all duration-200 bg-red-600 border border-transparent rounded-lg hover:bg-red-700 shadow-lg shadow-red-500/30">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            Exportar a PDF
-          </button>
-        </div>
+  <div class="reportes animate-fade-in">
+    <div class="reportes__header">
+      <h1 class="reportes__title">📈 Reporte de <span class="gold-text">Ventas</span></h1>
+    </div>
+
+    <!-- Filtros (HU-15 Esc.2) -->
+    <div class="reportes__filtros glass-card">
+      <div class="reportes__filtro-group">
+        <label class="label">Fecha Inicio</label>
+        <input type="date" class="input-field" v-model="filtroInicio" />
       </div>
+      <div class="reportes__filtro-group">
+        <label class="label">Fecha Fin</label>
+        <input type="date" class="input-field" v-model="filtroFin" />
+      </div>
+      <div class="reportes__filtro-group">
+        <label class="label">Barbero</label>
+        <select class="input-field" v-model="filtroBarbero">
+          <option value="">Todos</option>
+          <option v-for="b in listaBarberos" :key="b.IdBarbero" :value="b.IdBarbero">
+            {{ b.usuario.Nombre1 }} {{ b.usuario.Apellido1 }}
+          </option>
+        </select>
+      </div>
+      <button class="btn-primary" @click="cargarReporte" id="btn-buscar-ventas">🔍 Buscar</button>
     </div>
 
-    <div v-if="cargando" class="flex justify-center items-center py-20">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-    </div>
+    <div v-if="cargando" class="reportes__loading glass-card"><p>Cargando reporte...</p></div>
 
-    <div v-else-if="datos" class="space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 border-l-4 border-l-indigo-500">
-          <p class="text-slate-500 text-sm">Ingreso Total del Periodo</p>
-          <h3 class="text-2xl font-bold mt-1 dark:text-white">Bs. {{ formatNumber(datos.resumen.ingreso_total) }}</h3>
+    <template v-if="datos && !cargando">
+      <!-- Totales consolidados (HU-15 Esc.3) -->
+      <div class="reportes__resumen">
+        <div class="reportes__stat glass-card">
+          <p class="reportes__stat-label">Ingreso Total</p>
+          <p class="reportes__stat-value reportes__stat-value--big">Bs. {{ parseFloat(datos.resumen.ingreso_total).toFixed(2) }}</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 border-l-4 border-l-blue-500">
-          <p class="text-slate-500 text-sm">Total Servicios Atendidos</p>
-          <h3 class="text-2xl font-bold mt-1 dark:text-white">{{ datos.resumen.cantidad_servicios }}</h3>
+        <div class="reportes__stat glass-card">
+          <p class="reportes__stat-label">Servicios Atendidos</p>
+          <p class="reportes__stat-value">{{ datos.resumen.cantidad_servicios }}</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 border-l-4 border-l-teal-500">
-          <p class="text-slate-500 text-sm">Total Productos Vendidos</p>
-          <h3 class="text-2xl font-bold mt-1 dark:text-white">{{ datos.resumen.cantidad_productos }}</h3>
+        <div class="reportes__stat glass-card">
+          <p class="reportes__stat-label">Productos Vendidos</p>
+          <p class="reportes__stat-value">{{ datos.resumen.cantidad_productos }}</p>
         </div>
       </div>
 
-      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
-            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-900/50 dark:text-slate-300">
+      <!-- Tabla de Transacciones (HU-15 Esc.1, 4) -->
+      <div class="reportes__section glass-card">
+        <h2 class="reportes__section-title">Transacciones del Periodo</h2>
+        <div class="reportes__table-wrapper" v-if="datos.transacciones.length > 0">
+          <table class="reportes__table">
+            <thead>
               <tr>
-                <th scope="col" class="px-4 py-3">Ref</th>
-                <th scope="col" class="px-4 py-3">Fecha y Hora</th>
-                <th scope="col" class="px-4 py-3">Barbero</th>
-                <th scope="col" class="px-4 py-3">Servicios Prestados</th>
-                <th scope="col" class="px-4 py-3">Productos Vendidos</th>
-                <th scope="col" class="px-4 py-3">Pago</th>
-                <th scope="col" class="px-4 py-3 font-bold text-right">Monto Total</th>
+                <th>Ref</th>
+                <th>Fecha</th>
+                <th>Barbero</th>
+                <th>Servicios</th>
+                <th>Productos</th>
+                <th>Pago</th>
+                <th>Total</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(t, i) in datos.transacciones" :key="i" class="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">{{ t.referencia }}</td>
-                <td class="px-4 py-3">
-                  <div class="font-medium">{{ t.fecha }}</div>
-                  <div class="text-xs text-slate-500">{{ t.hora }}</div>
-                </td>
-                <td class="px-4 py-3">{{ t.barbero }}</td>
-                <td class="px-4 py-3">{{ t.servicios || '-' }}</td>
-                <td class="px-4 py-3">{{ t.productos || '-' }}</td>
-                <td class="px-4 py-3">
-                  <span class="bg-slate-100 text-slate-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-slate-700 dark:text-slate-300">
-                    {{ t.metodos_pago || 'N/A' }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">Bs. {{ formatNumber(t.monto_total) }}</td>
-              </tr>
-              <tr v-if="datos.transacciones.length === 0">
-                <td colspan="7" class="px-6 py-8 text-center text-slate-500">No hay ventas en este periodo.</td>
+              <tr v-for="(t, i) in datos.transacciones" :key="i">
+                <td class="reportes__td-ref">{{ t.referencia }}</td>
+                <td>{{ t.fecha }}</td>
+                <td>{{ t.barbero }}</td>
+                <td>{{ t.servicios || '-' }}</td>
+                <td>{{ t.productos || '-' }}</td>
+                <td>{{ t.metodos_pago || '-' }}</td>
+                <td class="reportes__td-total">Bs. {{ parseFloat(t.monto_total).toFixed(2) }}</td>
               </tr>
             </tbody>
           </table>
         </div>
+        <p v-else class="reportes__empty">No hay transacciones en este periodo.</p>
       </div>
-    </div>
+
+      <!-- Exportar (HU-15 Esc.5) -->
+      <div class="reportes__actions">
+        <button class="btn-primary" @click="exportarPDF" id="btn-exportar-ventas">📄 Exportar a PDF (Vista Previa)</button>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { reportesService } from '../../services/reportesService'
-import { barberoService } from '../../services/barberoService'
 import { pdfGenerator } from '../../utils/pdfGenerator'
+import api from '../../services/api.js'
 
 const hoy = new Date()
 const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
 
-const formatFecha = (d) => {
-  return d.toISOString().split('T')[0]
-}
-
-const filtros = ref({
-  inicio: formatFecha(inicioMes),
-  fin: formatFecha(hoy),
-  id_barbero: ''
-})
-
+const filtroInicio = ref(inicioMes.toISOString().split('T')[0])
+const filtroFin = ref(hoy.toISOString().split('T')[0])
+const filtroBarbero = ref('')
 const datos = ref(null)
-const cargando = ref(true)
+const cargando = ref(false)
 const listaBarberos = ref([])
 
 const cargarReporte = async () => {
-  cargando.value = true
   try {
-    const params = { fecha_inicio: filtros.value.inicio, fecha_fin: filtros.value.fin }
-    if (filtros.value.id_barbero) params.id_barbero = filtros.value.id_barbero
-    
-    const res = await reportesService.getVentasAdmin(params)
-    datos.value = res
+    cargando.value = true
+    const params = { inicio: filtroInicio.value, fin: filtroFin.value }
+    if (filtroBarbero.value) params.id_barbero = filtroBarbero.value
+    datos.value = await reportesService.getVentasAdmin(params)
   } catch (error) {
-    console.error('Error cargando reporte de ventas:', error)
+    console.error('Error cargando ventas:', error)
   } finally {
     cargando.value = false
   }
@@ -133,23 +116,45 @@ const cargarReporte = async () => {
 
 const cargarBarberos = async () => {
   try {
-    const res = await barberoService.getBarberos()
-    listaBarberos.value = res.data || res
+    const response = await api.get('/admin/barberos')
+    listaBarberos.value = response.data
   } catch (error) {
     console.error('Error cargando barberos:', error)
   }
 }
 
-const formatNumber = (num) => parseFloat(num).toFixed(2)
-
 const exportarPDF = () => {
   if (datos.value) {
-    pdfGenerator.exportarReporteVentas(datos.value, filtros.value)
+    pdfGenerator.exportarReporteVentas(datos.value, { inicio: filtroInicio.value, fin: filtroFin.value })
   }
 }
 
-onMounted(() => {
-  cargarBarberos()
-  cargarReporte()
-})
+onMounted(() => { cargarReporte(); cargarBarberos() })
 </script>
+
+<style scoped>
+.reportes { max-width: 1200px; }
+.reportes__header { margin-bottom: 1.5rem; }
+.reportes__title { font-family: var(--font-heading); font-size: 1.75rem; font-weight: 700; }
+.reportes__filtros { padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1rem; }
+.reportes__filtro-group { display: flex; flex-direction: column; min-width: 160px; }
+.reportes__loading { padding: 2rem; text-align: center; color: var(--color-text-muted); }
+.reportes__resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.reportes__stat { padding: 1.25rem; text-align: center; }
+.reportes__stat-label { font-size: 0.8125rem; color: var(--color-text-muted); margin-bottom: 0.25rem; }
+.reportes__stat-value { font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: var(--color-azul-oscuro); }
+.reportes__stat-value--big { color: var(--color-success); font-size: 1.75rem; }
+.reportes__section { padding: 1.5rem; margin-bottom: 1.5rem; }
+.reportes__section-title { font-family: var(--font-heading); font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; }
+.reportes__table-wrapper { overflow-x: auto; }
+.reportes__table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+.reportes__table th { text-align: left; padding: 0.75rem 0.75rem; background: var(--color-azul-oscuro); color: #fff; font-family: var(--font-heading); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+.reportes__table th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+.reportes__table th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
+.reportes__table td { padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--color-border-light); }
+.reportes__table tbody tr:hover { background: var(--color-bg-hover); }
+.reportes__td-ref { font-weight: 600; color: var(--color-azul-real); }
+.reportes__td-total { font-weight: 700; color: var(--color-success); }
+.reportes__empty { text-align: center; padding: 2rem; color: var(--color-text-muted); }
+.reportes__actions { display: flex; justify-content: flex-end; margin-top: 1rem; }
+</style>

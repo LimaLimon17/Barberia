@@ -1,73 +1,68 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Barbero;
 use App\Models\Reserva;
-use App\Services\ComisionService;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    protected $comisionService;
-
-    public function __construct(ComisionService $comisionService)
-    {
-        $this->comisionService = $comisionService;
-    }
-
     /**
-     * Retorna la información consolidada para el panel principal del Administrador.
+     * HU-14: Panel principal del administrador.
+     * Muestra información consolidada de los barberos, y citas del día.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $fechaInicioSemana = Carbon::now()->startOfWeek();
-        $fechaFinSemana = Carbon::now()->endOfWeek();
-        $hoy = Carbon::today()->format('Y-m-d');
+        $hoy = Carbon::today();
+        // Semana empieza el Lunes
+        $inicioSemana = Carbon::now()->startOfWeek(Carbon::MONDAY);
 
-        // 1. Visualización consolidada de barberos
-        $barberos = Barbero::with(['usuario'])->get();
-        $consolidadoBarberos = [];
-
-        foreach ($barberos as $barbero) {
-            // Ganancias de la semana actual
-            $ganancias = $this->comisionService->calcularGanancias($barbero, $fechaInicioSemana, $fechaFinSemana);
-            
-            // Citas completadas del día
-            $citasCompletadasHoy = Reserva::where('IdBarbero', $barbero->IdBarbero)
-                ->where('EstadoReserva', 'Completada')
-                ->where('FechaCita', $hoy)
-                ->count();
-
-            $consolidadoBarberos[] = [
-                'id' => $barbero->IdBarbero,
-                'nombre' => $barbero->usuario->Nombre . ' ' . $barbero->usuario->Apellido,
-                'estado' => $barbero->EstadoA ? 'Activo' : 'Inactivo',
-                'ganancia_semanal' => $ganancias['total_ganado'],
-                'citas_completadas_hoy' => $citasCompletadasHoy
-            ];
-        }
-
-        // 2. Citas del día
-        $citasHoy = Reserva::with(['barbero.usuario', 'cliente', 'servicios'])
-            ->where('FechaCita', $hoy)
-            ->orderBy('HoraInicio', 'asc')
+        // 1. Citas del Día (Todas las citas de hoy ordenadas)
+        $citasHoy = Reserva::with(['cliente', 'barbero.usuario', 'servicios'])
+            ->whereDate('FechaCita', $hoy)
+            ->orderBy('HoraInicio')
             ->get()
             ->map(function ($reserva) {
                 return [
-                    'hora' => $reserva->HoraInicio . ' - ' . $reserva->HoraFin,
-                    'barbero' => $reserva->barbero->usuario->Nombre . ' ' . $reserva->barbero->usuario->Apellido,
-                    'cliente' => $reserva->cliente ? $reserva->cliente->Nombre . ' ' . $reserva->cliente->Apellido : 'Desconocido',
+                    'id' => $reserva->IdReserva,
+                    'hora' => Carbon::parse($reserva->HoraInicio)->format('H:i'),
+                    'barbero' => $reserva->barbero->usuario->Nombre1 . ' ' . $reserva->barbero->usuario->Apellido1,
+                    'cliente' => $reserva->cliente->Nombre1 . ' ' . $reserva->cliente->Apellido1,
                     'servicios' => $reserva->servicios->pluck('Nombre')->implode(', '),
                     'estado' => $reserva->EstadoReserva
                 ];
             });
 
+        // 2. Visualización consolidada de barberos (ganancias de la semana, citas completadas hoy)
+        $barberosData = Barbero::with('usuario')->where('EstadoA', 1)->get()->map(function ($barbero) use ($hoy, $inicioSemana) {
+            
+            $citasCompletadasHoy = Reserva::where('IdBarbero', $barbero->IdBarbero)
+                ->whereDate('FechaCita', $hoy)
+                ->where('EstadoReserva', 'Completada')
+                ->count();
+
+            // Ganancias estimadas de la semana por servicios (50%)
+            $ingresosServicios = Reserva::where('IdBarbero', $barbero->IdBarbero)
+                ->whereBetween('FechaCita', [$inicioSemana->format('Y-m-d'), Carbon::today()->format('Y-m-d')])
+                ->where('EstadoReserva', 'Completada')
+                ->sum('CostoTotal');
+                
+            $gananciaAprox = $ingresosServicios * 0.50; // 50% para el barbero
+
+            return [
+                'id' => $barbero->IdBarbero,
+                'nombre' => $barbero->usuario->Nombre1 . ' ' . $barbero->usuario->Apellido1,
+                'citas_hoy' => $citasCompletadasHoy,
+                'ganancia_semana' => round($gananciaAprox, 2),
+                'estado' => 'Activo'
+            ];
+        });
+
         return response()->json([
-            'barberos' => $consolidadoBarberos,
-            'citas_hoy' => $citasHoy
+            'citas_hoy' => $citasHoy,
+            'barberos' => $barberosData
         ]);
     }
 }

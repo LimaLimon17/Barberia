@@ -33,14 +33,12 @@ export const pdfGenerator = {
    * RF21: Nota de Venta (Comprobante simplificado sin valor fiscal)
    */
   exportarNotaVenta(transaccion, autoPrint = false) {
-    // Tamaño de ticket/recibo
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: [80, 200]
     })
 
-    // Header
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
     doc.text('BARBERÍA LIMA LIMÓN', 40, 10, { align: 'center' })
@@ -51,7 +49,6 @@ export const pdfGenerator = {
     doc.setFontSize(8)
     doc.text('(Sin Valor Fiscal)', 40, 19, { align: 'center' })
 
-    // Detalles
     doc.setFontSize(9)
     doc.text(`Fecha: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 5, 28)
     doc.text(`Barbero: ${transaccion.barbero}`, 5, 33)
@@ -69,7 +66,6 @@ export const pdfGenerator = {
     y += 5
     doc.setFont('helvetica', 'normal')
 
-    // Servicios
     if (transaccion.servicios && transaccion.servicios.length > 0) {
       doc.setFontSize(8)
       doc.text('Servicios:', 5, y)
@@ -81,7 +77,6 @@ export const pdfGenerator = {
       })
     }
 
-    // Productos
     if (transaccion.productos && transaccion.productos.length > 0) {
       y += 2
       doc.setFontSize(8)
@@ -97,29 +92,23 @@ export const pdfGenerator = {
     doc.line(5, y + 2, 75, y + 2)
     y += 8
 
-    // Total
     doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
     doc.text('TOTAL:', 5, y)
     doc.text(`Bs. ${parseFloat(transaccion.total).toFixed(2)}`, 75, y, { align: 'right' })
 
-    // Footer
     y += 15
     doc.setFontSize(8)
     doc.setFont('helvetica', 'normal')
     doc.text('¡Gracias por su preferencia!', 40, y, { align: 'center' })
 
-    if (autoPrint) {
-      doc.autoPrint()
-    }
+    if (autoPrint) doc.autoPrint()
     
-    // Registrar auditoría
     auditoriaService.registrarReporte('Nota de Venta (Comprobante)', { 
       cliente: transaccion.cliente || 'Consumidor Final', 
       barbero: transaccion.barbero 
     })
 
-    // Obtener blob URL para mostrar o imprimir directamente
     const blobUrl = doc.output('bloburl')
     return blobUrl
   },
@@ -236,7 +225,6 @@ export const pdfGenerator = {
       theme: 'grid',
       headStyles: { fillColor: THEME_COLOR },
       didParseCell: function(data) {
-        // Colorear fila si hay alerta de stock bajo
         if (data.section === 'body' && datos.inventario[data.row.index].alerta) {
             data.cell.styles.fillColor = [254, 226, 226] // red-100
         }
@@ -269,7 +257,6 @@ export const pdfGenerator = {
     doc.text(`- Por Productos: Bs. ${parseFloat(datos.desglose_ganancias.productos).toFixed(2)}`, 18, 67)
     doc.text(`- Por Ausentes: Bs. ${parseFloat(datos.desglose_ganancias.ausentes).toFixed(2)}`, 18, 73)
 
-    // Tabla de Detalle Cronológico Unificado
     const tableData = datos.detalle_transacciones.map(t => [
       t.Fecha,
       t.Cliente,

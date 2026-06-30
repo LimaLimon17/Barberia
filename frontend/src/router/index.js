@@ -15,9 +15,9 @@ import DashboardAdmin from '../views/admin/DashboardAdmin.vue'
 import ListaBarberos from '../views/admin/ListaBarberos.vue'
 import PerfilBarberoAdmin from '../views/admin/PerfilBarberoAdmin.vue'
 import EditarBarbero from '../views/admin/EditarBarbero.vue'
-import FinanzasAdmin from '../views/admin/Finanzas.vue'
-import ReportesVentasAdmin from '../views/admin/ReportesVentas.vue'
-import ReportesInventarioAdmin from '../views/admin/ReportesInventario.vue'
+import Finanzas from '../views/admin/Finanzas.vue'
+import ReportesVentas from '../views/admin/ReportesVentas.vue'
+import ReportesInventario from '../views/admin/ReportesInventario.vue'
 const routes = [
   // ==========================================
   // RUTAS PÚBLICAS
@@ -66,7 +66,7 @@ const routes = [
         path: 'reportes',
         name: 'ReportesBarbero',
         component: ReportesBarbero,
-        meta: { title: 'Mis Reportes y Comisiones' },
+        meta: { title: 'Mis Reportes' },
       },
     ],
   },
@@ -89,24 +89,6 @@ const routes = [
         meta: { title: 'Panel de Administración' },
       },
       {
-        path: 'finanzas',
-        name: 'FinanzasAdmin',
-        component: FinanzasAdmin,
-        meta: { title: 'Finanzas' },
-      },
-      {
-        path: 'reportes/ventas',
-        name: 'ReportesVentasAdmin',
-        component: ReportesVentasAdmin,
-        meta: { title: 'Reporte de Ventas' },
-      },
-      {
-        path: 'reportes/inventario',
-        name: 'ReportesInventarioAdmin',
-        component: ReportesInventarioAdmin,
-        meta: { title: 'Reporte de Inventario' },
-      },
-      {
         path: 'barberos',
         name: 'ListaBarberos',
         component: ListaBarberos,
@@ -125,6 +107,24 @@ const routes = [
         component: EditarBarbero,
         meta: { title: 'Editar Barbero' },
         props: true,
+      },
+      {
+        path: 'finanzas',
+        name: 'FinanzasAdmin',
+        component: Finanzas,
+        meta: { title: 'Finanzas' },
+      },
+      {
+        path: 'reportes/ventas',
+        name: 'ReportesVentasAdmin',
+        component: ReportesVentas,
+        meta: { title: 'Reporte de Ventas' },
+      },
+      {
+        path: 'reportes/inventario',
+        name: 'ReportesInventarioAdmin',
+        component: ReportesInventario,
+        meta: { title: 'Reporte de Inventario' },
       },
     ],
   },

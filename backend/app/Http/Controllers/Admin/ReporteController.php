@@ -1,172 +1,135 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Reserva;
 use App\Models\Venta;
 use App\Models\Producto;
-use App\Models\DetalleVenta;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ReporteController extends Controller
 {
     /**
-     * Reporte de ventas consolidadas (HU-15)
+     * HU-15: Reporte de Ventas Consolidadas
      */
     public function ventas(Request $request)
     {
-        $fechaInicio = $request->query('fecha_inicio') ? Carbon::parse($request->query('fecha_inicio'))->startOfDay() : Carbon::now()->startOfWeek();
-        $fechaFin = $request->query('fecha_fin') ? Carbon::parse($request->query('fecha_fin'))->endOfDay() : Carbon::now()->endOfWeek();
-        $idBarbero = $request->query('id_barbero');
+        $fechaInicio = $request->input('inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $fechaFin = $request->input('fin', Carbon::now()->endOfMonth()->format('Y-m-d'));
+        $idBarbero = $request->input('id_barbero');
 
-        $queryReservas = Reserva::with(['barbero.usuario', 'cliente', 'servicios', 'ventas.detalles.producto', 'pagos'])
-            ->where('EstadoReserva', 'Completada')
-            ->whereBetween('FechaCita', [$fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d')]);
+        $reservasQuery = Reserva::with(['cliente', 'barbero.usuario', 'servicios', 'pagos'])
+            ->whereBetween('FechaCita', [$fechaInicio, $fechaFin])
+            ->where('EstadoReserva', 'Completada');
 
-        $queryVentasSueltas = Venta::with(['barbero.usuario', 'cliente', 'detalles.producto'])
-            ->whereNull('IdReserva')
-            ->whereBetween('Fecha', [$fechaInicio, $fechaFin]);
+        $ventasQuery = Venta::with(['cliente', 'barbero.usuario', 'detalles.producto'])
+            ->whereBetween(DB::raw('DATE(Fecha)'), [$fechaInicio, $fechaFin])
+            ->where('EstadoA', 1);
 
         if ($idBarbero) {
-            $queryReservas->where('IdBarbero', $idBarbero);
-            $queryVentasSueltas->where('IdBarbero', $idBarbero);
+            $reservasQuery->where('IdBarbero', $idBarbero);
+            $ventasQuery->where('IdBarbero', $idBarbero);
         }
 
-        $reservas = $queryReservas->get();
-        $ventasSueltas = $queryVentasSueltas->get();
+        $reservas = $reservasQuery->get();
+        $ventas = $ventasQuery->get();
 
-        $transacciones = [];
+        $transacciones = collect();
         $ingresoTotal = 0;
         $cantidadServicios = 0;
         $cantidadProductos = 0;
 
-        foreach ($reservas as $reserva) {
-            $servicios = $reserva->servicios;
-            $productos = collect();
-            $montoProductos = 0;
-            
-            foreach ($reserva->ventas as $venta) {
-                foreach ($venta->detalles as $detalle) {
-                    $productos->push($detalle);
-                    $montoProductos += ($detalle->PrecioUnitario * $detalle->Cantidad);
-                    $cantidadProductos += $detalle->Cantidad;
-                }
-            }
-            
-            $montoTotal = $reserva->CostoTotal + $montoProductos;
-            $ingresoTotal += $montoTotal;
-            $cantidadServicios += $servicios->count();
-
-            $transacciones[] = [
-                'referencia' => 'R-' . $reserva->IdReserva,
-                'fecha' => $reserva->FechaCita->format('Y-m-d'),
-                'hora' => $reserva->HoraInicio,
-                'barbero' => $reserva->barbero->usuario->Nombre . ' ' . $reserva->barbero->usuario->Apellido,
-                'servicios' => $servicios->pluck('Nombre')->implode(', '),
-                'productos' => $productos->map(function($d) { return $d->producto->Nombre . ' (x' . $d->Cantidad . ')'; })->implode(', '),
-                'metodos_pago' => $reserva->pagos->pluck('MetodoPago')->unique()->implode(', '),
-                'monto_total' => $montoTotal
-            ];
+        foreach ($reservas as $res) {
+            $servs = $res->servicios->pluck('Nombre')->implode(', ');
+            $pagos = $res->pagos->pluck('MetodoPago')->unique()->implode(', ');
+            $transacciones->push([
+                'referencia' => 'RES-'.$res->IdReserva,
+                'fecha' => Carbon::parse($res->FechaCita)->format('d/m/Y') . ' ' . Carbon::parse($res->HoraInicio)->format('H:i'),
+                'barbero' => $res->barbero->usuario->Nombre1 . ' ' . $res->barbero->usuario->Apellido1,
+                'servicios' => $servs,
+                'productos' => null,
+                'metodos_pago' => $pagos,
+                'monto_total' => $res->CostoTotal
+            ]);
+            $ingresoTotal += $res->CostoTotal;
+            $cantidadServicios += $res->servicios->count();
         }
 
-        foreach ($ventasSueltas as $venta) {
-            $productos = $venta->detalles;
-            $montoTotal = $venta->MontoTotal;
-            $ingresoTotal += $montoTotal;
-            
-            foreach ($productos as $detalle) {
-                $cantidadProductos += $detalle->Cantidad;
-            }
-
-            $transacciones[] = [
-                'referencia' => 'V-' . $venta->IdVenta,
-                'fecha' => $venta->Fecha->format('Y-m-d'),
-                'hora' => $venta->Fecha->format('H:i:s'),
-                'barbero' => $venta->barbero->usuario->Nombre . ' ' . $venta->barbero->usuario->Apellido,
-                'servicios' => '',
-                'productos' => $productos->map(function($d) { return $d->producto->Nombre . ' (x' . $d->Cantidad . ')'; })->implode(', '),
-                'metodos_pago' => 'Efectivo/Transferencia', // TODO: Agregar metodo_pago a Venta si es necesario
-                'monto_total' => $montoTotal
-            ];
+        foreach ($ventas as $ven) {
+            $prods = $ven->detalles->map(function($d) { return $d->producto->Nombre . ' (x'.$d->Cantidad.')'; })->implode(', ');
+            $transacciones->push([
+                'referencia' => 'VEN-'.$ven->IdVenta,
+                'fecha' => Carbon::parse($ven->Fecha)->format('d/m/Y H:i'),
+                'barbero' => $ven->barbero->usuario->Nombre1 . ' ' . $ven->barbero->usuario->Apellido1,
+                'servicios' => null,
+                'productos' => $prods,
+                'metodos_pago' => 'Venta Directa',
+                'monto_total' => $ven->MontoTotal
+            ]);
+            $ingresoTotal += $ven->MontoTotal;
+            $cantidadProductos += $ven->detalles->sum('Cantidad');
         }
 
-        // Ordenar por fecha y hora
-        usort($transacciones, function($a, $b) {
-            $timeA = strtotime($a['fecha'] . ' ' . $a['hora']);
-            $timeB = strtotime($b['fecha'] . ' ' . $b['hora']);
-            return $timeA - $timeB;
-        });
+        // Ordenar por fecha desc
+        $transacciones = $transacciones->sortByDesc('fecha')->values();
 
         return response()->json([
             'resumen' => [
-                'ingreso_total' => $ingresoTotal,
+                'ingreso_total' => round($ingresoTotal, 2),
                 'cantidad_servicios' => $cantidadServicios,
-                'cantidad_productos' => $cantidadProductos,
+                'cantidad_productos' => $cantidadProductos
             ],
             'transacciones' => $transacciones
         ]);
     }
 
     /**
-     * Reporte de Inventario (RF20)
+     * RF20: Reporte de Inventario
      */
     public function inventario(Request $request)
     {
-        $fechaInicio = $request->query('fecha_inicio') ? Carbon::parse($request->query('fecha_inicio'))->startOfDay() : Carbon::now()->startOfWeek();
-        $fechaFin = $request->query('fecha_fin') ? Carbon::parse($request->query('fecha_fin'))->endOfDay() : Carbon::now()->endOfWeek();
-        $idBarbero = $request->query('id_barbero');
-
-        $productos = Producto::where('EstadoA', true)->get();
+        $fechaInicio = $request->input('inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $fechaFin = $request->input('fin', Carbon::now()->endOfMonth()->format('Y-m-d'));
         
-        $queryDetalles = DetalleVenta::with('venta')
-            ->whereHas('venta', function($q) use ($fechaInicio, $fechaFin, $idBarbero) {
-                $q->whereBetween('Fecha', [$fechaInicio, $fechaFin]);
-                if ($idBarbero) {
-                    $q->where('IdBarbero', $idBarbero);
-                }
-            })->get();
-
-        $reporte = [];
+        $productos = Producto::where('EstadoA', 1)->get();
+        
+        $inventario = [];
 
         foreach ($productos as $producto) {
-            $ventasProducto = $queryDetalles->where('IdProducto', $producto->IdProducto);
-            
-            $cantidadVendida = $ventasProducto->sum('Cantidad');
-            $gananciaAcumulada = $ventasProducto->sum(function($detalle) {
-                // Ganancia = (PrecioVenta - CostoCompra) * Cantidad - ComisionBarbero
-                // Simplificamos asumiendo que la ganancia es para la barbería (PrecioVenta - CostoCompra - ComisionBarbero)
-                return ($detalle->PrecioUnitario - $detalle->producto->CostoCompra) * $detalle->Cantidad - $detalle->ComisionBarbero;
-            });
+            // Historial de ventas de este producto
+            $ventas = DB::table('DetalleVenta')
+                ->join('Ventas', 'DetalleVenta.IdVenta', '=', 'Ventas.IdVenta')
+                ->where('DetalleVenta.IdProducto', $producto->IdProducto)
+                ->whereBetween(DB::raw('DATE(Ventas.Fecha)'), [$fechaInicio, $fechaFin])
+                ->where('Ventas.EstadoA', 1)
+                ->get();
 
-            // Si se filtra por barbero, y este barbero no vendio este producto, lo podemos omitir
-            if ($idBarbero && $cantidadVendida == 0) {
-                continue;
+            $cantidadVendida = $ventas->sum('Cantidad');
+            $gananciaAcumulada = 0;
+            foreach ($ventas as $v) {
+                // Ganancia Barbería = (PrecioVenta - CostoCompra - ComisionBarbero) * Cantidad
+                // O de forma más simple según el porcentaje de venta de la barberia
+                $gananciaAcumulada += (($v->PrecioUnitario - $producto->CostoCompra) * $v->Cantidad) - $v->ComisionBarbero;
             }
 
-            // RF20 pide Stock Inicial y Stock Final. 
-            // Aproximación simple: Stock Final = StockActual. Stock Inicial = StockActual + Cantidad Vendida.
-            $stockFinal = $producto->StockActual;
-            $stockInicial = $stockFinal + $cantidadVendida; 
+            // Stock Inicial = Stock Actual + Vendidos en el periodo (aproximación para el reporte simple)
+            $stockInicial = $producto->StockActual + $cantidadVendida;
 
-            $reporte[] = [
-                'id_producto' => $producto->IdProducto,
+            $inventario[] = [
+                'id' => $producto->IdProducto,
                 'nombre' => $producto->Nombre,
                 'stock_inicial' => $stockInicial,
                 'cantidad_vendida' => $cantidadVendida,
-                'stock_final' => $stockFinal,
-                'ganancia_acumulada' => $gananciaAcumulada,
-                'alerta' => $stockFinal <= 5 // true para rojo/amarillo
+                'stock_final' => $producto->StockActual,
+                'ganancia_acumulada' => round($gananciaAcumulada, 2),
+                'alerta' => $producto->StockActual <= 5
             ];
         }
 
         return response()->json([
-            'periodo' => [
-                'inicio' => $fechaInicio->format('Y-m-d'),
-                'fin' => $fechaFin->format('Y-m-d')
-            ],
-            'inventario' => $reporte
+            'inventario' => $inventario
         ]);
     }
 }

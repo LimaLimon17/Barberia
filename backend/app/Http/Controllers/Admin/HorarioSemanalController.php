@@ -4,132 +4,122 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Barbero;
-use App\Models\HorarioSemanal;
+use App\Models\HorarioBarbero;
+use App\Services\HorarioSemanalService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class HorarioSemanalController extends Controller
 {
+    public function __construct(private HorarioSemanalService $servicio) {}
+
     /**
-     * Devuelve el estado de horarios de una semana específica.
+     * GET /api/admin/horarios-semana?semana=&ano=
+     * Estado de la semana: si ya está generada, y el descanso de cada barbero.
      */
     public function index(Request $request)
     {
-        $semana = $request->query('semana', now()->weekOfYear);
-        $ano    = $request->query('ano',    now()->year);
+        $semana = (int) $request->query('semana', now()->isoWeek());
+        $anio = (int) $request->query('ano', now()->isoWeekYear());
 
-        // Barberos activos ordenados por antigüedad (FIFO)
+        $inicioSemana = Carbon::now()->setISODate($anio, $semana, 1)->format('Y-m-d');
+        $finSemana = Carbon::now()->setISODate($anio, $semana, 7)->format('Y-m-d');
+
         $barberos = Barbero::with('usuario')
-            ->whereHas('usuario', fn($q) => $q->where('EstadoA', 1))
             ->where('EstadoA', 1)
             ->orderBy('FechaIngreso', 'asc')
             ->get();
 
-        // Horarios ya generados para esta semana
-        $horariosGenerados = HorarioSemanal::where('Semana', $semana)
-            ->where('Año', $ano)
+        $asignaciones = HorarioBarbero::where('FechaInicio', $inicioSemana)
+            ->where('FechaFin', $finSemana)
             ->where('EstadoA', 1)
-            ->pluck('IdBarbero')
-            ->toArray();
+            ->with('horario')
+            ->get()
+            ->groupBy('IdBarbero');
 
-        $semanaGenerada = count($horariosGenerados) > 0;
+        $semanaGenerada = $asignaciones->isNotEmpty();
 
-        // Días FIFO: posición en la lista = día asignado
-        $diasFifo = ['Lunes', 'Martes', 'Miércoles', 'Jueves'];
-
-        $listaBarberos = $barberos->values()->map(function ($b, $index) use ($diasFifo, $horariosGenerados) {
-            $diaDescanso = $index < count($diasFifo) ? $diasFifo[$index] : null;
+        $listaBarberos = $barberos->map(function ($b) use ($asignaciones) {
+            $filasBarbero = $asignaciones->get($b->IdBarbero, collect());
+            $descanso = $filasBarbero->first(fn ($f) => $f->horario && $f->horario->DiaDescanso);
 
             return [
-                'id_barbero'        => $b->IdBarbero,
-                'nombre_completo'   => $b->usuario->nombre_completo,
-                'fecha_ingreso'     => $b->FechaIngreso->format('Y-m-d'),
-                'antiguedad_dias'   => $b->antiguedad_dias,
-                'dia_descanso_fifo' => $diaDescanso,
-                'horario_generado'  => in_array($b->IdBarbero, $horariosGenerados),
+                'id_barbero' => $b->IdBarbero,
+                'nombre_completo' => $b->usuario->nombre_completo,
+                'fecha_ingreso' => $b->FechaIngreso->format('Y-m-d'),
+                'antiguedad_dias' => $b->antiguedad_dias,
+                'dia_descanso' => $descanso?->horario->DiaSemana,
             ];
         });
 
         return response()->json([
-            'semana'          => (int) $semana,
-            'ano'             => (int) $ano,
+            'semana' => $semana,
+            'ano' => $anio,
+            'fecha_inicio' => $inicioSemana,
+            'fecha_fin' => $finSemana,
             'semana_generada' => $semanaGenerada,
-            'barberos'        => $listaBarberos,
+            'barberos' => $listaBarberos,
         ], 200);
     }
 
     /**
-     * Genera los horarios de la semana aplicando FIFO.
+     * POST /api/admin/horarios-semana
+     * Genera (rota FIFO) el horario de la semana indicada.
      */
     public function store(Request $request)
     {
-        $semana = $request->input('semana', now()->weekOfYear);
-        $ano    = $request->input('ano',    now()->year);
-        $admin  = $request->user();
-        $ip     = $request->ip();
+        $request->validate([
+            'semana' => 'required|integer|min:1|max:53',
+            'ano' => 'required|integer|min:2020',
+        ]);
+
+        $admin = $request->user();
 
         try {
-            DB::statement('CALL sp_GenerarHorarioSemana(?, ?, ?, ?)', [
-                $semana,
-                $ano,
+            $resultado = $this->servicio->generarSemana(
+                (int) $request->input('ano'),
+                (int) $request->input('semana'),
                 $admin->IdUsuario,
-                $ip,
-            ]);
-        } catch (\Exception $e) {
-            $msg = $e->getMessage();
-
-            if (str_contains($msg, 'Ya existe un horario')) {
-                return response()->json([
-                    'mensaje' => 'Ya existe un horario generado para esta semana',
-                ], 422);
-            }
-
-            return response()->json([
-                'mensaje' => 'Error al generar el horario',
-                'error'   => $msg,
-            ], 500);
+                $request->ip()
+            );
+        } catch (ValidationException $e) {
+            return response()->json(['mensaje' => collect($e->errors())->flatten()->first()], 422);
         }
 
         return response()->json([
             'mensaje' => 'Horario semanal generado correctamente',
-            'semana'  => $semana,
-            'ano'     => $ano,
+            ...$resultado,
         ], 201);
     }
 
     /**
-     * Actualiza el día de descanso de un barbero para la semana.
+     * PUT /api/admin/horarios-semana/{idBarbero}/descanso
+     * Reasigna el día de descanso de un barbero puntual, revalidando cobertura.
      */
     public function update(Request $request, $idBarbero)
     {
         $request->validate([
-            'semana'       => 'required|integer',
-            'ano'          => 'required|integer',
-            'dia_descanso' => 'required|string|in:Lunes,Martes,Miércoles,Jueves',
+            'semana' => 'required|integer',
+            'ano' => 'required|integer',
+            'dia_descanso' => 'nullable|string|in:Lunes,Martes,Miércoles,Jueves',
         ]);
 
-        $horario = HorarioSemanal::where('IdBarbero', $idBarbero)
-            ->where('Semana', $request->semana)
-            ->where('Año', $request->ano)
-            ->first();
+        $admin = $request->user();
 
-        if (!$horario) {
-            return response()->json([
-                'mensaje' => 'No existe horario para este barbero en la semana indicada',
-            ], 404);
+        try {
+            $this->servicio->reasignarDiaDescanso(
+                (int) $idBarbero,
+                (int) $request->input('ano'),
+                (int) $request->input('semana'),
+                $request->input('dia_descanso'),
+                $admin->IdUsuario,
+                $request->ip()
+            );
+        } catch (ValidationException $e) {
+            return response()->json(['mensaje' => collect($e->errors())->flatten()->first()], 422);
         }
 
-        DB::table('Horarios')
-            ->where('IdHorarioSemanal', $horario->IdHorarioSemanal)
-            ->update(['DiaDescanso' => 0]);
-
-        DB::table('Horarios')
-            ->where('IdHorarioSemanal', $horario->IdHorarioSemanal)
-            ->where('DiaSemana', $request->dia_descanso)
-            ->update(['DiaDescanso' => 1]);
-
-        return response()->json([
-            'mensaje' => 'Día de descanso actualizado correctamente',
-        ], 200);
+        return response()->json(['mensaje' => 'Día de descanso actualizado correctamente'], 200);
     }
 }

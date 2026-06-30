@@ -2,7 +2,7 @@
   <div class="dashboard animate-fade-in">
 
     <!-- ── Vista principal del dashboard ─────────────────────── -->
-    <template v-if="!mostrarFormularioCita">
+    <template v-if="vista === 'inicio'">
       <div class="dashboard__welcome">
         <h1 class="dashboard__greeting">
           Hola, <span class="gold-text">{{ authStore.usuario?.nombre1 }}</span> 👋
@@ -11,82 +11,102 @@
       </div>
 
       <div class="dashboard__cards">
-        <div class="dashboard__card glass-card">
+        <div
+          class="dashboard__card glass-card dashboard__card--accionable"
+          @click="vista = 'agenda'"
+        >
           <div class="dashboard__card-icon">📅</div>
           <div class="dashboard__card-info">
             <h3 class="dashboard__card-title">Mi Agenda</h3>
-            <p class="dashboard__card-desc">Consulta tus citas del día</p>
+            <p class="dashboard__card-desc">Consulta y gestiona tus citas del día</p>
           </div>
         </div>
 
-        <!-- Card Crear Cita — activa el formulario -->
         <div
           class="dashboard__card glass-card dashboard__card--accionable"
-          @click="abrirFormularioCita"
+          @click="vista = 'cita-presencial'"
         >
           <div class="dashboard__card-icon">✂️</div>
           <div class="dashboard__card-info">
             <h3 class="dashboard__card-title">Crear Cita</h3>
             <p class="dashboard__card-desc">Registrar cliente presencial ahora</p>
           </div>
-      </div>
-
-        <div class="dashboard__card glass-card">
-          <div class="dashboard__card-icon">💰</div>
-          <div class="dashboard__card-info">
-            <h3 class="dashboard__card-title">Comisiones</h3>
-            <p class="dashboard__card-desc">Revisa tus ganancias semanales</p>
-          </div>
         </div>
 
-        
-  <router-link to="/barbero/perfil" class="dashboard__card glass-card dashboard__card--link" id="btn-ver-perfil">
-    <div class="dashboard__card-icon">👤</div>
-    <div class="dashboard__card-info">
-      <h3 class="dashboard__card-title">Visualizar Perfil</h3>
-      <p class="dashboard__card-desc">Ver tu información personal y antigüedad</p>
-    </div>
-    <span class="dashboard__card-arrow">→</span>
-  </router-link>
+        <div
+  class="dashboard__card glass-card dashboard__card--accionable"
+  @click="vista = 'comisiones'"
+>
+  <div class="dashboard__card-icon">💰</div>
+  <div class="dashboard__card-info">
+    <h3 class="dashboard__card-title">Comisiones</h3>
+    <p class="dashboard__card-desc">Revisa tus ganancias semanales</p>
+  </div>
+</div>
+        <div
+  class="dashboard__card glass-card dashboard__card--accionable"
+  @click="vista = 'venta-directa'"
+>
+  <div class="dashboard__card-icon">🛍️</div>
+  <div class="dashboard__card-info">
+    <h3 class="dashboard__card-title">Venta sin cita</h3>
+    <p class="dashboard__card-desc">Vender productos a un cliente ocasional</p>
+  </div>
+</div>
+
+        <router-link to="/barbero/perfil" class="dashboard__card glass-card dashboard__card--link" id="btn-ver-perfil">
+          <div class="dashboard__card-icon">👤</div>
+          <div class="dashboard__card-info">
+            <h3 class="dashboard__card-title">Visualizar Perfil</h3>
+            <p class="dashboard__card-desc">Ver tu información personal y antigüedad</p>
+          </div>
+          <span class="dashboard__card-arrow">→</span>
+        </router-link>
       </div>
-
-
-    </template> <!-- <-- CORREGIDO: Cierre del v-if añadido -->
+    </template>
 
     <!-- ── Formulario crear cita presencial ─────────────────── -->
-    <template v-else>
-      <CrearCitaPresencial @cerrar="cerrarFormularioCita" />
+    <template v-else-if="vista === 'cita-presencial'">
+      <CrearCitaPresencial @cerrar="vista = 'inicio'" />
     </template>
+
+    <template v-else-if="vista === 'agenda'">
+      <AgendaCitas @cerrar="vista = 'inicio'" />
+    </template>
+    <template v-else-if="vista === 'venta-directa'">
+  <VentaDirecta @cerrar="vista = 'inicio'" />
+</template>
+<template v-else-if="vista === 'comisiones'">
+  <ComisionesSemana @cerrar="vista = 'inicio'" />
+</template>
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
 import CrearCitaPresencial from './Crearcitapresencial.vue'
+import AgendaCitas from './AgendaCitas.vue'
+import VentaDirecta from './VentaDirecta.vue'
+import ComisionesSemana from './ComisionesSemana.vue'
 
 const authStore = useAuthStore()
-const mostrarFormularioCita = ref(false)
+const route = useRoute()
+const vista = ref(route.query.vista || 'inicio')
+
+watch(() => route.query.vista, (nuevoValor) => {
+  vista.value = nuevoValor || 'inicio'
+})
 
 const fechaHoy = computed(() =>
   new Date().toLocaleDateString('es-BO', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   })
 )
-
-function abrirFormularioCita() {
-  mostrarFormularioCita.value = true
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function cerrarFormularioCita() {
-  mostrarFormularioCita.value = false
-}
 </script>
+
 
 <style scoped>
 .dashboard {

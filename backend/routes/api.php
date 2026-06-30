@@ -13,6 +13,15 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Public\ReservaController;
 
 use App\Http\Controllers\Barbero\CitaPresencialController;
+use App\Http\Controllers\Barbero\AgendaController;
+use App\Http\Controllers\Barbero\VentaController;
+use App\Http\Controllers\Barbero\PagoFinalController;
+use App\Http\Controllers\Barbero\VentaDirectaController;
+use App\Http\Controllers\Barbero\ComisionController;
+
+use App\Http\Controllers\Admin\ProductoController;
+use App\Http\Controllers\Admin\PorcentajeProductoController;
+use App\Http\Controllers\Admin\ServicioController;
 /*
 |--------------------------------------------------------------------------
 | API Routes - Sistema Barbería
@@ -76,10 +85,40 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/citas',        [CitaPresencialController::class, 'misCitas']);
         Route::post('/crear',       [CitaPresencialController::class, 'crear']);
         Route::post('/{idReserva}/confirmar-pago', [CitaPresencialController::class, 'confirmarPago']);
+        
     });
 
     // Búsqueda de cliente:
     Route::get('/cliente/{ci}', [ReservaController::class, 'buscarClientePorCI']);
+   
+
+Route::prefix('agenda')->group(function () {
+    Route::get('/hoy', [AgendaController::class, 'citasHoy']);
+    Route::get('/buscar', [AgendaController::class, 'buscarCitas']);
+});
+Route::put('/citas/{idReserva}/estado', [AgendaController::class, 'cambiarEstado']);
+
+
+
+Route::get('/productos', [VentaController::class, 'productosDisponibles']);
+Route::get('/citas/{idReserva}/venta', [VentaController::class, 'ventaDeLaCita']);
+Route::post('/citas/{idReserva}/venta', [VentaController::class, 'agregarProductos']);
+
+Route::prefix('citas/{idReserva}/pago-final')->group(function () {
+    Route::get('/resumen', [PagoFinalController::class, 'resumen']);
+    Route::post('/', [PagoFinalController::class, 'iniciar']);
+    Route::post('/confirmar', [PagoFinalController::class, 'confirmar']);
+});
+
+Route::prefix('venta-directa')->group(function () {
+    Route::post('/', [VentaDirectaController::class, 'iniciar']);
+    Route::post('/confirmar', [VentaDirectaController::class, 'confirmar']);
+});
+
+Route::get('/comisiones', [ComisionController::class, 'semana']);
+Route::get('/comisiones/filtrar', [ComisionController::class, 'filtrar']);
+
+Route::put('/perfil/cambiar-password', [PerfilController::class, 'cambiarPassword']);
 });
 
     // ------------------------------------------
@@ -100,12 +139,30 @@ Route::middleware('auth:sanctum')->group(function () {
     // Horarios semanales (FIFO + rotación almuerzo)
     Route::get('/horarios-semana',              [HorarioSemanalController::class, 'index']);
     Route::post('/horarios-semana',             [HorarioSemanalController::class, 'store']);
-    Route::put('/horarios-semana/{id}/descanso',[HorarioSemanalController::class, 'update']);
+    Route::put('/horarios-semana/{idBarbero}/descanso',[HorarioSemanalController::class, 'update']);
 
-     // Registros de almuerzo
-    Route::get('/barberos/{id}/almuerzos',           [AlmuerzoController::class, 'index']);
-    Route::post('/barberos/{id}/almuerzos',          [AlmuerzoController::class, 'store']);
-    Route::put('/barberos/{id}/almuerzos/{idReg}',   [AlmuerzoController::class, 'update']);
+// Productos
+Route::get('/productos', [ProductoController::class, 'index']);
+Route::post('/productos', [ProductoController::class, 'store']);
+Route::put('/productos/{id}', [ProductoController::class, 'update']);
+Route::patch('/productos/{id}/desactivar', [ProductoController::class, 'desactivar']);
+Route::post('/productos/{id}/lotes', [ProductoController::class, 'registrarLote']);
+
+// Porcentajes de productos (historial)
+Route::get('/productos/{id}/porcentajes', [PorcentajeProductoController::class, 'historial']);
+Route::put('/productos/{id}/porcentajes', [PorcentajeProductoController::class, 'actualizar']);
+
+// Categorías
+Route::get('/categorias', [ServicioController::class, 'categorias']);
+Route::post('/categorias', [ServicioController::class, 'storeCategoria']);
+Route::put('/categorias/{id}', [ServicioController::class, 'updateCategoria']);
+Route::patch('/categorias/{id}/desactivar', [ServicioController::class, 'desactivarCategoria']);
+
+// Servicios
+Route::get('/servicios', [ServicioController::class, 'index']);
+Route::post('/servicios', [ServicioController::class, 'store']);
+Route::put('/servicios/{id}', [ServicioController::class, 'update']);
+Route::patch('/servicios/{id}/desactivar', [ServicioController::class, 'desactivar']);
         
 });
 });

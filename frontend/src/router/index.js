@@ -21,10 +21,10 @@ import PerfilBarberoAdmin from '../views/admin/PerfilBarberoAdmin.vue'
 import EditarBarbero from '../views/admin/EditarBarbero.vue'
 import RegistrarBarbero from '../views/admin/RegistrarBarbero.vue'
 import GestionHorarios from '../views/admin/GestionHorarios.vue'
-import RegistroAlmuerzos from '../views/admin/RegistroAlmuerzos.vue'
 import VerHorarioBarbero   from '../views/admin/VerHorarioBarbero.vue'
-import EditarHorarioBarbero from '../views/admin/EditarHorarioBarbero.vue'
-
+import ServiciosView from '../views/admin/ServiciosView.vue'
+import PorcentajesView from '../views/admin/PorcentajesView.vue'
+import ProductosView from '../views/admin/ProductosView.vue'
 const routes = [
   // ==========================================
   // RUTAS PÚBLICAS
@@ -138,13 +138,7 @@ const routes = [
         component: GestionHorarios,
         meta: { title: 'Gestión de Horarios' },
         },
-        {
-        path: 'barberos/:id/almuerzos',
-        name: 'RegistroAlmuerzos',
-        component: RegistroAlmuerzos,
-        meta: { title: 'Registro de Almuerzos' },
-        props: true,
-        },
+       
         {
           path: 'barberos/:id/horario',
           name: 'VerHorarioBarbero',
@@ -152,11 +146,25 @@ const routes = [
           props: true,
         },
         {
-          path: 'barberos/:id/horario/editar',
-          name: 'EditarHorarioBarbero',
-          component: EditarHorarioBarbero,
-          props: true,
-        },
+  path: 'servicios',
+  name: 'CatalogoServicios',
+  component: ServiciosView,
+  meta: { title: 'Catálogo de Servicios' },
+},
+{
+  path: 'productos/porcentajes',
+  name: 'PorcentajesProductos',
+  component: PorcentajesView,
+  meta: { title: 'Porcentajes de Productos' },
+},
+
+{
+  path: 'productos',
+  name: 'Productos',
+  component: ProductosView,
+  meta: { title: 'Inventario de Productos' },
+},
+        
     ],
   },
 

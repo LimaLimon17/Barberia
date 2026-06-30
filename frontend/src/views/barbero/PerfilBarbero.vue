@@ -64,7 +64,58 @@
           La antigüedad se calcula automáticamente restando la fecha de ingreso a la fecha actual en días completos.
         </p>
       </div>
+<!-- Cambiar contraseña -->
+<div class="perfil__details glass-card">
+  <h3 class="perfil__section-title">🔑 Cambiar Contraseña</h3>
 
+  <AlertMessage v-if="errorPassword" :mensaje="errorPassword" tipo="error" />
+  <AlertMessage v-if="mensajeExitoPassword" :mensaje="mensajeExitoPassword" tipo="exito" />
+
+  <form class="perfil__form-password" @submit.prevent="enviarCambioPassword">
+    <div class="perfil__field perfil__field--input">
+      <label class="perfil__field-label" for="pw-actual">Contraseña actual</label>
+      <input
+        id="pw-actual"
+        v-model="passwordActual"
+        type="password"
+        autocomplete="current-password"
+        class="perfil__input"
+        required
+      />
+    </div>
+
+    <div class="perfil__field perfil__field--input">
+      <label class="perfil__field-label" for="pw-nueva">Nueva contraseña</label>
+      <input
+        id="pw-nueva"
+        v-model="passwordNueva"
+        type="password"
+        autocomplete="new-password"
+        class="perfil__input"
+        minlength="8"
+        required
+      />
+      <span class="perfil__hint">Mínimo 8 caracteres.</span>
+    </div>
+
+    <div class="perfil__field perfil__field--input">
+      <label class="perfil__field-label" for="pw-confirmar">Confirmar nueva contraseña</label>
+      <input
+        id="pw-confirmar"
+        v-model="passwordConfirmar"
+        type="password"
+        autocomplete="new-password"
+        class="perfil__input"
+        minlength="8"
+        required
+      />
+    </div>
+
+    <button type="submit" class="perfil__btn-guardar" :disabled="guardandoPassword">
+      {{ guardandoPassword ? 'Guardando…' : 'Actualizar contraseña' }}
+    </button>
+  </form>
+</div>
       <!-- Nota de solo lectura -->
       <div class="perfil__readonly-notice">
         <span>🔒</span>
@@ -76,13 +127,19 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import barberoService from '../../services/barberoService.js'
+import barberoService from '../../services/perfilBarberoService.js'
 import AlertMessage from '../../components/common/AlertMessage.vue'
 import { formatearFecha } from '../../utils/helpers.js'
 
 const perfil = ref(null)
 const cargando = ref(true)
 const error = ref('')
+const passwordActual = ref('')
+const passwordNueva = ref('')
+const passwordConfirmar = ref('')
+const guardandoPassword = ref(false)
+const errorPassword = ref('')
+const mensajeExitoPassword = ref('')
 
 const iniciales = computed(() => {
   if (!perfil.value) return '?'
@@ -101,6 +158,35 @@ onMounted(async () => {
     cargando.value = false
   }
 })
+async function enviarCambioPassword() {
+  errorPassword.value = ''
+  mensajeExitoPassword.value = ''
+
+  if (passwordNueva.value !== passwordConfirmar.value) {
+    errorPassword.value = 'La confirmación no coincide con la nueva contraseña.'
+    return
+  }
+
+  guardandoPassword.value = true
+  try {
+    const data = await barberoService.cambiarPassword(
+      passwordActual.value,
+      passwordNueva.value,
+      passwordConfirmar.value
+    )
+    mensajeExitoPassword.value = data.mensaje || 'Contraseña actualizada correctamente.'
+    passwordActual.value = ''
+    passwordNueva.value = ''
+    passwordConfirmar.value = ''
+  } catch (err) {
+    errorPassword.value =
+      err.response?.data?.message ||
+      Object.values(err.response?.data?.errors || {}).flat().join(' ') ||
+      'No se pudo actualizar la contraseña.'
+  } finally {
+    guardandoPassword.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -267,4 +353,12 @@ onMounted(async () => {
   font-size: 1.25rem;
   flex-shrink: 0;
 }
+.perfil__form-password { display: flex; flex-direction: column; gap: 1rem; max-width: 360px; }
+.perfil__field--input { gap: 0.4rem; }
+.perfil__input { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.6rem 0.85rem; font-size: 0.9rem; background: var(--color-bg-primary); color: var(--color-text-primary); }
+.perfil__input:focus { outline: none; border-color: var(--color-azul-real); }
+.perfil__hint { font-size: 0.72rem; color: var(--color-text-muted); }
+.perfil__btn-guardar { align-self: flex-start; padding: 0.65rem 1.4rem; background: var(--color-azul-real); color: #fff; border: none; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+.perfil__btn-guardar:disabled { opacity: 0.5; cursor: not-allowed; }
+.perfil__btn-guardar:hover:not(:disabled) { opacity: 0.88; }
 </style>

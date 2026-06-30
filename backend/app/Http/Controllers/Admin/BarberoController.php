@@ -9,9 +9,11 @@ use App\Models\Barbero;
 use App\Models\HorarioBarbero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\HorarioSemanalService;
 
 class BarberoController extends Controller
 {
+     public function __construct(private HorarioSemanalService $horarioSemanalService) {}
     /**
      * Lista todos los barberos activos.
      */
@@ -210,48 +212,27 @@ class BarberoController extends Controller
             $message = $e->getMessage();
 
             if (str_contains($message, 'El correo ya está registrado')) {
-                return response()->json([
-                    'mensaje' => 'El correo electrónico ya está registrado en el sistema',
-                ], 422);
+                return response()->json(['mensaje' => 'El correo electrónico ya está registrado en el sistema'], 422);
             }
-
             if (str_contains($message, 'La fecha de ingreso no puede ser posterior')) {
-                return response()->json([
-                    'mensaje' => 'La fecha de ingreso no puede ser posterior a hoy',
-                ], 422);
+                return response()->json(['mensaje' => 'La fecha de ingreso no puede ser posterior a hoy'], 422);
             }
 
-            return response()->json([
-                'mensaje' => 'Error al registrar el barbero',
-                'error'   => $message,
-            ], 500);
-        }
-
-        // Asignar horario inicial obligatorio
-        $dias     = json_encode($request->input('dias'));
-        $semana   = now()->weekOfYear;
-        $ano      = now()->year;
-
-        try {
-            DB::statement('CALL sp_AsignarHorarioSemanal(?, ?, ?, ?, ?, ?, @id_horario)', [
-                $idBarberoNuevo,
-                $semana,
-                $ano,
-                $dias,
-                $admin->IdUsuario,
-                $ip,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'mensaje' => 'Barbero registrado pero hubo un error al asignar el horario: ' . $e->getMessage(),
-            ], 422);
-        }
+            return response()->json(['mensaje' => 'Error al registrar el barbero', 'error' => $message], 500);
+        }// Ya no se pide al admin elegir "días" manualmente: el nuevo barbero
+        // entra trabajando todos los días de la semana actual (sin descanso
+        // todavía); en la próxima rotación FIFO regular ya queda incluido
+        // según su antigüedad real junto al resto del equipo.
+        $barbero = Barbero::find($idBarberoNuevo);
+        $this->horarioSemanalService->asignarBarberoNuevoSemanaActual($barbero, $admin->IdUsuario, $ip);
 
         return response()->json([
-            'mensaje'      => 'Barbero registrado correctamente',
-            'id_barbero'   => $idBarberoNuevo,
+            'mensaje'    => 'Barbero registrado correctamente',
+            'id_barbero' => $idBarberoNuevo,
         ], 201);
     }
+
+     
 
     /**
      * HU-02 Escenario 4: Desactivar barbero.

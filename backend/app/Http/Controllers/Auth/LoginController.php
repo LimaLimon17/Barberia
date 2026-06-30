@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Auth;
+use Illuminate\Support\Facades\Hash;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
@@ -23,11 +24,11 @@ class LoginController extends Controller
 
         // Buscar usuario por correo y estado activo
         $usuario = User::where('Correo', $correo)
-            ->where('EstadoA', 1)
-            ->first();
+    ->where('EstadoA', 1)
+    ->first();
 
         // Credenciales incorrectas
-        if (!$usuario || $usuario->Contraseña !== $contraseña) {
+      if (!$usuario || !Hash::check($contraseña, $usuario->Contraseña)) {
 
             try {
                 DB::statement(

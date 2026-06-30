@@ -15,16 +15,12 @@ import Navbar from '../components/common/Navbar.vue'
 import Sidebar from '../components/common/Sidebar.vue'
 
 const menuItems = [
-  {
-    nombre: 'Mi Agenda',
-    ruta: '/barbero/dashboard',
-    icono: '📅',
-  },
-  {
-    nombre: 'Mi Perfil',
-    ruta: '/barbero/perfil',
-    icono: '👤',
-  },
+  { nombre: 'Inicio', ruta: '/barbero/dashboard', icono: '🏠' },
+  { nombre: 'Mi Agenda', ruta: '/barbero/dashboard?vista=agenda', icono: '📅' },
+  { nombre: 'Crear Cita', ruta: '/barbero/dashboard?vista=cita-presencial', icono: '✂️' },
+  { nombre: 'Vender sin cita', ruta: '/barbero/dashboard?vista=venta-directa', icono: '🛍️' },
+  { nombre: 'Comisiones', ruta: '/barbero/dashboard?vista=comisiones', icono: '💰' },
+  { nombre: 'Mi Perfil', ruta: '/barbero/perfil', icono: '👤' },
 ]
 </script>
 

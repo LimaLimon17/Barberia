@@ -7,45 +7,56 @@
       <p class="dashboard__date">{{ fechaHoy }}</p>
     </div>
 
-    <div class="dashboard__cards">
-      <router-link to="/admin/barberos" class="dashboard__card glass-card" style="text-decoration:none;">
-        <div class="dashboard__card-icon">✂️</div>
-        <div class="dashboard__card-info">
-          <h3 class="dashboard__card-title">Barberos</h3>
-          <p class="dashboard__card-desc">Gestionar equipo de barberos</p>
-        </div>
-      </router-link>
-
-      <div class="dashboard__card glass-card">
-        <div class="dashboard__card-icon">📦</div>
-        <div class="dashboard__card-info">
-          <h3 class="dashboard__card-title">Inventario</h3>
-          <p class="dashboard__card-desc">Control de productos</p>
-        </div>
-      </div>
-
-      <div class="dashboard__card glass-card">
-        <div class="dashboard__card-icon">💰</div>
-        <div class="dashboard__card-info">
-          <h3 class="dashboard__card-title">Comisiones</h3>
-          <p class="dashboard__card-desc">Reportes de ganancias</p>
-        </div>
-      </div>
-
-      <div class="dashboard__card glass-card">
-        <div class="dashboard__card-icon">📊</div>
-        <div class="dashboard__card-info">
-          <h3 class="dashboard__card-title">Reportes</h3>
-          <p class="dashboard__card-desc">Estadísticas del negocio</p>
-        </div>
-      </div>
+  <div class="dashboard__cards">
+  <router-link to="/admin/barberos" class="dashboard__card glass-card" style="text-decoration:none;">
+    <div class="dashboard__card-icon">✂️</div>
+    <div class="dashboard__card-info">
+      <h3 class="dashboard__card-title">Barberos</h3>
+      <p class="dashboard__card-desc">Gestionar equipo de barberos</p>
     </div>
+  </router-link>
 
-    <div class="dashboard__section glass-card">
-      <h2 class="dashboard__section-title">📋 Resumen del día</h2>
-      <p class="dashboard__empty">Panel en desarrollo. Usa el menú lateral para navegar.</p>
+  <router-link to="/admin/servicios" class="dashboard__card glass-card" style="text-decoration:none;">
+    <div class="dashboard__card-icon">🗂️</div>
+    <div class="dashboard__card-info">
+      <h3 class="dashboard__card-title">Catálogo de Servicios</h3>
+      <p class="dashboard__card-desc">Categorías y servicios disponibles para reserva</p>
+    </div>
+  </router-link>
+
+  <router-link to="/admin/productos/porcentajes" class="dashboard__card glass-card" style="text-decoration:none;">
+    <div class="dashboard__card-icon">🏷️</div>
+    <div class="dashboard__card-info">
+      <h3 class="dashboard__card-title">Porcentajes de Productos</h3>
+      <p class="dashboard__card-desc">Precio de venta y comisión por producto</p>
+    </div>
+  </router-link>
+
+  <router-link to="/admin/productos" class="dashboard__card glass-card" style="text-decoration:none;">
+  <div class="dashboard__card-icon">📦</div>
+  <div class="dashboard__card-info">
+    <h3 class="dashboard__card-title">Inventario</h3>
+    <p class="dashboard__card-desc">Control de productos y stock</p>
+  </div>
+</router-link>
+
+  <div class="dashboard__card glass-card">
+    <div class="dashboard__card-icon">💰</div>
+    <div class="dashboard__card-info">
+      <h3 class="dashboard__card-title">Comisiones</h3>
+      <p class="dashboard__card-desc">Reportes de ganancias</p>
     </div>
   </div>
+
+  <div class="dashboard__card glass-card">
+    <div class="dashboard__card-icon">📊</div>
+    <div class="dashboard__card-info">
+      <h3 class="dashboard__card-title">Reportes</h3>
+      <p class="dashboard__card-desc">Estadísticas del negocio</p>
+    </div>
+  </div>
+</div>
+</div>
 </template>
 
 <script setup>

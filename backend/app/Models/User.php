@@ -39,9 +39,14 @@ class User extends Authenticatable
      * Nombre completo del usuario.
      */
     public function getNombreCompletoAttribute()
-    {
-        return trim("{$this->Nombre1} {$this->Nombre2} {$this->Apellido1} {$this->Apellido2}");
-    }
+{
+    return implode(' ', array_filter([
+        $this->Nombre1,
+        $this->Nombre2,
+        $this->Apellido1,
+        $this->Apellido2,
+    ]));
+}
 
     /**
      * Relación con el rol.

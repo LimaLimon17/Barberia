@@ -3,16 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\HorarioRequest;
 use App\Models\Barbero;
-use App\Models\HorarioSemanal;
+use App\Models\HorarioBarbero;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class HorarioController extends Controller
 {
     /**
-     * Lista los horarios semanales de un barbero.
+     * GET /api/admin/barberos/{id}/horarios
+     * Historial de asignaciones semanales de un barbero (semana por semana).
      */
     public function index(Request $request, $idBarbero)
     {
@@ -22,74 +21,27 @@ class HorarioController extends Controller
             return response()->json(['mensaje' => 'Barbero no encontrado'], 404);
         }
 
-        $horarios = HorarioSemanal::where('IdBarbero', $idBarbero)
+        $asignaciones = HorarioBarbero::where('IdBarbero', $idBarbero)
             ->where('EstadoA', 1)
-            ->orderBy('Año', 'desc')
-            ->orderBy('Semana', 'desc')
-            ->with('horarios')
+            ->with('horario')
+            ->orderByDesc('FechaInicio')
             ->get()
-            ->map(function ($hs) {
-                return [
-                    'id_horario_semanal' => $hs->IdHorarioSemanal,
-                    'semana'             => $hs->Semana,
-                    'ano'                => $hs->Año,
-                    'dias'               => $hs->horarios->map(fn($h) => [
-                        'dia'          => $h->DiaSemana,
-                        'hora_entrada' => $h->HoraEntrada,
-                        'hora_salida'  => $h->HoraSalida,
-                        'dia_descanso' => $h->DiaDescanso,
-                    ]),
-                ];
-            });
+            ->groupBy(fn ($a) => $a->FechaInicio->format('Y-m-d') . '_' . $a->FechaFin->format('Y-m-d'));
 
-        return response()->json(['horarios' => $horarios], 200);
-    }
+        $semanas = $asignaciones->map(function ($filas, $clave) {
+            [$inicio, $fin] = explode('_', $clave);
+            return [
+                'fecha_inicio' => $inicio,
+                'fecha_fin' => $fin,
+                'dias' => $filas->map(fn ($f) => [
+                    'dia' => $f->horario->DiaSemana,
+                    'hora_entrada' => $f->horario->HoraEntrada,
+                    'hora_salida' => $f->horario->HoraSalida,
+                    'dia_descanso' => (bool) $f->horario->DiaDescanso,
+                ])->values(),
+            ];
+        })->values();
 
-    /**
-     * HU-11 Escenario 8: Crear nueva configuración de horario.
-     */
-    public function store(HorarioRequest $request)
-    {
-        $admin  = $request->user();
-        $ip     = $request->ip();
-        $dias   = json_encode($request->input('dias'));
-
-        try {
-            DB::statement('CALL sp_AsignarHorarioSemanal(?, ?, ?, ?, ?, ?, @id_horario)', [
-                $request->input('id_barbero'),
-                $request->input('semana'),
-                $request->input('ano'),
-                $dias,
-                $admin->IdUsuario,
-                $ip,
-            ]);
-
-            $resultado = DB::select('SELECT @id_horario AS id')[0];
-
-        } catch (\Exception $e) {
-            $message = $e->getMessage();
-
-            if (str_contains($message, 'mínimo 8 horas')) {
-                return response()->json([
-                    'mensaje' => 'Cada día laboral debe tener mínimo 8 horas efectivas de trabajo',
-                ], 422);
-            }
-
-            if (str_contains($message, 'al menos un día')) {
-                return response()->json([
-                    'mensaje' => 'Debe configurar al menos un día de trabajo',
-                ], 422);
-            }
-
-            return response()->json([
-                'mensaje' => 'Error al crear el horario',
-                'error'   => $message,
-            ], 500);
-        }
-
-        return response()->json([
-            'mensaje'            => 'Horario creado correctamente',
-            'id_horario_semanal' => $resultado->id,
-        ], 201);
+        return response()->json(['horarios' => $semanas], 200);
     }
 }

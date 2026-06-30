@@ -52,7 +52,7 @@ Sigue estos pasos en orden estricto para configurar tu entorno.
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
    DB_PORT=3306
-   DB_DATABASE=Barberia_bd
+   DB_DATABASE=Barberia_db
    DB_USERNAME=root
    DB_PASSWORD=
    ```
@@ -79,9 +79,9 @@ Sigue estos pasos en orden estricto para configurar tu entorno.
    ```
 
 3. Instala las librerías para generación de comprobantes y reportes en PDF:
-```bash
+   ```bash
    npm install html2pdf.js jspdf jspdf-autotable date-fns
-```
+   ```
 
 4. Levanta el servidor de desarrollo:
    ```bash

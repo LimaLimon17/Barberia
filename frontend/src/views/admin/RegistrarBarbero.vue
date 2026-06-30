@@ -25,18 +25,6 @@
         <h2 class="registrar__seccion-titulo">👤 Datos personales</h2>
 
         <div class="registrar__grid">
-          
-          <div class="registrar__campo">
-            <label class="label">Cédula de Identidad (CI) *</label>
-            <input
-              v-model="form.ci"
-              type="text"
-              placeholder="Ej: 1234567"
-              class="input-field"
-              :class="{ 'input-field--error': errores.ci }"
-            />
-            <span v-if="errores.ci" class="registrar__error">{{ errores.ci }}</span>
-          </div>
 
           <div class="registrar__campo">
             <label class="label">Primer nombre *</label>
@@ -246,7 +234,6 @@ const hoy = new Date().toISOString().split('T')[0]
 const verContrasena = ref(false)
 
 const form = ref({
-  ci:            '',
   nombre1:       '',
   nombre2:       '',
   apellido1:     '',
@@ -286,8 +273,6 @@ function horasValidas(dia) {
 function validar() {
   const e = {}
   const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/
-
-  if (!form.value.ci.trim()) e.ci = 'El CI es obligatorio'
 
   // Validación de Nombres y Apellidos (Rechaza números)
   if (!form.value.nombre1.trim()) {

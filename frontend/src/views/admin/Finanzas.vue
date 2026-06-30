@@ -7,13 +7,16 @@
 
     <!-- Filtro por Barbero (HU-16 Esc.7) -->
     <div class="finanzas__filtro glass-card">
-      <label class="label" for="select-barbero">Filtrar por Barbero</label>
-      <select id="select-barbero" class="input-field" v-model="filtroBarbero" @change="cargarFinanzas">
-        <option value="">Todos los barberos</option>
-        <option v-for="b in listaBarberos" :key="b.IdBarbero" :value="b.IdBarbero">
-          {{ b.usuario.Nombre1 }} {{ b.usuario.Apellido1 }}
-        </option>
-      </select>
+      <div class="finanzas__filtro-group">
+        <label class="label" for="select-barbero">Filtrar por Barbero</label>
+        <select id="select-barbero" class="input-field" v-model="filtroBarbero" @change="cargarFinanzas">
+          <option value="">Todos los barberos</option>
+          <option v-for="b in listaBarberos" :key="b.IdBarbero" :value="b.IdBarbero">
+            {{ b.usuario?.CI }} - {{ b.usuario?.Nombre1 || 'Sin nombre' }} {{ b.usuario?.Apellido1 || '' }} {{ b.usuario?.Apellido2 || '' }}
+          </option>
+        </select>
+      </div>
+      <button class="btn-secondary finanzas__btn-limpiar" @click="limpiarFiltros" v-if="filtroBarbero">🧹 Limpiar Filtros</button>
     </div>
 
     <div v-if="cargando" class="finanzas__loading glass-card">
@@ -144,6 +147,11 @@ const cargarBarberos = async () => {
   }
 }
 
+const limpiarFiltros = () => {
+  filtroBarbero.value = ''
+  cargarFinanzas()
+}
+
 const exportarPDF = () => {
   if (datos.value) {
     pdfGenerator.exportarFinanzas(datos.value)
@@ -161,8 +169,10 @@ onMounted(() => {
 .finanzas__header { margin-bottom: 1.5rem; }
 .finanzas__title { font-family: var(--font-heading); font-size: 1.75rem; font-weight: 700; }
 .finanzas__subtitle { font-size: 0.875rem; color: var(--color-text-muted); margin-top: 0.25rem; }
-.finanzas__filtro { padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; }
-.finanzas__filtro select { max-width: 300px; }
+.finanzas__filtro { padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: flex-end; gap: 1rem; }
+.finanzas__filtro-group { display: flex; flex-direction: column; width: 100%; max-width: 400px; }
+.finanzas__filtro select { width: 100%; }
+.finanzas__btn-limpiar { padding: 0.75rem 1rem; font-size: 0.875rem; white-space: nowrap; }
 .finanzas__loading { padding: 2rem; text-align: center; color: var(--color-text-muted); }
 .finanzas__resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
 .finanzas__stat-card { display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem; }

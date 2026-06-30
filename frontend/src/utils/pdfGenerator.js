@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'
 import { format } from 'date-fns'
 import { auditoriaService } from '../services/auditoriaService'
 
@@ -16,7 +16,7 @@ export const pdfGenerator = {
     
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(18)
-    doc.text('BARBERÍA LIMA LIMÓN', 14, 15)
+    doc.text('THE LAMPLIGHT', 14, 15)
     
     doc.setFontSize(12)
     doc.text(title, 14, 23)
@@ -140,7 +140,7 @@ export const pdfGenerator = {
       `Bs. ${parseFloat(t.monto_total).toFixed(2)}`
     ])
 
-    doc.autoTable({
+    autoTable(doc,{
       startY: 68,
       head: [['Ref', 'Fecha', 'Barbero', 'Servicios', 'Productos', 'Pago', 'Total']],
       body: tableData,
@@ -189,7 +189,7 @@ export const pdfGenerator = {
       `Bs. ${parseFloat(b.total).toFixed(2)}`
     ])
 
-    doc.autoTable({
+    autoTable(doc,{
       startY: 80,
       head: [['Barbero', 'Comisión Servicios', 'Comisión Productos', 'Comisión Ausentes', 'Total a Pagar']],
       body: tableData,
@@ -218,7 +218,7 @@ export const pdfGenerator = {
       `Bs. ${parseFloat(i.ganancia_acumulada).toFixed(2)}`
     ])
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 40,
       head: [['Producto', 'Stock Inicial', 'Cant. Vendida', 'Stock Final', 'Ganancia Acumulada']],
       body: tableData,
@@ -265,7 +265,7 @@ export const pdfGenerator = {
       `Bs. ${parseFloat(t.Comision).toFixed(2)}`
     ])
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 85,
       head: [['Fecha y Hora', 'Cliente', 'Detalle', 'Monto Bruto', 'Comisión Ganada']],
       body: tableData,

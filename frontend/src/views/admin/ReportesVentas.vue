@@ -4,7 +4,6 @@
       <h1 class="reportes__title">📈 Reporte de <span class="gold-text">Ventas</span></h1>
     </div>
 
-    <!-- Filtros (HU-15 Esc.2) -->
     <div class="reportes__filtros glass-card">
       <div class="reportes__filtro-group">
         <label class="label">Fecha Inicio</label>
@@ -17,13 +16,23 @@
       <div class="reportes__filtro-group">
         <label class="label">Barbero</label>
         <select class="input-field" v-model="filtroBarbero">
-          <option value="">Todos</option>
+          <option value="">Todos los barberos</option>
           <option v-for="b in listaBarberos" :key="b.IdBarbero" :value="b.IdBarbero">
-            {{ b.usuario.Nombre1 }} {{ b.usuario.Apellido1 }}
+            {{ b.usuario?.CI }} - {{ b.usuario?.Nombre1 || 'Sin nombre' }} {{ b.usuario?.Apellido1 || '' }} {{ b.usuario?.Apellido2 || '' }}
+          </option>
+        </select>
+      </div>
+      <div class="reportes__filtro-group">
+        <label class="label">Servicio</label>
+        <select class="input-field" v-model="filtroServicio">
+          <option value="">Todos los servicios</option>
+          <option v-for="s in listaServicios" :key="s.IdServicio" :value="s.IdServicio">
+            {{ s.Nombre }}
           </option>
         </select>
       </div>
       <button class="btn-primary" @click="cargarReporte" id="btn-buscar-ventas">🔍 Buscar</button>
+      <button class="btn-secondary" @click="limpiarFiltros" v-if="filtroBarbero || filtroServicio">🧹 Limpiar Filtros</button>
     </div>
 
     <div v-if="cargando" class="reportes__loading glass-card"><p>Cargando reporte...</p></div>
@@ -97,15 +106,18 @@ const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
 const filtroInicio = ref(inicioMes.toISOString().split('T')[0])
 const filtroFin = ref(hoy.toISOString().split('T')[0])
 const filtroBarbero = ref('')
+const filtroServicio = ref('')
 const datos = ref(null)
 const cargando = ref(false)
 const listaBarberos = ref([])
+const listaServicios = ref([])
 
 const cargarReporte = async () => {
   try {
     cargando.value = true
     const params = { inicio: filtroInicio.value, fin: filtroFin.value }
     if (filtroBarbero.value) params.id_barbero = filtroBarbero.value
+    if (filtroServicio.value) params.id_servicio = filtroServicio.value
     datos.value = await reportesService.getVentasAdmin(params)
   } catch (error) {
     console.error('Error cargando ventas:', error)
@@ -123,13 +135,30 @@ const cargarBarberos = async () => {
   }
 }
 
+const cargarServicios = async () => {
+  try {
+    const response = await api.get('/servicios')
+    listaServicios.value = response.data
+  } catch (error) {
+    console.error('Error cargando servicios:', error)
+  }
+}
+
+const limpiarFiltros = () => {
+  filtroBarbero.value = ''
+  filtroServicio.value = ''
+  filtroInicio.value = inicioMes.toISOString().split('T')[0]
+  filtroFin.value = hoy.toISOString().split('T')[0]
+  cargarReporte()
+}
+
 const exportarPDF = () => {
   if (datos.value) {
     pdfGenerator.exportarReporteVentas(datos.value, { inicio: filtroInicio.value, fin: filtroFin.value })
   }
 }
 
-onMounted(() => { cargarReporte(); cargarBarberos() })
+onMounted(() => { cargarReporte(); cargarBarberos(); cargarServicios(); })
 </script>
 
 <style scoped>

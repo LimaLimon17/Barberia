@@ -78,10 +78,10 @@ Sigue estos pasos en orden estricto para configurar tu entorno.
    npm install
    ```
 
-3. Instala la librería para generación de comprobantes en PDF:
-   ```bash
-   npm install html2pdf.js
-   ```
+3. Instala las librerías para generación de comprobantes y reportes en PDF:
+```bash
+   npm install html2pdf.js jspdf jspdf-autotable date-fns
+```
 
 4. Levanta el servidor de desarrollo:
    ```bash

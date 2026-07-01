@@ -33,7 +33,7 @@ export const useCitaPresencialStore = defineStore('citaPresencial', () => {
   const horaInicioSeleccionada = ref(null)
   const duracionTotal          = ref(0)
   const cargandoSlots          = ref(false)
-  
+
 const hoyStr = new Date().toISOString().split('T')[0]
 
 const esCitaHoy = computed(() => fechaCita.value === hoyStr)
@@ -266,7 +266,8 @@ const montoACobrar = computed(() =>
     categorias, servicios, serviciosFiltrados, idCategoriaFiltro,
     serviciosSeleccionados, cargandoServicios,
     fechaCita, slots, horaInicioSeleccionada, duracionTotal, cargandoSlots,
-    metodoPago, reservaPendiente,
+    metodoPago, reservaPendiente,esCitaHoy,
+  montoACobrar,
     costoTotal, horaFinEstimada,
     reservaConfirmada, error, cargando,
     citasLista, cargandoCitas, errorCitas, filtroDesde, filtroHasta,

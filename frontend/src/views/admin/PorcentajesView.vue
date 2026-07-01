@@ -54,8 +54,15 @@
           min="0"
           placeholder="Ej: 10"
         />
-        <small>No debe igualar ni superar el porcentaje total de venta.</small>
-      </label>
+        <small>No debe igualar ni superar el porcentaje total de venta.
+  <span
+    v-if="form.PorcentajeBarbero && form.PorcentajeVenta && Number(form.PorcentajeBarbero) >= Number(form.PorcentajeVenta)"
+    style="color:#b42318; display:block; margin-top:2px;"
+  >
+    ⚠ La comisión ({{ form.PorcentajeBarbero }}%) iguala o supera el porcentaje de venta ({{ form.PorcentajeVenta }}%).
+  </span>
+</small>
+</label>
 
       <label class="field">
         <span>Fecha de inicio del nuevo porcentaje</span>
@@ -145,14 +152,34 @@ async function cargarHistorial() {
 }
 
 async function actualizar() {
-  if (!productoId.value) return notify("Selecciona un producto", "warning");
-  try {
-    await porcentajesService.actualizarProducto(productoId.value, form);
-    notify("Porcentajes actualizados");
-    await cargarProductos();
-    await cargarHistorial();
-  } catch (error) {
-    notify(error.friendlyMessage || "No se pudo actualizar", "error");
+  if (!productoId.value) {
+    return notify('Selecciona un producto', 'error')
+  }
+
+  if (Number(form.PorcentajeVenta) < 10) {
+    return notify('El porcentaje de venta debe ser mínimo 10%.', 'error')
+  }
+
+  if (Number(form.PorcentajeBarbero) >= Number(form.PorcentajeVenta)) {
+    return notify(
+      `La comisión del barbero (${form.PorcentajeBarbero}%) no puede igualar ni superar el porcentaje de venta (${form.PorcentajeVenta}%).`,
+      'error'
+    )
+  }
+
+  if (!form.FechaInicio) {
+    return notify('La fecha de inicio es obligatoria para registrar el cambio en el historial.', 'error')
+  }
+
+try {
+  await porcentajesService.actualizarProducto(productoId.value, form)
+  notify('Porcentajes actualizados correctamente')
+  await cargarHistorial() // refresca la tabla y los valores del formulario
+} catch (error) {
+  notify(
+    error.friendlyMessage || error.response?.data?.message || 'No se pudo actualizar los porcentajes.',
+    'error'
+  )
   }
 }
 

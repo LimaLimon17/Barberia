@@ -41,43 +41,45 @@
         </label>
 
         <label class="field">
-          <span>Duración máxima permitida</span>
-          <input
-            v-model.number="categoria.DuracionMaximaMinutos"
-            type="number"
-            min="1"
-            placeholder="Ej: 35"
-            required
-          />
-          <small>Tiempo máximo en minutos permitido para esta categoría.</small>
-        </label>
+  <span>Duración máxima permitida</span>
+  <input
+    v-model.number="categoria.DuracionMaximaMinutos"
+    type="number"
+    :min="categoria.DuracionMinimaMinutos || 1"
+    placeholder="Ej: 35"
+    required
+  />
+  <small>
+    Tiempo máximo en minutos permitido para esta categoría.
+    <span
+      v-if="categoria.DuracionMaximaMinutos && categoria.DuracionMaximaMinutos < categoria.DuracionMinimaMinutos"
+      style="color:#b42318; display:block; margin-top:2px;"
+    >
+      ⚠ No puede ser menor que la duración mínima ({{ categoria.DuracionMinimaMinutos }} min).
+    </span>
+  </small>
+</label>
 
-        <label class="field">
-          <span>Precio mínimo permitido</span>
-          <input
-            v-model.number="categoria.PrecioMin"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="Ej: 20.00"
-            required
-          />
-          <small>Monto mínimo en bolivianos que puede tener un servicio de esta categoría.</small>
-        </label>
-
-        <label class="field">
-          <span>Precio máximo permitido</span>
-          <input
-            v-model.number="categoria.PrecioMax"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="Ej: 90.00"
-            required
-          />
-          <small>Monto máximo en bolivianos permitido para esta categoría.</small>
-        </label>
-
+<label class="field">
+  <span>Precio máximo permitido</span>
+  <input
+    v-model.number="categoria.PrecioMax"
+    type="number"
+    :min="categoria.PrecioMin || 0"
+    step="0.01"
+    placeholder="Ej: 90.00"
+    required
+  />
+  <small>
+    Monto máximo en bolivianos permitido para esta categoría.
+    <span
+      v-if="categoria.PrecioMax && categoria.PrecioMax < categoria.PrecioMin"
+      style="color:#b42318; display:block; margin-top:2px;"
+    >
+      ⚠ No puede ser menor que el precio mínimo (Bs {{ Number(categoria.PrecioMin).toFixed(2) }}).
+    </span>
+  </small>
+</label>
         <div class="field actions-field">
           <span>Acción de categoría</span>
           <button type="submit">{{ categoria.IdCategoria ? 'Actualizar categoría' : 'Crear categoría' }}</button>
@@ -126,29 +128,53 @@
         </label>
 
         <label class="field">
-          <span>Precio del servicio</span>
-          <input
-            v-model.number="servicio.Precio"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="Ej: 30.00"
-            required
-          />
-          <small>Precio en bolivianos. Debe respetar el rango definido por la categoría.</small>
-        </label>
+  <span>Precio del servicio</span>
+  <input
+    v-model.number="servicio.Precio"
+    type="number"
+    :min="categoriaActiva?.PrecioMin ?? 0"
+    :max="categoriaActiva?.PrecioMax ?? undefined"
+    step="0.01"
+    placeholder="Ej: 30.00"
+    required
+  />
+  <small>
+    Precio en bolivianos.
+    <span v-if="categoriaActiva">
+      Rango permitido: Bs {{ Number(categoriaActiva.PrecioMin).toFixed(2) }} – Bs {{ Number(categoriaActiva.PrecioMax).toFixed(2) }}.
+    </span>
+    <span
+      v-if="categoriaActiva && servicio.Precio && (servicio.Precio < categoriaActiva.PrecioMin || servicio.Precio > categoriaActiva.PrecioMax)"
+      style="color:#b42318; display:block; margin-top:2px;"
+    >
+      ⚠ El precio está fuera del rango de la categoría.
+    </span>
+  </small>
+</label>
 
-        <label class="field">
-          <span>Duración fija en minutos</span>
-          <input
-            v-model.number="servicio.DuracionMinutos"
-            type="number"
-            min="1"
-            placeholder="Ej: 45"
-            required
-          />
-          <small>Tiempo que se usará para calcular el bloqueo de la cita.</small>
-        </label>
+<label class="field">
+  <span>Duración fija en minutos</span>
+  <input
+    v-model.number="servicio.DuracionMinutos"
+    type="number"
+    :min="categoriaActiva?.DuracionMinimaMinutos ?? 1"
+    :max="categoriaActiva?.DuracionMaximaMinutos ?? undefined"
+    placeholder="Ej: 45"
+    required
+  />
+  <small>
+    Tiempo que se usará para calcular el bloqueo de la cita.
+    <span v-if="categoriaActiva">
+      Rango permitido: {{ categoriaActiva.DuracionMinimaMinutos }} – {{ categoriaActiva.DuracionMaximaMinutos }} min.
+    </span>
+    <span
+      v-if="categoriaActiva && servicio.DuracionMinutos && (servicio.DuracionMinutos < categoriaActiva.DuracionMinimaMinutos || servicio.DuracionMinutos > categoriaActiva.DuracionMaximaMinutos)"
+      style="color:#b42318; display:block; margin-top:2px;"
+    >
+      ⚠ La duración está fuera del rango de la categoría.
+    </span>
+  </small>
+</label>
 
         <div class="field actions-field">
           <span>Acción de servicio</span>
@@ -192,16 +218,21 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref, computed } from "vue"
 import AlertMessage from "../../components/common/AlertMessage.vue";
 import LoadingSpinner from "../../components/common/LoadingSpinner.vue";
 import { serviciosService } from "../../services/serviciosService";
+
+
 
 const categorias = ref([]);
 const servicios = ref([]);
 const loading = ref(false);
 const message = ref("");
 const messageType = ref("info");
+const categoriaActiva = computed(() =>
+  categorias.value.find(c => c.IdCategoria === servicio.IdCategoria) || null
+)
 
 const categoria = reactive({
   IdCategoria: null,
@@ -265,26 +296,64 @@ function resetServicio() {
 }
 
 async function guardarCategoria() {
+  // Validación frontend antes de llamar al backend
+  if (Number(categoria.DuracionMaximaMinutos) < Number(categoria.DuracionMinimaMinutos)) {
+    notify('La duración máxima no puede ser menor que la mínima.', 'error')
+    return
+  }
+  if (Number(categoria.PrecioMax) < Number(categoria.PrecioMin)) {
+    notify('El precio máximo no puede ser menor que el mínimo.', 'error')
+    return
+  }
+
   try {
-    if (categoria.IdCategoria) await serviciosService.actualizarCategoria(categoria.IdCategoria, categoria);
-    else await serviciosService.crearCategoria(categoria);
-    notify("Categoría guardada");
-    resetCategoria();
-    await cargarTodo();
+    if (categoria.IdCategoria) {
+      await serviciosService.actualizarCategoria(categoria.IdCategoria, categoria)
+    } else {
+      await serviciosService.crearCategoria(categoria)
+    }
+    notify('Categoría guardada')
+    resetCategoria()
+    await cargarTodo()
   } catch (error) {
-    notify(error.friendlyMessage || "No se pudo guardar la categoría", "error");
+    notify(error.friendlyMessage || error.response?.data?.message || 'No se pudo guardar la categoría', 'error')
   }
 }
 
 async function guardarServicio() {
+  // Buscar la categoría seleccionada para validar rangos
+  const catSeleccionada = categorias.value.find(c => c.IdCategoria === servicio.IdCategoria)
+
+  if (catSeleccionada) {
+    if (Number(servicio.Precio) < Number(catSeleccionada.PrecioMin)) {
+      notify(`El precio no puede ser menor al mínimo de la categoría (Bs ${Number(catSeleccionada.PrecioMin).toFixed(2)}).`, 'error')
+      return
+    }
+    if (Number(servicio.Precio) > Number(catSeleccionada.PrecioMax)) {
+      notify(`El precio no puede superar el máximo de la categoría (Bs ${Number(catSeleccionada.PrecioMax).toFixed(2)}).`, 'error')
+      return
+    }
+    if (Number(servicio.DuracionMinutos) < Number(catSeleccionada.DuracionMinimaMinutos)) {
+      notify(`La duración no puede ser menor al mínimo de la categoría (${catSeleccionada.DuracionMinimaMinutos} min).`, 'error')
+      return
+    }
+    if (Number(servicio.DuracionMinutos) > Number(catSeleccionada.DuracionMaximaMinutos)) {
+      notify(`La duración no puede superar el máximo de la categoría (${catSeleccionada.DuracionMaximaMinutos} min).`, 'error')
+      return
+    }
+  }
+
   try {
-    if (servicio.IdServicio) await serviciosService.actualizarServicio(servicio.IdServicio, servicio);
-    else await serviciosService.crearServicio(servicio);
-    notify("Servicio guardado");
-    resetServicio();
-    await cargarTodo();
+    if (servicio.IdServicio) {
+      await serviciosService.actualizarServicio(servicio.IdServicio, servicio)
+    } else {
+      await serviciosService.crearServicio(servicio)
+    }
+    notify('Servicio guardado')
+    resetServicio()
+    await cargarTodo()
   } catch (error) {
-    notify(error.friendlyMessage || "No se pudo guardar el servicio", "error");
+    notify(error.friendlyMessage || error.response?.data?.message || 'No se pudo guardar el servicio', 'error')
   }
 }
 

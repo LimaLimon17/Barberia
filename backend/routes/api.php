@@ -9,7 +9,6 @@ use App\Http\Controllers\Admin\HorarioSemanalController;
 
 
 use App\Http\Controllers\PublicController;
-use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Public\ReservaController;
 
 use App\Http\Controllers\Barbero\CitaPresencialController;
@@ -45,7 +44,6 @@ use App\Http\Controllers\AuditoriaController;
 Route::post('/login', [LoginController::class, 'login']);
 // --- RUTAS PÚBLICAS (Catálogo y Flujo de Reservas del Cliente) ---
 Route::get('/catalogo', [PublicController::class, 'obtenerCatalogoHome']);
-Route::get('/cliente/buscar/{ci}', [PublicController::class, 'buscarClientePorCI']);
 Route::post('/reservas/crear', [PublicController::class, 'crearReservaTentativa']);
 Route::post('/reservas/procesar-pago', [PublicController::class, 'procesarValidacionPago']);
 

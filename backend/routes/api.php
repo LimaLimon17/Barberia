@@ -142,6 +142,7 @@ Route::get('/reportes', [ReporteBarberoController::class, 'index']);
     Route::get('/barberos/{id}',      [BarberoController::class, 'show']);
     Route::put('/barberos/{id}',      [BarberoController::class, 'update']);
     Route::delete('/barberos/{id}',   [BarberoController::class, 'destroy']);
+    Route::patch('/barberos/{id}/reactivar', [BarberoController::class, 'reactivar']);
 
     // Horarios
     Route::get('/barberos/{id}/horarios',  [HorarioController::class, 'index']);

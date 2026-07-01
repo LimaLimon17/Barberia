@@ -279,4 +279,38 @@ class BarberoController extends Controller
             'mensaje' => 'Barbero desactivado correctamente',
         ], 200);
     }
+    /**
+ * Reactivar un barbero desactivado.
+ */
+public function reactivar(Request $request, $id)
+{
+    $admin = $request->user();
+    $ip    = $request->ip();
+
+    $barbero = Barbero::find($id);
+
+    if (!$barbero) {
+        return response()->json(['mensaje' => 'Barbero no encontrado'], 404);
+    }
+
+    if ($barbero->EstadoA) {
+        return response()->json(['mensaje' => 'El barbero ya está activo'], 422);
+    }
+
+    try {
+        DB::statement('CALL sp_ReactivarBarbero(?, ?, ?)', [
+            $barbero->IdBarbero,
+            $admin->IdUsuario,
+            $ip,
+        ]);
+    } catch (\Exception $e) {
+        // Si no existe el SP, hacemos el UPDATE directo
+        $barbero->EstadoA = 1;
+        $barbero->FechaA  = now();
+        $barbero->UsuarioA = $admin->IdUsuario;
+        $barbero->save();
+    }
+
+    return response()->json(['mensaje' => 'Barbero reactivado correctamente'], 200);
+}
 }

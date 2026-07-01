@@ -48,9 +48,11 @@ const barberoService = {
     const response = await api.put(`/admin/horarios-semana/${idBarbero}/descanso`, { semana, ano, dia_descanso })
     return response.data
   },
+  async reactivar(id) {
+  const response = await api.patch(`/admin/barberos/${id}/reactivar`)
+  return response.data
+},
 
-  // Métodos de almuerzo ELIMINADOS: getAlmuerzos, registrarSalidaAlmuerzo,
-  // registrarRetornoAlmuerzo — esa funcionalidad ya no existe en el negocio.
 }
 
 export default barberoService

@@ -10,6 +10,8 @@ use App\Models\HorarioBarbero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\HorarioSemanalService;
+//Para hashear la contraseña
+use Illuminate\Support\Facades\Hash;
 
 class BarberoController extends Controller
 {
@@ -186,51 +188,50 @@ class BarberoController extends Controller
      * HU-02: Registrar nuevo barbero con horario inicial obligatorio.
      */
     public function store(RegistrarBarberoRequest $request)
-    {
-        $admin = $request->user();
-        $ip    = $request->ip();
+{
+    $admin = $request->user();
+    $ip    = $request->ip();
 
-        $idBarberoNuevo = null;
+    $idBarberoNuevo = null;
+    $passwordHasheada = Hash::make($request->input('contrasena'));
 
-        try {
-            DB::statement('CALL sp_RegistrarBarbero(?, ?, ?, ?, ?, ?, ?, ?, ?, @id_barbero)', [
-                $request->input('nombre1'),
-                $request->input('nombre2', ''),
-                $request->input('apellido1'),
-                $request->input('apellido2', ''),
-                $request->input('correo'),
-                $request->input('contrasena'),
-                $request->input('fecha_ingreso'),
-                $admin->IdUsuario,
-                $ip,
-            ]);
+    try {
+        DB::statement('CALL sp_RegistrarBarbero(?, ?, ?, ?, ?, ?, ?, ?, ?, @id_barbero)', [
+            $request->input('nombre1'),
+            $request->input('nombre2', ''),
+            $request->input('apellido1'),
+            $request->input('apellido2', ''),
+            $request->input('correo'),
+            $passwordHasheada,
+            $request->input('fecha_ingreso'),
+            $admin->IdUsuario,
+            $ip,
+        ]);
 
-            $resultado      = DB::select('SELECT @id_barbero AS id')[0];
-            $idBarberoNuevo = $resultado->id;
+        $resultado      = DB::select('SELECT @id_barbero AS id')[0];
+        $idBarberoNuevo = $resultado->id;
 
-        } catch (\Exception $e) {
-            $message = $e->getMessage();
+    } catch (\Exception $e) {
+        $message = $e->getMessage();
 
-            if (str_contains($message, 'El correo ya está registrado')) {
-                return response()->json(['mensaje' => 'El correo electrónico ya está registrado en el sistema'], 422);
-            }
-            if (str_contains($message, 'La fecha de ingreso no puede ser posterior')) {
-                return response()->json(['mensaje' => 'La fecha de ingreso no puede ser posterior a hoy'], 422);
-            }
+        if (str_contains($message, 'El correo ya está registrado')) {
+            return response()->json(['mensaje' => 'El correo electrónico ya está registrado en el sistema'], 422);
+        }
+        if (str_contains($message, 'La fecha de ingreso no puede ser posterior')) {
+            return response()->json(['mensaje' => 'La fecha de ingreso no puede ser posterior a hoy'], 422);
+        }
 
-            return response()->json(['mensaje' => 'Error al registrar el barbero', 'error' => $message], 500);
-        }// Ya no se pide al admin elegir "días" manualmente: el nuevo barbero
-        // entra trabajando todos los días de la semana actual (sin descanso
-        // todavía); en la próxima rotación FIFO regular ya queda incluido
-        // según su antigüedad real junto al resto del equipo.
-        $barbero = Barbero::find($idBarberoNuevo);
-        $this->horarioSemanalService->asignarBarberoNuevoSemanaActual($barbero, $admin->IdUsuario, $ip);
-
-        return response()->json([
-            'mensaje'    => 'Barbero registrado correctamente',
-            'id_barbero' => $idBarberoNuevo,
-        ], 201);
+        return response()->json(['mensaje' => 'Error al registrar el barbero', 'error' => $message], 500);
     }
+
+    $barbero = Barbero::find($idBarberoNuevo);
+    $this->horarioSemanalService->asignarBarberoNuevoSemanaActual($barbero, $admin->IdUsuario, $ip);
+
+    return response()->json([
+        'mensaje'    => 'Barbero registrado correctamente',
+        'id_barbero' => $idBarberoNuevo,
+    ], 201);
+}
 
      
 

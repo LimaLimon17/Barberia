@@ -33,7 +33,14 @@ export const useCitaPresencialStore = defineStore('citaPresencial', () => {
   const horaInicioSeleccionada = ref(null)
   const duracionTotal          = ref(0)
   const cargandoSlots          = ref(false)
+  
+const hoyStr = new Date().toISOString().split('T')[0]
 
+const esCitaHoy = computed(() => fechaCita.value === hoyStr)
+
+const montoACobrar = computed(() =>
+  esCitaHoy.value ? costoTotal.value : Math.round(costoTotal.value * 0.5 * 100) / 100
+)
   // ── Paso 3: pago ─────────────────────────────────────────────────
   const metodoPago      = ref('Efectivo') // 'Efectivo' | 'QR'
   const reservaPendiente = ref(null)       // { id_reserva, qr } mientras se espera confirmar el QR

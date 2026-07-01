@@ -6,15 +6,17 @@
     <div class="campo">
       <label>Cédula de identidad</label>
       <div class="fila-ci">
-        <input
-          v-model="ciInput"
-          type="text"
-          placeholder="Ej: 1000001"
-          maxlength="10"
-          :class="['input-field', tocado.CI && errorCI ? 'input-error' : '']"
-          @blur="tocado.CI = true"
-          @input="resetearBusqueda"
-        />
+       <input
+  v-model="ciInput"
+  type="text"
+  inputmode="numeric"
+  placeholder="Ej: 1000001"
+  maxlength="11"
+  :class="['input-field', tocado.CI && errorCI ? 'input-error' : '']"
+  @blur="tocado.CI = true"
+  @input="resetearBusqueda"
+  @keydown="soloNumerosYGuion"
+/>
         <button
           class="btn-secundario"
           :disabled="!ciInput || errorCI || store.buscandoCliente"
@@ -204,8 +206,13 @@ const formularioValido = computed(() => {
     store.cliente.Telefono  && !errorTelefono.value &&
     store.cliente.Correo    && !errorCorreo.value
   )
-})
 
+})
+function soloNumerosYGuion(e) {
+  const permitidas = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', 'Home', 'End']
+  if (permitidas.includes(e.key)) return
+  if (!/^[0-9\-]$/.test(e.key)) e.preventDefault()
+}
 // ── Enmascarado (Para protección de scraping de datos en la UI) ───────────────
 function mascararNombre(str = '') {
   if (!str) return '***'

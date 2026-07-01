@@ -43,15 +43,17 @@
           <label class="campo-label">Carnet de Identidad *</label>
           <div class="ci-row">
             <input
-              v-model="store.cliente.ci"
-              @keyup.enter="buscarYmarcar"
-              type="text"
-              :class="['campo-input', tocado.ci && errorCI ? 'input-error' : '']"
-              placeholder="Ej: 12345678"
-              maxlength="10"
-              @blur="tocado.ci = true"
-              @input="resetearBusqueda"
-            />
+  v-model="store.cliente.ci"
+  @keyup.enter="buscarYmarcar"
+  @keydown="soloNumerosYGuion"
+  type="text"
+  inputmode="numeric"
+  :class="['campo-input', tocado.ci && errorCI ? 'input-error' : '']"
+  placeholder="Ej: 12345678"
+  maxlength="11"
+  @blur="tocado.ci = true"
+  @input="resetearBusqueda"
+/>
             <button
               @click="buscarYmarcar"
               :disabled="!store.cliente.ci || errorCI || store.buscandoCliente"
@@ -61,7 +63,7 @@
             </button>
           </div>
           <p v-if="tocado.ci && !store.cliente.ci" class="campo-error">Ingresa el CI para continuar.</p>
-          <p v-else-if="tocado.ci && errorCI" class="campo-error">La cédula debe tener entre 4 y 10 dígitos numéricos.</p>
+          <p v-else-if="tocado.ci && errorCI" class="campo-error">La cédula debe tener entre 4 y 11 dígitos numéricos</p>
           <p v-if="store.clienteEncontrado" class="aviso-verde" style="margin-top:0.25rem">
             ✓ Cliente encontrado — datos autocompletados.
           </p>
@@ -69,8 +71,13 @@
             Cliente nuevo — completa los datos manualmente.
           </p>
         </div>
-
-        <div class="form-grid">
+<transition name="fade-bloque">
+  <p v-if="!ciYaBuscado" class="aviso-gris" style="margin-top: 0.5rem;">
+    Busca el CI del cliente para continuar con sus datos.
+  </p>
+</transition>
+        <transition name="fade-bloque">
+  <div v-if="ciYaBuscado" class="form-grid">
           <div class="campo-grupo">
             <label class="campo-label">Primer Nombre *</label>
             <input
@@ -124,7 +131,8 @@
             <p v-if="tocado.correo && !store.cliente.correo" class="campo-error">Ingresa el correo.</p>
             <p v-else-if="tocado.correo && errorCorreo" class="campo-error">Formato inválido. Ej: ejemplo@gmail.com</p>
           </div>
-        </div>
+       </div>
+</transition>
 
         <transition name="fade-bloque">
           <div v-if="intentoContinuar && !paso1Valido" class="banner-error-local">
@@ -236,11 +244,11 @@
         </div>
       </div>
 
-      <!-- PASO 3 — Pago -->
-      <div v-else-if="store.paso === 3" class="paso-contenido">
-        <h3 class="paso-titulo">Pago</h3>
+     <!-- PASO 3 — Pago -->
+<div v-else-if="store.paso === 3" class="paso-contenido">
+  <h3 class="paso-titulo">Pago</h3>
 
-        <div class="resumen-cita">
+  <div class="resumen-cita">
           <div class="resumen-seccion">
             <p class="resumen-titulo">Cliente</p>
             <p class="resumen-valor">{{ store.cliente.nombre1 }} {{ store.cliente.apellido1 }}</p>
@@ -262,81 +270,89 @@
             </p>
           </div>
 
-          <div class="resumen-total">
-            <span>TOTAL A COBRAR</span>
-            <strong>{{ store.costoTotal.toFixed(2) }} Bs.</strong>
-          </div>
+          <div class="resumen-seccion">
+      <p class="resumen-titulo">Detalle del cobro</p>
+      <template v-if="store.esCitaHoy">
+        <p class="resumen-valor">Pago total — cita del día</p>
+        <p class="resumen-meta">El cliente paga el 100% al momento.</p>
+      </template>
+      <template v-else>
+        <p class="resumen-valor">Anticipo del 50%</p>
+        <p class="resumen-meta">
+          El cliente paga {{ store.montoACobrar.toFixed(2) }} Bs. ahora.
+          El 50% restante se cobra al finalizar el servicio.
+        </p>
+      </template>
+      
+    </div>
+     <div class="resumen-total">
+      <span>{{ store.esCitaHoy ? 'TOTAL A COBRAR' : 'ANTICIPO A COBRAR (50%)' }}</span>
+      <strong>{{ store.montoACobrar.toFixed(2) }} Bs.</strong>
+    </div>
+
         </div>
 
-        <!-- Selector de método (solo si aún no se generó el QR) -->
-        <div v-if="!store.reservaPendiente" class="campo-grupo" style="margin-top:1.25rem">
-          <label class="campo-label">Método de pago *</label>
-          <div class="metodos-pago">
-            <button
-              v-for="mp in metodosPago"
-              :key="mp.value"
-              @click="store.metodoPago = mp.value"
-              :class="['metodo-btn', store.metodoPago === mp.value ? 'activo' : '']"
-            >
-              <span class="metodo-icon">{{ mp.icon }}</span>
-              <span>{{ mp.label }}</span>
-            </button>
-          </div>
-        </div>
+      <!-- Selector de método -->
+  <div v-if="!store.reservaPendiente" class="campo-grupo" style="margin-top:1.25rem">
+    <label class="campo-label">Método de pago *</label>
+    <div class="metodos-pago">
+      <button
+        v-for="mp in metodosPago"
+        :key="mp.value"
+        @click="store.metodoPago = mp.value"
+        :class="['metodo-btn', store.metodoPago === mp.value ? 'activo' : '']"
+      >
+        <span class="metodo-icon">{{ mp.icon }}</span>
+        <span>{{ mp.label }}</span>
+      </button>
+    </div>
+  </div>
 
-        <!-- Vista QR pendiente de confirmación -->
-        <div v-else class="qr-bloque">
-          <p class="qr-titulo">Cobra escaneando este código</p>
-          <div class="qr-caja">
-            <!-- Placeholder visual: aquí se integraría una librería real de QR -->
-            <div class="qr-placeholder">
-              <span class="qr-placeholder-icon">▦</span>
-            </div>
-            <p class="qr-referencia">{{ store.reservaPendiente.qr.referencia }}</p>
-            <p class="qr-monto">{{ Number(store.reservaPendiente.qr.monto).toFixed(2) }} {{ store.reservaPendiente.qr.moneda }}</p>
-          </div>
-          <p class="qr-aviso">El cliente debe escanear y pagar antes de confirmar.</p>
-        </div>
 
-        <div class="paso-footer">
-          <button @click="volverDesdePago" class="btn-secundario" :disabled="store.cargando">
-            ← Atrás
-          </button>
+       <!-- QR pendiente -->
+  <div v-else class="qr-bloque">
+    <!-- sin cambios -->
+  </div>
 
-          <!-- Efectivo: un solo botón que confirma directo -->
-          <button
-            v-if="!store.reservaPendiente && store.metodoPago === 'Efectivo'"
-            @click="store.crearCita"
-            :disabled="store.cargando"
-            class="btn-confirmar"
-          >
-            <span v-if="store.cargando">Registrando…</span>
-            <span v-else>✓ Confirmar Cita · {{ store.costoTotal.toFixed(2) }} Bs.</span>
-          </button>
+  <div class="paso-footer">
+    <button @click="volverDesdePago" class="btn-secundario" :disabled="store.cargando">← Atrás</button>
 
-          <!-- QR: primero generar el QR -->
-          <button
-            v-else-if="!store.reservaPendiente && store.metodoPago === 'QR'"
-            @click="store.crearCita"
-            :disabled="store.cargando"
-            class="btn-confirmar"
-          >
-            <span v-if="store.cargando">Generando QR…</span>
-            <span v-else>Generar QR de cobro</span>
-          </button>
+    <button
+      v-if="!store.reservaPendiente && store.metodoPago === 'Efectivo'"
+      @click="store.crearCita"
+      :disabled="store.cargando"
+      class="btn-confirmar"
+    >
+      <span v-if="store.cargando">Registrando…</span>
+      <span v-else>
+        ✓ {{ store.esCitaHoy ? 'Confirmar Cita' : 'Registrar y cobrar anticipo' }}
+        · {{ store.montoACobrar.toFixed(2) }} Bs.
+      </span>
+    </button>
 
-          <!-- QR generado: confirmar que ya pagó -->
-          <button
-            v-else-if="store.reservaPendiente"
-            @click="store.confirmarPagoQR"
-            :disabled="store.cargando"
-            class="btn-confirmar"
-          >
-            <span v-if="store.cargando">Confirmando…</span>
-            <span v-else>✓ Ya pagó — Confirmar</span>
-          </button>
-        </div>
-      </div>
+    <button
+      v-else-if="!store.reservaPendiente && store.metodoPago === 'QR'"
+      @click="store.crearCita"
+      :disabled="store.cargando"
+      class="btn-confirmar"
+    >
+      <span v-if="store.cargando">Generando QR…</span>
+      <span v-else>
+        Generar QR · {{ store.montoACobrar.toFixed(2) }} Bs.
+      </span>
+    </button>
+
+    <button
+      v-else-if="store.reservaPendiente"
+      @click="store.confirmarPagoQR"
+      :disabled="store.cargando"
+      class="btn-confirmar"
+    >
+      <span v-if="store.cargando">Confirmando…</span>
+      <span v-else>✓ Ya pagó — Confirmar</span>
+    </button>
+  </div>
+</div>
 
       <!-- PASO 4 — Éxito -->
       <div v-else-if="store.paso === 4" class="paso-contenido paso-exito">
@@ -499,6 +515,11 @@ async function cargarSlotsYautoseleccionar() {
     store.horaInicioSeleccionada = slotsDisponibles.value[0].hora_inicio
   }
 }
+function soloNumerosYGuion(e) {
+  const permitidas = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', 'Home', 'End']
+  if (permitidas.includes(e.key)) return
+  if (!/^[0-9\-]$/.test(e.key)) e.preventDefault()
+}
 
 function onToggleServicio(s) {
   store.toggleServicio(s)
@@ -560,8 +581,6 @@ watch(
 /* ── Layout base (igual que antes) ── */
 .cita-wrapper { max-width: 760px; margin: 0 auto; padding: 0 0 2rem; color: var(--color-text-primary); }
 .cita-header { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--color-border); }
-.btn-volver { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-secondary); padding: 0.45rem 0.9rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
-.btn-volver:hover { border-color: var(--color-gold); color: var(--color-gold); }
 .cita-titulo { font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; margin: 0 0 0.15rem; }
 .cita-sub { font-size: 0.82rem; color: var(--color-text-secondary); margin: 0; }
 
@@ -606,8 +625,93 @@ watch(
 .campo-fecha { max-width: 220px; }
 .ci-row { display: flex; gap: 0.5rem; }
 .ci-row .campo-input { flex: 1; }
-.btn-buscar { padding: 0.6rem 1.1rem; background: var(--color-gold); color: #1a1a2e; border: none; border-radius: 7px; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: opacity 0.2s; }
-.btn-buscar:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Reemplaza estos tres bloques en el <style scoped> de Crearcitapresencial.vue */
+
+.btn-buscar {
+  padding: 0.6rem 1.1rem;
+  background: #1a1a2e;
+  color: #ffffff;
+  border: 2px solid #1a1a2e;
+  border-radius: 7px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.btn-buscar:hover:not(:disabled) {
+  background: #c9a84c;
+  border-color: #c9a84c;
+  color: #1a1a2e;
+}
+.btn-buscar:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-primario {
+  padding: 0.7rem 1.75rem;
+  background: #1a1a2e;
+  color: #ffffff;
+  border: 2px solid #1a1a2e;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primario:hover:not(:disabled) {
+  background: #c9a84c;
+  border-color: #c9a84c;
+  color: #1a1a2e;
+}
+.btn-primario:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-secundario {
+  padding: 0.7rem 1.25rem;
+  background: transparent;
+  color: #1a1a2e;
+  border: 2px solid #1a1a2e;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-secundario:hover:not(:disabled) {
+  background: #1a1a2e;
+  color: #ffffff;
+}
+.btn-secundario:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-confirmar {
+  padding: 0.75rem 2rem;
+  background: #16a34a;
+  color: #ffffff;
+  border: 2px solid #16a34a;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-confirmar:hover:not(:disabled) { opacity: 0.88; }
+.btn-confirmar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-volver {
+  background: transparent;
+  border: 2px solid #1a1a2e;
+  color: #1a1a2e;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.btn-volver:hover {
+  background: #1a1a2e;
+  color: #ffffff;
+}
 
 /* ── Filtros y servicios ── */
 .filtros-wrap { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.25rem; }
@@ -666,14 +770,6 @@ watch(
 
 /* ── Pie de paso ── */
 .paso-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--color-border); }
-.btn-primario { padding: 0.7rem 1.75rem; background: var(--color-gold); color: #1a1a2e; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
-.btn-primario:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn-primario:hover:not(:disabled) { opacity: 0.88; }
-.btn-secundario { padding: 0.7rem 1.25rem; background: transparent; color: var(--color-text-secondary); border: 1px solid var(--color-border); border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.btn-secundario:hover:not(:disabled) { border-color: var(--color-text-secondary); color: var(--color-text-primary); }
-.btn-confirmar { padding: 0.75rem 2rem; background: #16a34a; color: #fff; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
-.btn-confirmar:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-confirmar:hover:not(:disabled) { opacity: 0.88; }
 
 /* ── Éxito ── */
 .paso-exito { text-align: center; }

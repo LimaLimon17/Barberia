@@ -6,7 +6,7 @@ use App\Http\Controllers\Barbero\PerfilController;
 use App\Http\Controllers\Admin\BarberoController;
 use App\Http\Controllers\Admin\HorarioController;
 use App\Http\Controllers\Admin\HorarioSemanalController;
-use App\Http\Controllers\Admin\AlmuerzoController;
+
 
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\Admin\AdminController;
@@ -149,7 +149,7 @@ Route::get('/reportes', [ReporteBarberoController::class, 'index']);
     Route::get('/barberos/{id}/horarios',  [HorarioController::class, 'index']);
     Route::post('/horarios',               [HorarioController::class, 'store']);
 
-    // Horarios semanales (FIFO + rotación almuerzo)
+    // Horarios semanales (FIFO)
     Route::get('/horarios-semana',              [HorarioSemanalController::class, 'index']);
     Route::post('/horarios-semana',             [HorarioSemanalController::class, 'store']);
     Route::put('/horarios-semana/{idBarbero}/descanso',[HorarioSemanalController::class, 'update']);

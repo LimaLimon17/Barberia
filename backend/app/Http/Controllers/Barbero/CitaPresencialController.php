@@ -190,21 +190,22 @@ public function crear(Request $request)
             ]
         );
 
-        $reserva = Reserva::create([
-            'IdCliente'     => $cliente->CI,
-            'IdBarbero'     => $barbero->IdBarbero,
-            'FechaCita'     => $request->fecha,
-            'HoraInicio'    => $request->hora_inicio . ':00',
-            'HoraFin'       => $hora_fin,
-            'CostoTotal'    => $costo,
-            'MontoAnticipo' => $costo, // 100% pagado (presencial)
-            'EstadoReserva' => $esQR ? ReservaService::PENDIENTE : 'Confirmada',
-            // FechaPagoAnticipo / MetodoPagoAnticipo: ya NO se llenan aquí,
-            // ese detalle vive ahora en la tabla Pagos.
-            'EstadoA'       => 1,
-            'FechaA'        => now(),
-            'UsuarioA'      => $idUsuarioAutenticado,
-        ]);
+        $esHoy = $request->fecha === now()->format('Y-m-d');
+$montoAnticipo = $esHoy ? $costo : round($costo * 0.5, 2);
+
+$reserva = Reserva::create([
+    'IdCliente'     => $cliente->CI,
+    'IdBarbero'     => $barbero->IdBarbero,
+    'FechaCita'     => $request->fecha,
+    'HoraInicio'    => $request->hora_inicio . ':00',
+    'HoraFin'       => $hora_fin,
+    'CostoTotal'    => $costo,
+    'MontoAnticipo' => $montoAnticipo,
+    'EstadoReserva' => $esQR ? ReservaService::PENDIENTE : 'Confirmada',
+    'EstadoA'       => 1,
+    'FechaA'        => now(),
+    'UsuarioA'      => $idUsuarioAutenticado,
+]);
 
         foreach ($request->servicios as $idServicio) {
             ReservaServicio::create([
@@ -216,7 +217,11 @@ public function crear(Request $request)
             ]);
         }
 
-        // ── Efectivo/Tarjeta: ya se pagó, registrar el pago ──
+        // ── Efectivo ya se pagó, registrar el pago ──
+        if (!$esQR) {
+    $tipoPago = $esHoy ? 'Total' : 'Anticipo';
+    $this->registrarPago($reserva, $request->metodo_pago, $montoAnticipo, $idUsuarioAutenticado, $tipoPago);
+}
         if (!$esQR) {
             $this->registrarPago($reserva, $request->metodo_pago, $costo, $idUsuarioAutenticado);
         }
@@ -284,7 +289,9 @@ public function confirmarPago(Request $request, int $idReserva)
 
             $reservaLock->update(['EstadoReserva' => 'Confirmada']);
 
-            $this->registrarPago($reservaLock, 'QR', (float) $reservaLock->CostoTotal, $idUsuarioAutenticado);
+            $esHoy = $reservaLock->FechaCita->format('Y-m-d') === now()->format('Y-m-d');
+$tipoPago = $esHoy ? 'Total' : 'Anticipo';
+$this->registrarPago($reservaLock, 'QR', (float) $reservaLock->MontoAnticipo, $idUsuarioAutenticado, $tipoPago);
 
             return $reservaLock->fresh();
         });
@@ -303,12 +310,12 @@ public function confirmarPago(Request $request, int $idReserva)
 }
 
 // ── Helper: registra el pago completo (100%) en la tabla Pagos ──
-private function registrarPago(Reserva $reserva, string $metodoPago, float $monto, int $idUsuario): Pago
+private function registrarPago(Reserva $reserva, string $metodoPago, float $monto, int $idUsuario, string $tipoPago = 'Total'): Pago
 {
     return Pago::create([
         'IdReserva'  => $reserva->IdReserva,
         'IdVenta'    => null,
-        'TipoPago'   => 'Total', // pago presencial: 100%, no es anticipo
+        'TipoPago'   => $tipoPago,
         'Monto'      => $monto,
         'FechaPago'  => now(),
         'MetodoPago' => $metodoPago,

@@ -170,30 +170,32 @@ class AgendaController extends Controller
 
     // ── Helper: estructura de respuesta común para una cita ──
     private function mapearCita(Reserva $reserva): array
-    {
-        return [
-            'id_reserva' => $reserva->IdReserva,
-            'fecha' => $reserva->FechaCita instanceof Carbon
-                ? $reserva->FechaCita->format('Y-m-d')
-                : $reserva->FechaCita,
-            'hora_inicio' => $reserva->HoraInicio,
-            'hora_fin' => $reserva->HoraFin,
-            'estado' => $reserva->EstadoReserva,
-            'costo_total' => (float) $reserva->CostoTotal,
-            'monto_anticipo' => (float) $reserva->MontoAnticipo,
-            'cliente' => [
-                'ci' => $reserva->cliente->CI ?? null,
-                'nombre' => trim(($reserva->cliente->Nombre1 ?? '') . ' ' . ($reserva->cliente->Apellido1 ?? '')),
-                'telefono' => $reserva->cliente->Telefono ?? null,
-                'correo' => $reserva->cliente->Correo ?? null,
-            ],
-            'servicios' => $reserva->servicios->map(fn ($s) => [
-                'nombre' => $s->Nombre,
-                'duracion' => $s->DuracionMinutos,
-                'precio' => (float) $s->Precio,
-            ]),
-        ];
-    }
+{
+    return [
+        'id_reserva'   => $reserva->IdReserva,
+        'fecha'        => $reserva->FechaCita instanceof Carbon
+            ? $reserva->FechaCita->format('Y-m-d')
+            : $reserva->FechaCita,
+        'hora_inicio'  => $reserva->HoraInicio,
+        'hora_fin'     => $reserva->HoraFin,
+        'estado'       => $reserva->EstadoReserva,
+        'costo_total'  => (float) $reserva->CostoTotal,
+        'monto_anticipo' => (float) $reserva->MontoAnticipo,
+        // true si se cobró el 100%: cita presencial del mismo día
+        'pago_completo' => (float) $reserva->MontoAnticipo >= (float) $reserva->CostoTotal,
+        'cliente'      => [
+            'ci'      => $reserva->cliente->CI ?? null,
+            'nombre'  => trim(($reserva->cliente->Nombre1 ?? '') . ' ' . ($reserva->cliente->Apellido1 ?? '')),
+            'telefono' => $reserva->cliente->Telefono ?? null,
+            'correo'  => $reserva->cliente->Correo ?? null,
+        ],
+        'servicios'    => $reserva->servicios->map(fn ($s) => [
+            'nombre'   => $s->Nombre,
+            'duracion' => $s->DuracionMinutos,
+            'precio'   => (float) $s->Precio,
+        ]),
+    ];
+}
 
     private function barberoAutenticado(Request $request): Barbero
     {

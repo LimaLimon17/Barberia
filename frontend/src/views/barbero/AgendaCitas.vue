@@ -68,22 +68,27 @@
         <div class="cita-card-footer">
           <span class="cita-card-monto">{{ c.costo_total.toFixed(0) }} Bs. total</span>
 
-          <div v-if="c.estado === 'Confirmada'" class="cita-card-acciones">
-            <button
-              class="btn-accion ausente"
-              :disabled="!puedeMarcarAusente(c) || store.idCambiandoEstado === c.id_reserva"
-              :title="!puedeMarcarAusente(c) ? `Disponible desde las ${horaLimiteAusente(c)}` : ''"
-              @click="confirmarYCambiar(c, 'Ausente')">
-              Marcar Ausente
-            </button>
-            <button
-              class="btn-accion completada"
-              :disabled="store.idCambiandoEstado === c.id_reserva"
-              @click="confirmarYCambiar(c, 'Completada')">
-              Marcar Completada
-            </button>
-      
-          </div>
+         <div v-if="c.estado === 'Confirmada'" class="cita-card-acciones">
+  <button
+    class="btn-accion ausente"
+    :disabled="c.pago_completo || !puedeMarcarAusente(c) || store.idCambiandoEstado === c.id_reserva"
+    :title="c.pago_completo
+      ? 'Esta cita fue pagada al 100% — no aplica retención por ausencia'
+      : !puedeMarcarAusente(c)
+        ? `Disponible desde las ${horaLimiteAusente(c)}`
+        : ''"
+    @click="confirmarYCambiar(c, 'Ausente')"
+  >
+    Marcar Ausente
+  </button>
+  <button
+    class="btn-accion completada"
+    :disabled="store.idCambiandoEstado === c.id_reserva"
+    @click="confirmarYCambiar(c, 'Completada')"
+  >
+    Marcar Completada
+  </button>
+</div>
                 <div v-else-if="c.estado === 'Completada'" class="cita-card-acciones">
   <button class="btn-accion vender" @click="abrirVenta(c)">
     🛒 Vender productos

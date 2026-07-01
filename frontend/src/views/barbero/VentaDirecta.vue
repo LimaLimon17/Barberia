@@ -8,7 +8,8 @@
     <div v-if="!notaLista" class="vd-formulario">
       <p class="subseccion-label">Datos del cliente</p>
       <div class="ci-row">
-        <input v-model="ci" placeholder="CI" maxlength="10" class="campo-input" @blur="buscarPorCI" />
+        <input v-model="ci" placeholder="CI" maxlength="11" class="campo-input"
+  @blur="buscarPorCI" @keydown="soloNumerosYGuion" inputmode="numeric" />
         <span v-if="buscando" class="aviso-gris">Buscando…</span>
       </div>
       <div class="form-grid">
@@ -114,6 +115,11 @@ async function cargarProductos() {
   } finally {
     cargandoProductos.value = false
   }
+}
+function soloNumerosYGuion(e) {
+  const permitidas = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', 'Home', 'End']
+  if (permitidas.includes(e.key)) return
+  if (!/^[0-9\-]$/.test(e.key)) e.preventDefault()
 }
 
 async function buscarPorCI() {

@@ -141,7 +141,11 @@ onMounted(async () => {
 .verhorario__descanso-mini { color: var(--color-text-muted); }
 
 /* ── resto del style igual al que ya tenías (sin .verhorario__horas-badge, ya no aplica) ── */
-.verhorario { max-width: 900px; }
+.verhorario { width: 100%;
+  max-width: 1200px; /* Alineado con el resto de tus vistas */
+  margin: 0;         /* Elimina el centrado automático */
+  padding: 0 2rem;   /* Espaciado lateral consistente */
+}
 .verhorario__header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; }
 .verhorario__title { font-family: var(--font-heading); font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
 .verhorario__subtitle { font-size: 0.875rem; color: var(--color-text-muted); }

@@ -10,6 +10,7 @@ use App\Models\HorarioBarbero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\HorarioSemanalService;
+use App\Models\Reserva;
 //Para hashear la contraseña
 use Illuminate\Support\Facades\Hash;
 
@@ -250,6 +251,16 @@ class BarberoController extends Controller
                 'mensaje' => 'Barbero no encontrado',
             ], 404);
         }
+        $citasActivas = Reserva::where('IdBarbero', $barbero->IdBarbero)
+        ->where('FechaCita', '>=', now()->format('Y-m-d'))
+        ->whereIn('EstadoReserva', ['Pendiente', 'Confirmada'])
+        ->count();
+
+    if ($citasActivas > 0) {
+        return response()->json([
+            'mensaje' => "No se puede desactivar al barbero porque tiene {$citasActivas} cita(s) pendiente(s) o confirmada(s) programada(s). Reasigna o cancela esas citas primero.",
+        ], 422);
+    }
 
         try {
             DB::statement('CALL sp_DesactivarBarbero(?, ?, ?)', [

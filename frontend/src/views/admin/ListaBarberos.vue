@@ -172,6 +172,7 @@ async function desactivar() {
     await cargarBarberos()
     setTimeout(() => { mensajeExito.value = '' }, 4000)
   } catch (err) {
+    // El backend manda 422 con el mensaje específico de citas activas
     error.value = err.response?.data?.mensaje || 'Error al desactivar el barbero'
     barberoADesactivar.value = null
   } finally {

@@ -81,20 +81,40 @@ class ServicioController extends Controller
     }
 
     public function desactivarCategoria(Request $request, int $id): JsonResponse
-    {
-        $categoria = Categoria::findOrFail($id);
-        $anterior = $categoria->toArray();
-        $idUsuario = $request->user()->IdUsuario;
+{
+    $categoria = Categoria::findOrFail($id);
+    $anterior = $categoria->toArray();
+    $idUsuario = $request->user()->IdUsuario;
 
-        $categoria->EstadoA = 0;
-        $categoria->FechaA = Carbon::now();
-        $categoria->UsuarioA = $idUsuario;
-        $categoria->save();
+    $serviciosActivos = Servicio::where('IdCategoria', $id)
+        ->where('EstadoA', 1)
+        ->count();
 
-        $this->auditoriaService->registrar('Categorias', $categoria->IdCategoria, 'DESACTIVAR', 'EstadoA', $anterior, $categoria->toArray(), $idUsuario, 'Categoría desactivada.');
-
-        return response()->json(['ok' => true, 'data' => $categoria]);
+    if ($serviciosActivos > 0) {
+        return response()->json([
+            'ok' => false,
+            'message' => "No se puede desactivar la categoría porque tiene {$serviciosActivos} servicio(s) activo(s). Desactívalos primero.",
+        ], 422);
     }
+
+    $categoria->EstadoA = 0;
+    $categoria->FechaA = Carbon::now();
+    $categoria->UsuarioA = $idUsuario;
+    $categoria->save();
+
+    $this->auditoriaService->registrar(
+        'Categorias',
+        $categoria->IdCategoria,
+        'DESACTIVAR',
+        'EstadoA',
+        $anterior,
+        $categoria->toArray(),
+        $idUsuario,
+        'Categoría desactivada.'
+    );
+
+    return response()->json(['ok' => true, 'data' => $categoria]);
+}
 
     public function index(Request $request): JsonResponse
     {
@@ -166,18 +186,42 @@ class ServicioController extends Controller
     }
 
     public function desactivar(Request $request, int $id): JsonResponse
-    {
-        $servicio = Servicio::findOrFail($id);
-        $anterior = $servicio->toArray();
-        $idUsuario = $request->user()->IdUsuario;
+{
+    $servicio = Servicio::findOrFail($id);
+    $anterior = $servicio->toArray();
+    $idUsuario = $request->user()->IdUsuario;
 
-        $servicio->EstadoA = 0;
-        $servicio->FechaA = Carbon::now();
-        $servicio->UsuarioA = $idUsuario;
-        $servicio->save();
+    // Verificar si hay reservas futuras activas que usen este servicio
+    $reservasActivas = \App\Models\Reserva::whereHas('servicios', function ($q) use ($id) {
+            $q->where('Servicios.IdServicio', $id);
+        })
+        ->where('FechaCita', '>=', now()->format('Y-m-d'))
+        ->whereIn('EstadoReserva', ['Pendiente', 'Confirmada'])
+        ->count();
 
-        $this->auditoriaService->registrar('Servicios', $servicio->IdServicio, 'DESACTIVAR', 'EstadoA', $anterior, $servicio->toArray(), $idUsuario, 'Servicio desactivado.');
-
-        return response()->json(['ok' => true, 'data' => $servicio]);
+    if ($reservasActivas > 0) {
+        return response()->json([
+            'ok' => false,
+            'message' => "No se puede desactivar el servicio porque está incluido en {$reservasActivas} reserva(s) futura(s) activa(s). Espera a que concluyan o cancélalas primero.",
+        ], 422);
     }
+
+    $servicio->EstadoA = 0;
+    $servicio->FechaA = Carbon::now();
+    $servicio->UsuarioA = $idUsuario;
+    $servicio->save();
+
+    $this->auditoriaService->registrar(
+        'Servicios',
+        $servicio->IdServicio,
+        'DESACTIVAR',
+        'EstadoA',
+        $anterior,
+        $servicio->toArray(),
+        $idUsuario,
+        'Servicio desactivado.'
+    );
+
+    return response()->json(['ok' => true, 'data' => $servicio]);
+}
 }

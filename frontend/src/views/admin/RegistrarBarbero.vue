@@ -1,7 +1,6 @@
 <template>
   <div class="registrar animate-fade-in">
 
-    <!-- Encabezado -->
     <div class="registrar__header">
       <div>
         <h1 class="registrar__title">Registrar <span class="gold-text">nuevo barbero</span></h1>
@@ -12,23 +11,21 @@
       </button>
     </div>
 
-    <!-- Alerta error -->
     <div v-if="errorGeneral" class="registrar__alerta registrar__alerta--error">
       ⚠️ {{ errorGeneral }}
     </div>
 
-    <!-- Alerta éxito -->
     <div v-if="exitoso" class="registrar__alerta registrar__alerta--exito">
       ✅ Barbero registrado correctamente. Redirigiendo...
     </div>
 
     <form @submit.prevent="registrar" class="registrar__form">
 
-      <!-- SECCIÓN: Datos personales -->
       <div class="glass-card registrar__seccion">
         <h2 class="registrar__seccion-titulo">👤 Datos personales</h2>
 
         <div class="registrar__grid">
+
           <div class="registrar__campo">
             <label class="label">Primer nombre *</label>
             <input
@@ -48,7 +45,9 @@
               type="text"
               placeholder="Ej: Andres"
               class="input-field"
+              :class="{ 'input-field--error': errores.nombre2 }"
             />
+            <span v-if="errores.nombre2" class="registrar__error">{{ errores.nombre2 }}</span>
           </div>
 
           <div class="registrar__campo">
@@ -70,7 +69,9 @@
               type="text"
               placeholder="Ej: Quispe"
               class="input-field"
+              :class="{ 'input-field--error': errores.apellido2 }"
             />
+            <span v-if="errores.apellido2" class="registrar__error">{{ errores.apellido2 }}</span>
           </div>
 
           <div class="registrar__campo">
@@ -123,7 +124,6 @@
         </div>
       </div>
 
-      <!-- SECCIÓN: Horario inicial -->
       <div class="glass-card registrar__seccion">
         <div class="registrar__seccion-header">
           <h2 class="registrar__seccion-titulo">🗓️ Horario inicial</h2>
@@ -146,7 +146,6 @@
               'registrar__dia--inactivo': !dia.activo
             }"
           >
-            <!-- Cabecera del día -->
             <div class="registrar__dia-header">
               <label class="registrar__dia-toggle">
                 <input type="checkbox" v-model="dia.activo" />
@@ -164,7 +163,6 @@
               </span>
             </div>
 
-            <!-- Horarios (solo si está activo) -->
             <div v-if="dia.activo" class="registrar__dia-body">
               <div class="registrar__dia-horas-inputs">
                 <div class="registrar__campo-pequeño">
@@ -194,7 +192,6 @@
               </label>
             </div>
 
-            <!-- Mensaje si está inactivo -->
             <div v-else class="registrar__dia-inactivo-msg">
               No trabaja este día
             </div>
@@ -202,7 +199,6 @@
         </div>
       </div>
 
-      <!-- Botones finales -->
       <div class="registrar__footer">
         <button
           type="button"
@@ -277,8 +273,29 @@ function horasValidas(dia) {
 
 function validar() {
   const e = {}
-  if (!form.value.nombre1.trim())        e.nombre1       = 'El primer nombre es obligatorio'
-  if (!form.value.apellido1.trim())      e.apellido1     = 'El primer apellido es obligatorio'
+  const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/
+
+  // Validación de Nombres y Apellidos (Rechaza números)
+  if (!form.value.nombre1.trim()) {
+    e.nombre1 = 'El primer nombre es obligatorio'
+  } else if (!soloLetras.test(form.value.nombre1.trim())) {
+    e.nombre1 = 'El nombre solo debe contener letras'
+  }
+
+  if (form.value.nombre2.trim() && !soloLetras.test(form.value.nombre2.trim())) {
+    e.nombre2 = 'El segundo nombre solo debe contener letras'
+  }
+
+  if (!form.value.apellido1.trim()) {
+    e.apellido1 = 'El primer apellido es obligatorio'
+  } else if (!soloLetras.test(form.value.apellido1.trim())) {
+    e.apellido1 = 'El apellido solo debe contener letras'
+  }
+
+  if (form.value.apellido2.trim() && !soloLetras.test(form.value.apellido2.trim())) {
+    e.apellido2 = 'El segundo apellido solo debe contener letras'
+  }
+
   if (!form.value.correo.trim())         e.correo        = 'El correo es obligatorio'
   if (!form.value.contrasena.trim())     e.contrasena    = 'La contraseña es obligatoria'
   if (form.value.contrasena.length < 8) e.contrasena    = 'Mínimo 8 caracteres'
@@ -290,6 +307,12 @@ function validar() {
   } else {
     for (const d of diasActivos) {
       if (d.dia_descanso) continue
+
+      // Validar coherencia de tiempo (Salida antes de entrada)
+      if (d.hora_entrada >= d.hora_salida) {
+        e.dias = `El día ${d.nombre}: la salida debe ser posterior a la entrada`
+        break
+      }
 
       // Validar rango operativo 10:00 – 22:00
       if (d.hora_entrada < '10:00') {

@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use App\Services\HorarioSemanalService;
 
 class RegistrarBarberoRequest extends FormRequest
 {
@@ -48,5 +50,22 @@ class RegistrarBarberoRequest extends FormRequest
             'dias.min'              => 'Debe configurar al menos un día de horario',
             'dias.*.hora_salida.after' => 'La hora de salida debe ser posterior a la de entrada',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            foreach ($this->input('dias', []) as $index => $dia) {
+                $esDescanso = filter_var($dia['dia_descanso'] ?? false, FILTER_VALIDATE_BOOLEAN);
+                $nombreDia  = $dia['dia'] ?? null;
+
+                if ($esDescanso && !in_array($nombreDia, HorarioSemanalService::DIAS_DESCANSO_POSIBLES, true)) {
+                    $validator->errors()->add(
+                        "dias.$index.dia_descanso",
+                        "El día {$nombreDia} no puede marcarse como descanso. Solo se permite de Lunes a Jueves."
+                    );
+                }
+            }
+        });
     }
 }

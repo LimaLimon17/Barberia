@@ -186,10 +186,13 @@
                 </div>
               </div>
 
-              <label class="registrar__descanso-toggle">
-                <input type="checkbox" v-model="dia.dia_descanso" />
-                <span>Marcar como día de descanso</span>
-              </label>
+            <label
+              v-if="DIAS_DESCANSO_PERMITIDOS.includes(dia.key)"
+              class="registrar__descanso-toggle"
+            >
+              <input type="checkbox" v-model="dia.dia_descanso" />
+              <span>Marcar como día de descanso</span>
+            </label>
             </div>
 
             <div v-else class="registrar__dia-inactivo-msg">
@@ -232,6 +235,7 @@ const exitoso      = ref(false)
 const errores      = ref({})
 const hoy = new Date().toISOString().split('T')[0]
 const verContrasena = ref(false)
+const DIAS_DESCANSO_PERMITIDOS = ['Lunes', 'Martes', 'Miércoles', 'Jueves']
 
 const form = ref({
   nombre1:       '',
@@ -250,7 +254,7 @@ const diasSemana = ref([
   { key: 'Jueves',    nombre: 'Jueves',    activo: true,  hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: false },
   { key: 'Viernes',   nombre: 'Viernes',   activo: true,  hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: false },
   { key: 'Sábado',    nombre: 'Sábado',    activo: true,  hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: false },
-  { key: 'Domingo',   nombre: 'Domingo',   activo: false, hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: true  },
+  { key: 'Domingo', nombre: 'Domingo', activo: true, hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: false },
 ])
 
 function calcularHoras(dia) {
@@ -304,8 +308,14 @@ function validar() {
   if (diasActivos.length === 0) {
     e.dias = 'Debe activar al menos un día de trabajo'
   } else {
-    for (const d of diasActivos) {
-      if (d.dia_descanso) continue
+      for (const d of diasActivos) {
+        // Solo Lunes-Jueves puede ser día de descanso
+        if (d.dia_descanso && !DIAS_DESCANSO_PERMITIDOS.includes(d.key)) {
+          e.dias = `El día ${d.nombre} no puede marcarse como descanso. Solo se permite de Lunes a Jueves`
+          break
+        }
+
+        if (d.dia_descanso) continue
 
       // Validar coherencia de tiempo (Salida antes de entrada)
       if (d.hora_entrada >= d.hora_salida) {

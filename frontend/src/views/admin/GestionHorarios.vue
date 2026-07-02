@@ -68,7 +68,7 @@
         <table class="horarios__tabla">
           <thead>
             <tr>
-              <th>Orden FIFO</th>
+              <th>Orden</th>
               <th>Barbero</th>
               <th>Antigüedad</th>
               <th>Día de descanso</th>

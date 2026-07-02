@@ -50,7 +50,7 @@
                 <div class="lista__avatar">
                   {{ barbero.nombre_completo.charAt(0) }}
                 </div>
-                <span>{{ barbero.nombre_completo }}</span>
+                <span class="lista__barbero-name">{{ barbero.nombre_completo }}</span>
               </div>
             </td>
             <td>{{ barbero.correo }}</td>
@@ -271,22 +271,27 @@ async function desactivar() {
 .lista__barbero-info {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .lista__avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-gold-400), var(--color-gold-500));
-  color: var(--color-bg-primary);
+  width: 30px;         /* Tamaño compacto idéntico a Horarios */
+  height: 30px;        /* Mantener proporción perfecta */
+  border-radius: 50%;  /* Círculo perfecto */
+  background: linear-gradient(135deg, var(--color-bronce), var(--color-oro-suave)); /* Gradiente premium */
+  color: var(--color-azul-oscuro); /* Contraste elegante y legible */
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center;     /* Centrado vertical */
+  justify-content: center; /* Centrado horizontal */
   font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 0.8125rem;
-  flex-shrink: 0;
+  font-weight: 700;        /* Inicial marcada */
+  font-size: 0.75rem;      /* Escala proporcional al tamaño del círculo */
+  flex-shrink: 0;          /* Evita deformaciones */
+}
+
+.lista__barbero-name {
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
 }
 
 .lista__antiguedad {

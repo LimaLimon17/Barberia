@@ -243,11 +243,11 @@ async function desactivar() {
 }
 
 .lista__table th {
-  text-align: left;
+  text-align: center;
   padding: 0.875rem 1.25rem;
   font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
+  font-weight: 700; 
+  color: #000000; /* <-- Cambiado aquí para que sea negro */
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--color-border);

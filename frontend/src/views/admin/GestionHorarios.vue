@@ -263,12 +263,19 @@ onMounted(cargar)
 }
 .horarios__header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
 .horarios__title { font-family: var(--font-heading); font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
-.horarios__subtitle { font-size: 0.875rem; color: var(--color-text-muted); }
+.horarios__subtitle { 
+  font-size: 0.875rem; 
+  color: var(--color-azul-oscuro); /* Cambiado a azul oscuro */
+}
 .horarios__nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; margin-bottom: 1.25rem; }
 .horarios__nav-btn { padding: 0.5rem 1rem; font-size: 0.875rem; }
 .horarios__nav-info { display: flex; flex-direction: column; align-items: center; gap: 0.125rem; }
 .horarios__semana-label { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--color-text-primary); }
-.horarios__ano-label { font-size: 0.8125rem; color: var(--color-text-muted); }
+.horarios__ano-label { 
+  font-size: 0.8125rem; 
+  color: var(--color-azul-oscuro); /* Cambiado a azul oscuro */
+  font-weight: 500; /* Un poco más de peso para que resalte */
+}
 .horarios__loading { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 3rem; color: var(--color-text-muted); }
 .horarios__spinner { width: 32px; height: 32px; border: 3px solid var(--color-border); border-top-color: var(--color-azul-real); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -297,18 +304,60 @@ onMounted(cargar)
   background: var(--color-bg-secondary); 
   border-bottom: 1px solid var(--color-border); 
 }
+.horarios__tabla th:nth-child(2) {
+  text-align: left;
+}
 
-.horarios__tabla td { padding: 0.875rem 1.25rem; font-size: 0.875rem; border-bottom: 1px solid var(--color-border-light); }
+.horarios__tabla td { 
+  padding: 0.875rem 1.25rem; 
+  font-size: 0.875rem; 
+  border-bottom: 1px solid var(--color-border-light);
+  text-align: center; /* Alinea el texto ordinario al centro */
+}
+.horarios__tabla td:nth-child(2) {
+  text-align: left;
+}
+.horarios__barbero { 
+  display: flex; /* Cambiado a flex para ocupar el ancho disponible hacia la izquierda */
+  align-items: center; 
+  gap: 0.625rem; 
+}
+
 .horarios__fila { transition: background 0.15s; }
 .horarios__fila:hover { background: var(--color-bg-hover); }
 .horarios__fila:last-child td { border-bottom: none; }
-.horarios__orden { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--color-azul-oscuro); color: white; font-size: 0.75rem; font-weight: 700; }
-.horarios__barbero { display: flex; align-items: center; gap: 0.625rem; }
+.horarios__orden { 
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center; 
+  width: 26px; 
+  height: 26px; 
+  border-radius: 50%; 
+  background: var(--color-azul-oscuro); 
+  color: white; 
+  font-size: 0.75rem; 
+  font-weight: 700; 
+}
+.horarios__barbero { 
+  display: inline-flex; /* Cambiado a inline-flex para que respete el centrado del td */
+  align-items: center; 
+  gap: 0.625rem; 
+  text-align: left; /* Mantiene el bloque interno alineado de forma natural */
+}
 .horarios__avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--color-bronce), var(--color-oro-suave)); color: var(--color-azul-oscuro); display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-weight: 700; font-size: 0.75rem; flex-shrink: 0; }
 .horarios__antiguedad { color: var(--color-azul-real); font-weight: 600; font-size: 0.8125rem; }
 .horarios__descanso-badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.75rem; background: #EEF2FF; color: #3730a3; border: 1px solid #c7d2fe; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-.horarios__muted { font-size: 0.8125rem; color: var(--color-text-muted); font-style: italic; }
-.horarios__acciones { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.horarios__muted { 
+  font-size: 0.8125rem; 
+  color: var(--color-azul-oscuro); /* Cambiado a azul oscuro */
+  font-style: italic; 
+}
+.horarios__acciones { 
+  display: flex; 
+  gap: 0.4rem; 
+  flex-wrap: wrap;
+  justify-content: center; /* Centra los botones horizontalmente en su columna */
+}
 .horarios__btn { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.65rem; font-size: 0.75rem; font-weight: 500; border-radius: var(--radius-md); text-decoration: none; border: 1px solid transparent; transition: all 0.2s; white-space: nowrap; cursor: pointer; }
 .horarios__btn--ver { background:#EEF2FF; color:#3730a3; border-color:#c7d2fe; }
 .horarios__btn--ver:hover { background:#e0e7ff; }

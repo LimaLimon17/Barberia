@@ -75,15 +75,56 @@ class HorarioSemanalService
      * sin día de descanso (trabaja todos los días hasta la próxima rotación
      * FIFO regular, que ya lo incluirá ordenado por su antigüedad real).
      */
-    public function asignarBarberoNuevoSemanaActual(Barbero $barbero, int $idAdmin, ?string $ip): void
-    {
-        $anio = now()->isoWeekYear();
-        $semana = now()->isoWeek();
-        $inicioSemana = Carbon::now()->setISODate($anio, $semana, 1)->format('Y-m-d');
-        $finSemana = Carbon::now()->setISODate($anio, $semana, 7)->format('Y-m-d');
+public function asignarBarberoNuevoSemanaActual(Barbero $barbero, int $idAdmin, ?string $ip): void
+{
+    $anio = now()->isoWeekYear();
+    $semana = now()->isoWeek();
+    $inicioSemana = Carbon::now()->setISODate($anio, $semana, 1)->format('Y-m-d');
+    $finSemana = Carbon::now()->setISODate($anio, $semana, 7)->format('Y-m-d');
 
-        $this->crearAsignacionSemanal($barbero, null, $inicioSemana, $finSemana, $idAdmin);
-    }
+    $this->crearAsignacionSemanal($barbero, null, $inicioSemana, $finSemana, $idAdmin);
+}
+
+/**
+ * Asigna un barbero RECIÉN REGISTRADO usando el horario personalizado
+ * que el admin configuró en el formulario de registro (RegistrarBarbero.vue).
+ * Los días no marcados como activos quedan como no-laborables (equivalente a descanso).
+ */
+public function asignarBarberoNuevoConHorario(Barbero $barbero, array $dias, int $idAdmin, ?string $ip): void
+{
+    $anio = now()->isoWeekYear();
+    $semana = now()->isoWeek();
+    $inicioSemana = Carbon::now()->setISODate($anio, $semana, 1)->format('Y-m-d');
+    $finSemana = Carbon::now()->setISODate($anio, $semana, 7)->format('Y-m-d');
+
+    $diasPorNombre = collect($dias)->keyBy('dia');
+
+    DB::transaction(function () use ($barbero, $diasPorNombre, $inicioSemana, $finSemana, $idAdmin) {
+        foreach (self::DIAS_SEMANA_COMPLETA as $dia) {
+            $configDia = $diasPorNombre->get($dia);
+
+            // Día no enviado desde el form (checkbox "activo" desmarcado) => no trabaja ese día
+            $esDescanso = $configDia
+                ? filter_var($configDia['dia_descanso'], FILTER_VALIDATE_BOOLEAN)
+                : true;
+
+            $entrada = $esDescanso ? null : $configDia['hora_entrada'] . ':00';
+            $salida  = $esDescanso ? null : $configDia['hora_salida'] . ':00';
+
+            $horario = $this->obtenerOCrearHorario($dia, $entrada, $salida, $esDescanso, $idAdmin);
+
+            HorarioBarbero::create([
+                'IdBarbero'   => $barbero->IdBarbero,
+                'IdHorario'   => $horario->IdHorario,
+                'FechaInicio' => $inicioSemana,
+                'FechaFin'    => $finSemana,
+                'EstadoA'     => 1,
+                'FechaA'      => now(),
+                'UsuarioA'    => $idAdmin,
+            ]);
+        }
+    });
+}
 
     /**
      * Reasigna el día de descanso de UN barbero en una semana ya generada,

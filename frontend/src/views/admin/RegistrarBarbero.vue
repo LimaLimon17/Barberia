@@ -154,9 +154,9 @@
               <span
                 v-if="dia.activo && !dia.dia_descanso"
                 class="registrar__dia-horas"
-                :class="horasValidas(dia) ? 'registrar__dia-horas--ok' : 'registrar__dia-horas--mal'"
+                :class="(fueraDeHorario(dia) || !horasValidas(dia)) ? 'registrar__dia-horas--mal' : 'registrar__dia-horas--ok'"
               >
-                {{ calcularHoras(dia) }}
+                {{ fueraDeHorario(dia) ? '⚠️ Fuera de horario laboral' : calcularHoras(dia) }}
               </span>
               <span v-if="dia.activo && dia.dia_descanso" class="registrar__dia-badge">
                 Descanso
@@ -266,13 +266,20 @@ function calcularHoras(dia) {
   return `${total.toFixed(1)}h efectivas`
 }
 
-function horasValidas(dia) {
-  if (dia.dia_descanso) return true
-  const [h1, m1] = dia.hora_entrada.split(':').map(Number)
-  const [h2, m2] = dia.hora_salida.split(':').map(Number)
-  const total = ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60 - 1
-  return total >= 8
-}
+
+  function horasValidas(dia) {
+    if (dia.dia_descanso) return true
+    const [h1, m1] = dia.hora_entrada.split(':').map(Number)
+    const [h2, m2] = dia.hora_salida.split(':').map(Number)
+    const total = ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60 - 1
+    return total >= 8
+  }
+
+  function fueraDeHorario(dia) {
+    if (dia.dia_descanso) return false
+    if (!dia.hora_entrada || !dia.hora_salida) return false
+    return dia.hora_entrada < '10:00' || dia.hora_salida > '22:00'
+  }
 
 function validar() {
   const e = {}
@@ -324,12 +331,8 @@ function validar() {
       }
 
       // Validar rango operativo 10:00 – 22:00
-      if (d.hora_entrada < '10:00') {
-        e.dias = `El día ${d.nombre}: la entrada no puede ser antes de las 10:00`
-        break
-      }
-      if (d.hora_salida > '22:00') {
-        e.dias = `El día ${d.nombre}: la salida no puede ser después de las 22:00`
+      if (fueraDeHorario(d)) {
+        e.dias = `⚠️ El día ${d.nombre} está fuera de horario laboral (10:00 - 22:00)`
         break
       }
 

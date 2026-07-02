@@ -226,7 +226,12 @@ class BarberoController extends Controller
     }
 
     $barbero = Barbero::find($idBarberoNuevo);
-    $this->horarioSemanalService->asignarBarberoNuevoSemanaActual($barbero, $admin->IdUsuario, $ip);
+    $this->horarioSemanalService->asignarBarberoNuevoConHorario(
+        $barbero,
+        $request->input('dias'),
+        $admin->IdUsuario,
+        $ip
+    );
 
     return response()->json([
         'mensaje'    => 'Barbero registrado correctamente',

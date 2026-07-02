@@ -247,6 +247,7 @@ onMounted(cargar)
 </script>
 
 <style scoped>
+
 /* Estilos idénticos a tu versión previa, solo se agregan estos: */
 .horarios__select { padding: 0.3rem 0.5rem; border-radius: 6px; border: 1px solid var(--color-border); font-size: 0.8125rem; }
 .horarios__btn--guardar { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
@@ -284,7 +285,19 @@ onMounted(cargar)
 .horarios__tabla-titulo { font-family: var(--font-heading); font-size: 1rem; font-weight: 600; }
 .horarios__generada-badge { font-size: 0.875rem; font-weight: 600; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 0.375rem 0.875rem; border-radius: 9999px; }
 .horarios__tabla { width: 100%; border-collapse: collapse; }
-.horarios__tabla th { text-align: left; padding: 0.75rem 1.25rem; font-size: 0.75rem; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; background: var(--color-bg-secondary); border-bottom: 1px solid var(--color-border); }
+
+.horarios__tabla th { 
+  text-align: center;                  /* Centra el texto de los encabezados */
+  padding: 0.75rem 1.25rem; 
+  font-size: 0.75rem; 
+  font-weight: 700;                    /* Cambiado a 700 para mayor legibilidad */
+  color: #000000;                      /* Color cambiado a negro puro */
+  text-transform: uppercase; 
+  letter-spacing: 0.05em; 
+  background: var(--color-bg-secondary); 
+  border-bottom: 1px solid var(--color-border); 
+}
+
 .horarios__tabla td { padding: 0.875rem 1.25rem; font-size: 0.875rem; border-bottom: 1px solid var(--color-border-light); }
 .horarios__fila { transition: background 0.15s; }
 .horarios__fila:hover { background: var(--color-bg-hover); }

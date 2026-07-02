@@ -92,7 +92,7 @@
               <input
                 v-model="form.contrasena"
                 :type="verContrasena ? 'text' : 'password'"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Mínimo 6 caracteres"
                 class="input-field"
                 :class="{ 'input-field--error': errores.contrasena }"
               />
@@ -253,7 +253,6 @@ const diasSemana = ref([
   { key: 'Domingo',   nombre: 'Domingo',   activo: false, hora_entrada: '10:00', hora_salida: '19:00', dia_descanso: true  },
 ])
 
-
 function calcularHoras(dia) {
   if (!dia.hora_entrada || !dia.hora_salida) return ''
   const [h1, m1] = dia.hora_entrada.split(':').map(Number)
@@ -298,7 +297,7 @@ function validar() {
 
   if (!form.value.correo.trim())         e.correo        = 'El correo es obligatorio'
   if (!form.value.contrasena.trim())     e.contrasena    = 'La contraseña es obligatoria'
-  if (form.value.contrasena.length < 8) e.contrasena    = 'Mínimo 8 caracteres'
+  if (form.value.contrasena.length < 6)  e.contrasena    = 'Mínimo 6 caracteres'
   if (!form.value.fecha_ingreso)         e.fecha_ingreso = 'La fecha de ingreso es obligatoria'
 
   const diasActivos = diasSemana.value.filter(d => d.activo)
@@ -364,7 +363,10 @@ async function registrar() {
 
 <style scoped>
 .registrar {
-  max-width: 900px;
+  width: 100%;
+  max-width: 1200px; /* O el ancho máximo que prefieras */
+  margin: 0;         /* Esto quita el centrado automático (el margen izquierdo y derecho) */
+  padding: 0 2rem;   /* Agrega un poco de aire a los lados para que no toque los bordes */
 }
 
 .registrar__header {

@@ -255,7 +255,11 @@ onMounted(cargar)
 .horarios__btn--editar:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ── el resto del <style> queda exactamente igual al que ya tenías ── */
-.horarios { max-width: 1100px; }
+.horarios { width: 100%;
+  max-width: 1200px; /* Ajusta según el ancho máximo que desees */
+  margin: 0;         /* Elimina el centrado horizontal */
+  padding: 0 2rem;   /* Mantiene un pequeño margen para que no toque el borde del sidebar */
+}
 .horarios__header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
 .horarios__title { font-family: var(--font-heading); font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
 .horarios__subtitle { font-size: 0.875rem; color: var(--color-text-muted); }
